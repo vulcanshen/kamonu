@@ -1,0 +1,6 @@
+.local/
+.idea/
+/kamonu
+go.work
+go.work.sum
+dist/

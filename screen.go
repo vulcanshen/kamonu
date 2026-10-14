@@ -1,0 +1,309 @@
+package main
+
+// The screen: [1] KAMON, the kamon in the data directory, and [2] PREVIEW,
+// the one under the cursor (docs/dev-remarks.md, the screen).
+
+import (
+	"errors"
+	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
+	terminu "github.com/vulcanshen/terminu-go"
+)
+
+// Title glyphs of kamonu's inputs and forms (the app's choice:
+// components/layout/popup).
+const (
+	glyphAdd    = "\U000F0415" // nf-md-plus_box: NEW KAMON
+	glyphCog    = "\U000F0493" // nf-md-cog: EDIT
+	glyphPencil = "\U000F03EB" // nf-md-pencil: a name, the letters
+	glyphSave   = "\U000F0193" // nf-md-content_save: SAVE AS
+)
+
+// previewWidth is [2]'s width: the mark's 50 columns, a cell of room and the
+// frame on either side.
+const previewWidth = 2*cols + 4
+
+type kamonu struct {
+	a       *terminu.App
+	st      store
+	list    *terminu.List
+	panel   *terminu.Panel // [1] KAMON
+	preview *preview
+
+	pops     []*layer // kamonu's own popups (popup.go)
+	anim     bool     // an animation tick is on its way
+	quitting bool     // the quit confirm is open (tdp K9)
+	pending  string   // a g waiting for its second key (tdp K12)
+}
+
+func newKamonu(st store) *kamonu {
+	k := &kamonu{st: st}
+	a := terminu.New("kamonu")
+	a.Quit = &terminu.Ask{Title: "Quit", Question: "Quit kamonu?", Verb: "quit"}
+	a.QuitDesc = "leave kamonu"
+	a.Splash = splash()
+	k.a = a
+
+	k.list = &terminu.List{
+		Columns:   []terminu.Column{{Title: "Name", Flex: true}},
+		EmptyFact: "No kamon yet",
+		EmptyHint: "Press [A] to add one, or [Space] to see what you can do here",
+	}
+	k.panel = &terminu.Panel{Label: "Kamon", Body: k.list, Actions: []terminu.Action{
+		{Key: "Enter", Label: "Draw", Desc: "its cells", Scope: terminu.ItemScope, Hint: "draw", Do: k.draw},
+		{Key: "E", Label: "Edit", Desc: "name, letters, U frame", Scope: terminu.ItemScope, Do: k.edit},
+		// "ExPort": the key is a capital P, written in its place (tdp M5).
+		{Key: "P", Label: "ExPort", Desc: "write its svg", Scope: terminu.ItemScope, Do: k.export},
+		{Key: "X", Label: "Delete", Desc: "this kamon's file", Scope: terminu.ItemScope, Do: k.delete},
+		{Key: "A", Label: "Add", Desc: "a new kamon", Scope: terminu.PanelScope, Hint: "add", Do: k.add},
+	}}
+	k.panel.Actions = append(k.panel.Actions, k.list.Actions()...)
+	k.preview = &preview{k: k}
+	a.AddScreen(&terminu.Screen{
+		Name:   "Kamon",
+		Panels: []*terminu.Panel{k.panel, {Label: "Preview", Body: k.preview}},
+		Layout: func(w, h int) []terminu.Rect {
+			left := max(w-previewWidth, 0)
+			return []terminu.Rect{{X: 0, Y: 0, W: left, H: h}, {X: left, Y: 0, W: w - left, H: h}}
+		},
+		NarrowBelow: 80,
+	})
+	k.reload("")
+	return k
+}
+
+// frame is the screen: the lib's, with kamonu's popups over it.
+func (k *kamonu) frame() []string { return k.compose(k.a.Frame()) }
+
+func (k *kamonu) width() int { w, _ := k.a.Size(); return w }
+
+// current is the kamon under the cursor; "" when there is none.
+func (k *kamonu) current() string {
+	r, ok := k.list.Current()
+	if !ok {
+		return ""
+	}
+	return r.ID
+}
+
+// reload reads the data directory again, the cursor on sel when it is given.
+func (k *kamonu) reload(sel string) {
+	names, err := k.st.names()
+	if err != nil {
+		k.panel.Fail = &terminu.Failure{Fact: "Can't read " + shown(k.st.conf()), Hint: why(err)}
+		k.list.SetRows(nil)
+		return
+	}
+	k.panel.Fail = nil
+	rows := make([]terminu.Row, len(names))
+	for i, n := range names {
+		rows[i] = terminu.Row{ID: n, Cells: []string{n}}
+	}
+	k.list.SetRows(rows)
+	if sel != "" {
+		k.list.Select(sel)
+	}
+	k.preview.forget()
+}
+
+// draw opens the editor on the kamon under the cursor.
+func (k *kamonu) draw() tea.Cmd {
+	name := k.current()
+	km, err := k.st.load(name)
+	if err != nil {
+		return k.a.Error("Draw", "Can't read "+name+": "+why(err))
+	}
+	return k.open(newEditor(name, km))
+}
+
+// The fields NEW KAMON and EDIT share: the name, the letters, and
+// whether the U frame goes in (Base).
+
+func nameField(name *string, prompt string, check func() string) *terminu.FormField {
+	return &terminu.FormField{Label: "Name", Value: func() string { return *name }, Empty: "not set",
+		Edit: func() terminu.Input {
+			return terminu.TextInput{Title: "Name", Glyph: glyphPencil, Prompt: prompt, Verb: "set", Old: *name,
+				Check: checkFormat, Done: func(v string) tea.Cmd { *name = v; return nil }}
+		},
+		Check: check}
+}
+
+func lettersField(letters *string) *terminu.FormField {
+	return &terminu.FormField{Label: "Letters", Value: func() string { return *letters }, Empty: "not set",
+		Edit: func() terminu.Input {
+			return terminu.TextInput{Title: "Letters", Glyph: glyphPencil, Prompt: "The letters in the U frame, in the order the splash shows them",
+				Verb: "set", Old: *letters,
+				Check: checkLetters, Done: func(v string) tea.Cmd { *letters = strings.ToUpper(v); return nil }}
+		},
+		Check: func() string {
+			if *letters == "" {
+				return errNoLetters.Error()
+			}
+			return ""
+		}}
+}
+
+func baseField(on bool) *terminu.FormField {
+	return &terminu.FormField{Label: "Base", Options: []string{"U frame"}, Multi: true, Checked: []bool{on}}
+}
+
+// add is NEW KAMON: a name, the letters and whether the U frame goes in.
+// Create makes the file at once, then opens the editor on it.
+func (k *kamonu) add() tea.Cmd {
+	name, letters := "", ""
+	base := baseField(true)
+	return k.a.Form(&terminu.Form{
+		Title: "New kamon", Glyph: glyphAdd, Name: "New kamon", Button: "Create",
+		Fields: []*terminu.FormField{
+			nameField(&name, "Name of the new kamon", func() string {
+				if err := k.st.checkName(name); err != nil {
+					return err.Error()
+				}
+				return ""
+			}),
+			lettersField(&letters),
+			base,
+		},
+		Submit: func() (tea.Cmd, error) {
+			km := kamon{frame: base.Checked[0], letters: splitLetters(letters)}
+			if err := k.st.create(name, km); err != nil {
+				return nil, errors.New("Can't create " + name + ": " + why(err))
+			}
+			k.reload(name)
+			return k.open(newEditor(name, km)), nil
+		},
+	})
+}
+
+// edit is EDIT: <name>, the name, the letters and the U frame of the kamon
+// under the cursor. The cells stay where they are (kamon.setLetters,
+// kamon.setFrame): what that makes of them is the user's to draw again.
+func (k *kamonu) edit() tea.Cmd {
+	old := k.current()
+	km, err := k.st.load(old)
+	if err != nil {
+		return k.a.Error("Edit", "Can't read "+old+": "+why(err))
+	}
+	name, letters := old, strings.Join(km.letters, "")
+	base := baseField(km.frame)
+	return k.a.Form(&terminu.Form{
+		// The name after ": " in its own case (tdp v0.6.1, layout/popup).
+		Title: "Edit", Subject: old, Glyph: glyphCog, Name: old, Button: "Save",
+		Fields: []*terminu.FormField{
+			nameField(&name, "New name for "+old, func() string {
+				if name == old {
+					return ""
+				}
+				if err := k.st.checkName(name); err != nil {
+					return err.Error()
+				}
+				return ""
+			}),
+			lettersField(&letters),
+			base,
+		},
+		Submit: func() (tea.Cmd, error) {
+			km.setLetters(splitLetters(letters))
+			km.setFrame(base.Checked[0])
+			if err := k.st.save(old, km); err != nil {
+				return nil, errors.New("Can't save " + old + ": " + why(err))
+			}
+			if name != old {
+				if err := k.st.rename(old, name); err != nil {
+					k.reload(old)
+					return nil, errors.New("Can't rename " + old + ": " + why(err))
+				}
+			}
+			k.reload(name)
+			return nil, nil
+		},
+	})
+}
+
+// export writes the svg of the kamon under the cursor to svg/<name>.svg and
+// says where in a toast.
+func (k *kamonu) export() tea.Cmd {
+	name := k.current()
+	km, err := k.st.load(name)
+	if err == nil {
+		err = k.st.export(name, km)
+	}
+	if err != nil {
+		return k.a.Toast(terminu.Error, "Can't export "+name+": "+why(err))
+	}
+	return k.a.Toast(terminu.Info, "Exported to "+shown(k.st.svgPath(name)))
+}
+
+func (k *kamonu) delete() tea.Cmd {
+	name := k.current()
+	return k.a.Confirm(terminu.Ask{
+		Title: "Delete", Question: "Delete " + name + "?", Verb: "delete",
+		Details: []string{name + ".yaml is removed from " + shown(k.st.conf()) + "."}, Warn: []int{0},
+	}, func() tea.Cmd {
+		if err := k.st.remove(name); err != nil {
+			return k.a.Error("Delete", "Can't delete "+name+": "+why(err))
+		}
+		k.reload("")
+		return nil
+	})
+}
+
+// preview is [2]: the kamon under the cursor as the splash draws its mark,
+// every letter gold, with a row of background above and below (tdp S5).
+type preview struct {
+	k    *kamonu
+	name string // what m and err are of
+	m    mark
+	err  error
+	read bool
+}
+
+// forget makes the next draw read the file again.
+func (p *preview) forget() { p.read = false }
+
+func (p *preview) Draw(w, h int, focused bool) []string {
+	name := p.k.current()
+	if name == "" {
+		return terminu.EmptyState(w, h, "Nothing to preview", "")
+	}
+	if !p.read || name != p.name {
+		p.name, p.read = name, true
+		var km kamon
+		km, p.err = p.k.st.load(name)
+		p.m = km.picture()
+	}
+	if p.err != nil {
+		return terminu.EmptyState(w, h, "Can't draw "+name, why(p.err))
+	}
+	square := glyphSquare
+	if terminu.IconWidth() == 1 {
+		square += " " // a square takes two columns (tdp S5, E5)
+	}
+	backRow := terminu.Fg(backColor).Render(strings.Repeat(square, cols))
+	mark := []string{backRow}
+	for r := range rows {
+		var b strings.Builder
+		for c := range cols {
+			b.WriteString(terminu.Fg(p.m[r][c].color()).Render(square))
+		}
+		mark = append(mark, b.String())
+	}
+	mark = append(mark, backRow)
+
+	lines := make([]string, h)
+	top := (h - len(mark)) / 2
+	for i := range lines {
+		if j := i - top; j >= 0 && j < len(mark) {
+			lines[i] = terminu.Fit(terminu.Center(mark[j], w), w)
+		} else {
+			lines[i] = strings.Repeat(" ", w)
+		}
+	}
+	return lines
+}
+
+func (p *preview) Key(string, tea.KeyMsg) (bool, tea.Cmd) { return false, nil }
+func (p *preview) HasItem() bool                          { return false }
+func (p *preview) Scroll() string                         { return "" }
+func (p *preview) MoveKeys() []terminu.KeyRow             { return nil }

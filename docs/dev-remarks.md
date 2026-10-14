@@ -1,0 +1,292 @@
+# kamonu 開發者備忘
+
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.6.1），
+建在 terminu-go 上。
+
+## 運作方式
+
+- **畫面交給 lib**（`screen.go`）：這些都是 terminu-go 畫的。
+  - `[1] KAMON`（`terminu.List`）與 `[2] PREVIEW`（kamonu 自己的 `Body`）。
+  - `NEW KAMON`、`EDIT: <名字>`（lib 的表單）。
+  - delete 的 confirm、匯出的 toast、splash、Space menu、key reference、footer。
+- **kamonu 自己跑 Bubble Tea 的 program**（`main.go` 的 `model`）：包住 lib 的 `App`，不呼叫 `App.Run`。
+  - 理由：kamonu 自己的 popup 要畫在 lib 的畫面（`App.Frame()`）上面，`App.Run` 拿 `App` 本身當 model，插不進去。
+  - 所以 `App.Run` 做的兩件事 kamonu 自己做：`terminu.Probe`，以及把輸出裡的 `\x1b[K` 拿掉（`screenOutput`，照 lib 的寫法：icon 佔兩格時這個 erase 會擦掉右框）。
+- **kamonu 自己的 popup**（`popup.go`）：一疊 `layer`。
+  - 有 popup 開著時，按鍵都先給最上面那一個；畫的時候整個 lib 畫面淡化，各層照層色。
+  - 開關動畫、`Esc`、`?`、`Ctrl-C`、`q`、`gg` 都照 lib 的做法寫。popup 全部關掉之後，按鍵回到 lib。
+  - `editor.go`：畫格子的 popup（`DRAW`）。
+  - `dialogs.go`：疊在它上面的 confirm（discard、離開）、note（key reference、error popup）、一行文字輸入（`SAVE AS`）。
+- **mark**（`mark.go`）：
+  - `kamon`：yaml 裡存的東西，包括要不要 U 框、有哪些字、每一格是第幾個字。
+  - `mark`：splash 畫出來的樣子，只有底、U 框、金色三種格子。
+  - U 框從 `assets/u-frame.svg` 讀進來，編進執行檔。
+  - 讀 yaml 時，格子不合規定一律算錯（見「存檔格式」）。
+- **存檔**（`store.go`）：
+  - `Save`、`Edit` 與匯出都先寫到同一個目錄的暫存檔再 rename，寫到一半失敗時原檔還在。
+  - 新增（`Create`、`Save As`）用 `O_EXCL`，不會蓋掉同名的檔。
+  - 錯誤訊息不帶路徑（`why`）：使用者知道是哪一個 mark，而路徑可能只是暫存檔的名字。
+- **測試守著的**（`kamonu_test.go`）：
+  - `harness_test.go` 是不用終端機就能跑整個 app 的工具：送按鍵、跑完動畫、讀畫面。超過 200ms 的計時器（toast 留在畫面上的時間）不等，所以 toast 會留在畫面上讓測試讀。
+  - L4：80×40、120×50、60×30、56×28 四種大小，icon 一格與兩格，主畫面和每一種 popup（含 `EDIT: <名字>` 與 toast），每一列都剛好等於終端機寬。
+  - U 框跟 tdp 的 `principle/icon.svg` 一模一樣（`testdata/tdp-icon.svg` 是它的副本，只給測試用）。
+  - E6：splash 畫的就是 `docs/icon.svg`，lib 的 splash 吃得下；它的 U 框是家族的，註解依序是 U、K、A、M、O、N。
+  - yaml：寫出去再讀回來不變；手改出錯一律回錯誤，不會讀成另一張圖。
+  - 匯出的 svg：註解的順序是 U 框再照字的順序；沒有格子的字不寫；字全是金色；lib 的 splash 吃得下。
+  - 改字、打開 U 框之後格子的變化（見「改資料」）。
+  - 畫格子：cursor 跳過 U 框、到邊停住；`Space` 照順序切換；色標每個字一個顏色；改過才問，`Esc` 回到格子。
+  - Save 與 Save As：名字的檢查、控制字元、原檔不動、cursor 停在新檔。
+  - 存檔失敗開 error popup，`Enter` 關掉後回到按鈕；打開的動畫播完前不收鍵；`Ctrl-C` 兩次離開。
+  - 匯出寫出跟 yaml 一致的 svg，失敗時用 toast 說原因；壞掉的 yaml 在預覽、Draw、Edit 都說讀不了。
+
+## 設計決定
+
+### 畫面
+
+- **單一畫面、兩個 panel**：
+  - `[1] KAMON` 是資料目錄裡 `conf/*.yaml` 的清單，名字不顯示 `.yaml`。
+  - `[2] PREVIEW` 畫 cursor 那一筆，上下各多一列底，跟 splash 一樣是 21 列 × 50 欄。
+  - 理由：kamonu 只做一件事，挑一個 mark、打開來畫。
+- **`[1]` 的 label 是 `KAMON`**（不是 `ICONS`）：user 定的，清單裡的東西就是家紋。
+- **`[2]` 至少 54 欄**（mark 50 欄、左右各一格留白、框兩格）。80 欄時 `[1]` 剩 26 欄；更窄時一次只畫一個 panel。
+- **預覽照 splash 的樣子，字全是金色**（2026-10-14，user）。理由：kamonu 裡只有這裡看得到成品的樣子；想看分字，按 `Enter` 打開畫格子的 popup。
+
+### 動作
+
+清單上的動作（2026-10-14，user）：
+
+| 鍵 | 動作 | 範圍 |
+|---|---|---|
+| `Enter` | Draw：打開畫格子的 popup | item |
+| `E` | Edit：`EDIT: <名字>` 表單，改名字、字、U 框 | item |
+| `P` | Export：寫出 svg（label 是 `Ex[P]ort`） | item |
+| `X` | Delete：先 confirm | item |
+| `A` | Add：`NEW KAMON` 表單 | panel |
+
+- **`Enter` 直接畫格子，`[E]dit` 改資料**：
+  - 畫格子是最常做的事，按一下就到。
+  - 忘了鍵的話，`Space` menu 裡全列著。
+  - tdp K3 的 `Enter` 是對這一筆最直觀的動作；先選再做是 Space menu 的事。
+  - 規範 menu 範例（components/dialog/menu）也是這個排法：`[Enter] Connect`、`[E]dit`。
+- **`Enter` 原本叫 Edit**：有了改資料的 `[E]dit` 之後改名叫 Draw，免得兩個動作都叫 Edit。
+- **原本的 `[r]ename` 併進 `[E]dit`**：改名就是改 Name 那一欄。
+- **匯出用大寫 `P`**：
+  - 不用 `x`：規範 menu 的範例裡刪除是 `[X] Delete`，用過家族 app 的人會把 `x`／`X` 當成刪除。
+  - user 選大寫 `P`，因為瀏覽器的列印是 `Cmd-P`。
+  - lib 標熱鍵時大小寫算數，所以 label 寫成 `ExPort`，畫出來是 `Ex[P]ort`（tdp M5 的「字母在 label 中間，原地包」）。
+- **`[X] Delete`**：
+  - 先 confirm（`Delete <name>?`），上面一句 Peach 說 `conf/` 裡的 yaml 會被刪掉。
+  - 用大寫 `X`（2026-10-14，user 選「跟規範」）：規範 menu 的範例（components/dialog/menu）就是 `[X] Delete`。原本是 `[D]elete`。
+  - 匯出過的 svg 不跟著刪：那是已經給出去的成品。
+
+### 新增：`NEW KAMON` 表單
+
+- **只有家族的大小 25 × 19**（2026-10-14，user）：kamonu 是 terminu 家族家徽的編輯器，不是一般的點陣圖編輯器。
+- 欄位：
+  - `Name`
+  - `Letters`：框裡有哪些字（見「分字」）
+  - `Base`：一個 checkbox `U frame`，預設勾著，決定要不要 U 框
+- **按 `Create` 當場建檔**，不是畫完存檔才建（2026-10-14，user）。理由：名字一開始就定，檔案一開始就在，之後只是改它。建好之後打開畫格子的 popup。
+
+### 改資料：`EDIT: <名字>` 表單
+
+- lib 的表單，三欄跟 `NEW KAMON` 一樣，帶入現在的值（灰字提議是舊值），按鈕是 `Save`。
+- **可以改，後果自付**（2026-10-14，user）：
+  - **字照位置對應**：第 1 個字的格子永遠是第 1 個字。
+    - `FIL` 改成 `FAL`：中間那組格子形狀不動，改標成 A。
+    - `KB` 改成 `FIL`：K 的格子變成 F、B 的變成 I；L 沒有格子，要自己進去畫。
+  - **字數變少**時，沒了的那幾個字的格子變回底。
+  - **U 框原本沒有、打開它**時，畫在框位置上的格子清掉。
+  - 都不先問（後果自付是 user 定的原則；後兩條是照這個原則補的預設）。
+- **標題是 `EDIT: <名字>`**，例如 `EDIT: filu`：照 tdp v0.6.1，名字接在 `: ` 後面、大小寫照原樣（紀錄 KM5，lib 的 `Form.Subject`，
+  terminu-go v0.1.1）。discard 的問句也帶名字（`Discard changes to filu?`）。
+- 改名時，名字跟原本一樣不算重複；換成別的名字才檢查有沒有被用掉。
+
+### 分字
+
+- **建立時先填框裡有哪些字**（2026-10-14，user）：例如 filu 填 `FIL`（U 是框）。
+  - 字的順序就是 splash 揭露的順序。
+  - 同一個字可以出現兩次：sshu 是 S、S、H，兩個 S 各算一個字。
+  - 只收 A 到 Z，小寫自動轉大寫。
+- **最多 6 個字**（2026-10-14，user 選 A）：
+  - U 框裡能畫字的地方是 15 欄 × 17 列（第 5–19 欄、第 0–16 列）。
+  - 認得出是字母的最小大小是 3 × 5，字與字之間空一格。字貼著框塞滿是 4 × 3 = 12 個；跟框留空是 3 × 2 = 6 個。
+  - catppuccin 的 14 個彩色去掉藍色系（會跟 U 框、cursor 混在一起）剩 10 個，一眼分得開的大約 7 個。
+  - 家族最長的是 kamonu 的 5 個字。
+- **每個字一個顏色，照順序固定**：Peach、Teal、Mauve、Green、Red、Yellow。
+  - 顏色只在 kamonu 裡用來分字；匯出的 svg 照 S5，字一律是金色。
+  - 冷暖交錯排，順序相鄰的字通常也畫在隔壁，這樣顏色差最多。
+  - user 說顏色由 kamonu 決定、分得出來就好；不每次隨機，同一個 mark 每次看起來一樣才認得。
+  - 規範：內容本身的顏色由 app 決定（components/color 開頭、P4 最後一段）。格子裡的字是內容。
+
+### 存檔格式
+
+- **yaml，存成一張圖**（2026-10-14，user 選 A）：
+  ```yaml
+  frame: true
+  letters: [F, I, L]
+  cells: |
+    .........................
+    .......111.222.3.........
+    ...（共 19 列）
+  ```
+  - `cells` 一列一行，`.` 是底，`1` 到 `6` 是第幾個字。用數字不用字母，是因為同一個字可能出現兩次。
+  - U 框不畫進 `cells`，它是 `frame` 這個設定，匯出時才補上（user）。
+  - 理由：打開檔案就看得到畫的樣子，改一格的 git diff 也只差一行。
+- **手改出錯一律回錯誤**，不會讀成另一張圖：
+  - 縮排錯了，yaml 自己擋（tab：`found a tab character…`；少一格：`did not find expected key`）。
+  - yaml 讀得進來的錯（縮排多一格、少打一格、行尾多空白），那一列都不是 25 格，kamonu 擋：`Row 8 has 24 cells, not 25`。
+  - 其他：超過字數的數字、畫在 U 框上的格子、字不是一個 A 到 Z、列數不是 19、不認得的欄位、空檔案。
+  - 列與欄從 1 數，寫給人看。
+- 否決的 B（每個字列出自己的格子座標）：打錯一個數字（`[8,6]` 打成 `[8,7]`）還是合法的 yaml 與座標，那一格會默默跑到別的地方。
+
+### 匯出
+
+- **`Ex[P]ort` 直接寫到 `svg/<名字>.svg`**，再用 toast 說寫到哪裡（2026-10-14，user 選 B）。
+  - 已經有同名的檔就直接蓋掉：svg 是從 yaml 產生的，yaml 才是要留的東西。
+  - 失敗時用 Error toast：這是清單上的動作，不是 popup 裡的動作（components/dialog/toast）。
+- **格式照 S5**：
+  - 底 `#000000`。
+  - `frame: true` 時寫 `<!-- U -->` 加上 U 框。
+  - 接著照字的順序，每個字一個註解（`<!-- F -->`），後面是它的格子，全部金色 `#f2b753`。
+  - 格子照列的順序寫，S5 的揭露動畫會把同一個字的格子打散。
+- **沒有格子的字不寫**：splash 沒有東西可以揭露，空的一段只會多停一下。
+- 改名、刪除都不動 `svg/` 裡匯出過的檔。
+
+### U 框
+
+- **U 框是一個獨立的檔案**，從家族 mark（tdp 的 `principle/icon.svg`）的 U 那一部分抽出來，放在 repo 的 `assets/u-frame.svg`、編進執行檔：使用者碰不到、刪不掉。tdp S5 規定 U 框全家族一樣、不改。
+- **mark 只記要不要 U 框**（yaml 的 `frame`，2026-10-14，user）：U 框的格子不存在 mark 裡，畫不到、刪不掉。
+
+### kamonu 自己的 mark
+
+- **`docs/icon.svg` 是 user 用 kamonu 畫、匯出的**（2026-10-14）：U 框裡 K、A、M、O、N。splash 直接把這個檔編進執行檔（E6），
+  換掉了原本借用的 tdp mark。
+- **repo 只放 `docs/icon.svg`，不放 yaml**（2026-10-14，user）：`docs/icon.svg` 是家族的慣例，yaml 是 kamonu 自己的東西。原稿在
+  user 的 `~/.kamonu/data/conf/kamonu.yaml`。
+
+### 畫格子的 popup
+
+- **kamonu 自己的 popup**（2026-10-14，user：「這個屬於 kamon 自己的 popup，lib 不會有這個東西，也不應該有」）：
+  - 不是表單加一種欄位，在 F1 七類以外（見「偏離 tdp」）。
+  - 框、標題、hint、開關動畫、淡化、層色都由 kamonu 畫，照 components/layout/popup 與 F。
+  - 上面再開的 discard confirm、`SAVE AS` 文字輸入、error popup 也由 kamonu 畫，因為 lib 的 popup 疊不到 app 自己畫的 popup 上面。照 components 的 confirm、text、note。
+- **按 `Enter` 或 `Space`，那一格依序切換**：底 → 第 1 個字 → … → 最後一個字 → 底（K5 的 checkbox 例外）。
+  - 格子下面一列色標，每個字寫成 `[1] ■ F`：按哪個數字、什麼顏色、哪個字。數字照 tdp M5 標成熱鍵（數字放前面）。
+    排不下時（6 個字、icon 佔兩格）字與字之間從兩格空白縮成一格。
+  - 下面是動作列，`Tab` 在格子與動作列之間切換，跟表單一樣。
+- **數字鍵 `1`–`6` 直接把那一格設成第幾個字**（2026-10-14，user：「連續按 space 太繁瑣」）。
+  - **再按一次同一個數字就清空**（2026-10-14，user）：已經是那個字的格子上按它的數字，等於 `Backspace`，畫錯時不用換鍵。
+  - 超過字數的數字不作用（`FIL` 按 `4`）。
+  - popup 開著時按鍵只給 popup（tdp K 的「popup 能按的鍵」），所以不會碰到畫面上 `1`–`9` 切 panel。
+- **`Backspace` 把那一格清成空的**，不管它是第幾個字（2026-10-14，user）：不用一路 `Space` 繞回底。
+- **`p` 切換成金色**（2026-10-14，user）：格子與色標的字全畫成金色，就是匯出的 svg 與 splash 的樣子；再按一次變回分字的顏色。
+  - 為什麼：user 用分字的顏色畫好 kamonu 自己的 mark，匯出才發現字黏在一起 —— 顏色不同時分得開，全是金色就成了一整塊。
+    右邊的預覽是金色的，但畫的時候被 popup 蓋住。
+  - 金色時照樣可以畫；每次打開都從分字的顏色開始。
+  - 用 `p`（preview）：tdp 裡 `v` 是選取模式（K11）、`V` 是 splash（S1），`p` 沒有用到。
+- **`x` 清空所有格子，先 confirm**（2026-10-14，user）：`Clear every cell of <名字>?`，`Enter` 清空、回到格子，`Esc` 不動。
+  - 一格都沒畫時不問，什麼都不做。
+  - 清空只改 popup 裡的圖，`Save` 才寫進檔案；改過了，`Esc` 離開時照樣先問要不要丟掉。
+  - 用小寫 `x`：清單上刪除 mark 是大寫 `X`（規範 menu 的範例），意思相近（刪掉東西），大小寫分開不會按錯地方。
+- 數字鍵、`Backspace`、`p` 與 `x` 只寫在 `?` 的 key reference 裡（數字另外寫在色標上）：hint 放不下，popup 只有 54 欄，再加會把
+  `Esc:cancel` 擠掉。數字鍵與 `Backspace` 在按鈕上不作用；`p` 與 `x` 在哪裡都可以按。
+- **按鈕是 `Save`（存回原檔）與 `Save As`（存成新檔）**。存完就關掉，跟表單送出一樣（2026-10-14，user）。
+  - `Save`：寫回原檔，回到清單。
+  - `Save As`：先開 `SAVE AS` 文字輸入填新名字（檢查跟 `NEW KAMON` 一樣），連同字與 U 框存成新檔，原檔不動，關掉整疊，清單的 cursor 停在新檔。
+  - 理由：按鈕就是送出，家族的表單送出就關。
+- **U 框的格子是停用的格子，cursor 跳過**（2026-10-14，user）：
+  - 照日曆範圍外的日子：停在那個方向下一個能停的格子，那個方向沒有了就不動。
+  - 理由：家族裡停用的東西 cursor 一律跳過（menu 的停用列、表單的停用欄位、日曆）。
+  - 沒有 U 框的 mark，每一格都能畫。
+- 格子裡 hjkl 上下左右，到邊停住（K12：照空間走的不繞）。沒有錯誤列：格子不會不合格，存檔失敗開 error popup。改過時 `Esc` 先問。
+- cursor 的畫法規範沒寫（紀錄 KM3）：暫時照紀錄的 A，層色底、方塊保留自己的顏色（`TODO(tdp KM3)`）。
+- 下面這些是寫程式時照預設定的（2026-10-14，跟 user 報告過）：
+  - 標題 `DRAW: <名字>`，glyph `nf-md-grid`（U+F02C1）。打開時 cursor 在第一個能停的格子。
+  - 按鈕 `Save As`、`Save` 並排靠右。`Tab` 到動作列時停在 `Save`，`h|l` 在兩個之間移（K12，不繞）。
+  - hint：在格子上是 `Enter|Space:cycle Tab:actions Esc:cancel`，在按鈕上是 `Enter:save Tab:grid Esc:cancel`（或 `Enter:save as`）。
+  - `q` 在這個 popup 上不作用（照表單：`q` 不進離開流程）。`Ctrl-C` 開離開的 confirm；畫的東西沒存時，多一句 Peach `Changes to <名字> are not saved.`。
+  - `SAVE AS` 沒有灰字提議（沒有舊值）；說明列是 `Name for the new kamon; <名字> stays as it was`。
+
+### 名字
+
+- 檢查：
+  - 不能空：`Name can't be empty`。
+  - 不能有 `/`、不能 `.` 開頭：這兩條是名字本身的格式，在輸入框裡就擋。
+  - 不能跟現有的重複：`Name is taken`，表單在送出時擋。
+  - 不能有控制字元：lib 與 `SAVE AS` 在 `Enter` 時擋。
+  - 前後的空白字元會去掉。
+- 清單照名字排，不分大小寫。
+
+### 離開
+
+- 主畫面按 `q` 先問（`Quit kamonu?`）。理由：家族的 app 都問；畫到一半的東西在畫格子的 popup 裡，那裡另外會提醒沒存。
+
+### 位置
+
+- 資料目錄 `~/.kamonu/data/`（tdp E3），`KAMONU__DATA` 覆寫（E2）。裡面分兩個子目錄（2026-10-14，user）：
+  - `conf/<名字>.yaml`：mark 本身。
+  - `svg/<名字>.svg`：匯出的成品。
+- yaml 算資料不算設定：E3 的設定目錄（`~/.config/kamonu`）放的是決定 app 怎麼運作的設定檔，yaml 是使用者畫出來的東西。
+
+## 已否決，不要重提
+
+- 同一個動作同時綁 `Enter` 與 `E`：menu 裡會出現兩列一樣的動作。
+- **full size 與自訂大小**（2026-10-14）：曾想讓新增時選 locku 鎖定畫面的大小或任意大小。否決，kamonu 只畫家族的 mark（25 × 19）。
+  附帶查到的：locku 的鎖定畫面沒有固定的格數，是 `終端機寬 ÷ 2` × `終端機高 − 1`。
+- 存檔時才輸入檔名、才建檔：改成新增時就填名字、當場建檔。
+- 存完留在畫格子的 popup 裡繼續畫：存完要另跳 toast 才知道存了，按鈕的意思也會從「送出」變成「做一件事、留著」。
+- **用 popup 的層色分字**：
+  - 只有 4 個，kamonu 自己就有 5 個字。
+  - 4 個都是 Lavender 到 Sapphire 之間的淺藍，相鄰的字分不出來。
+  - 層色另有用途（popup 的框與 cursor，P4）。
+- 字建好就不能改：user 要可以改，後果自付。
+- `Enter` 先開一個選單（`Edit kamon`／`Edit properties`）：每次畫格子都多一步，而且跟 Space menu 重複。
+- `Enter` 先開資訊 popup，動作列有 `Edit Kamon` 與 `Save`：表單兩個按鈕（KM1）；畫格子的 popup 疊不到 lib 的表單上；兩個 `Save` 意思不清。
+- 匯出用 `x`：跟家族的刪除鍵 `X` 只差一個 Shift。
+- 匯出時用 lib 的「選目錄」挑地方、寫成那裡的 `icon.svg`：user 選固定寫到資料目錄（按一下就好），要放進 app 的 `docs/` 時自己複製。
+- yaml 放在 `~/.config/kamonu`：照 E3，畫出來的東西算資料。
+- 預覽用分字的顏色：kamonu 裡就看不到金色的成品了。
+- **用那個字母本身當熱鍵**（按 `k` 畫 K，2026-10-14）：小寫撞到格子裡的移動鍵（kamonu 的 K 是 `k` 往上、filu 的 L 是 `l` 往右），
+  還有 `p`、`q`、`g`；大寫（`Shift-K`）不撞，但 user 選維持只用數字，改成數字可以 toggle。
+- 把 kamonu 自己的 mark 的 yaml 放進 repo（`docs/icon.yaml`）：yaml 是 kamonu 的東西，app 的 repo 只放家族慣例的 `docs/icon.svg`。
+
+## 已知的牆與未做
+
+- **當 locku 的保護程式**：locku 讀 kamonu 畫的圖當一種 saver。這是 locku 的功能，locku 改用 lib 之後再談。
+- E6 的發布（goreleaser、`install.sh`／`uninstall.sh`、Homebrew tap）、E7 的 demo gif（VHS）：還沒做，發布前問 user。
+
+## 偏離 tdp
+
+- **F1（popup 只有七類）**，在畫格子的 popup：它是 kamonu 自己的一類。
+  - 為什麼：內容是 25 × 19 的格子，七類都裝不下（最接近的 form 是「一列一個值」）。
+  - 長相與按鍵盡量照 form：`Tab` 在格子與動作列之間、按鈕送出、改過時 `Esc` 先問；格子裡照 K12。
+- **E8（lib 給的，自己不另外做）**：
+  - 偏離的地方：畫格子的 popup 上面的 discard confirm、`SAVE AS` 文字輸入、error popup、key reference、離開的 confirm，都由 kamonu 自己畫；kamonu 也自己跑 Bubble Tea 的 program，不用 `App.Run`（見「運作方式」）。
+  - 為什麼：lib 的 popup 畫在 lib 自己那一疊裡，疊不到 app 自己畫的 popup 上面，而 lib 不放 app 自己的 popup（user 2026-10-14，紀錄 KM2）。
+  - 其他地方的 popup（`NEW KAMON`、`EDIT`、delete 的 confirm、error、toast）都用 lib 的。
+
+## 設計文件導讀
+
+- 規範的盲點與 lib 要補的地方記在 terminu 的 `.local/family-fix/kamonu/README.md`（編號 KM）。
+
+## 建置與開發
+
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.1）。
+  - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
+    lib 一改馬上看得到。`go.work`、`go.work.sum` 不進版控。
+  - commit 與發版前，關掉 go.work 跑一次（`make check-lib`：`GOWORK=off go build ./...`、`GOWORK=off go test ./...`）。過不了，
+    表示用到了 lib 還沒發版的東西，要等 terminu-go 打新 tag。
+  - 升級：`go get github.com/vulcanshen/terminu-go@vX.Y.Z`，再 `make tidy`（`GOWORK=off go mod tidy`），commit `go.mod` 與 `go.sum`。
+    發版時 `go.mod` 只能指向 terminu-go 打過的 tag，不用 replace、不用 pseudo-version。
+- **`Makefile`** 照家族的寫法（`make` 列出所有指令）：
+  - `make build`：編出 `./kamonu`（`CGO_ENABLED=0`、`-trimpath`、strip）；`make run`：直接跑。
+  - `make test`：約 40 秒（每個 popup 的開關動畫照真的時間跑）；`make test-race`：帶 race detector。
+  - `make check`：fmt-check、vet、test -race、check-lib 一次跑，commit 前跑，約一分半。
+  - `make install`／`make uninstall`、`make package`（`dist/` 的 tar.gz）、`make clean`。
+  - 跟家族不同的地方：main 在根目錄（`PKG := .`）；多了 `check-lib`（go.work 的關係）；goreleaser 與 demo gif 的 target 等發布時再加。
+- 不想動到自己的 `~/.kamonu`，就用 `KAMONU__DATA=<別的目錄> ./kamonu`。
+
+## 發布
+
+（還沒發布。）
