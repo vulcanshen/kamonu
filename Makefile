@@ -34,6 +34,16 @@ uninstall: ## 移除已安裝的 kamonu（從 $$GOBIN，否則 $$GOPATH/bin）
 tidy: ## go mod tidy（關掉 go.work，照 go.mod 寫的 terminu-go tag）
 	GOWORK=off go mod tidy
 
+##@ 發布（release）
+
+.PHONY: release-check
+release-check: ## goreleaser check：驗證 .goreleaser.yaml
+	goreleaser check
+
+.PHONY: snapshot
+snapshot: ## goreleaser 本機 snapshot 打包（不發布、不推 tap）→ dist/
+	GOWORK=off goreleaser release --snapshot --clean
+
 ##@ 執行（run）
 
 .PHONY: run

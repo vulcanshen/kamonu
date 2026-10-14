@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: go test -race ./...
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Extract release notes from CHANGELOG
+        run: |
+          # tag v0.1.0 -> the section under "## v0.1.0 — tdp …", up to the next "## "
+          awk -v tag="$GITHUB_REF_NAME" '
+            /^## / {
+              if (found) exit
+              if ($2 == tag) found=1
+              next
+            }
+            found { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
+      - uses: goreleaser/goreleaser-action@v7
+        with:
+          version: "~> v2"
+          args: release --clean --skip=validate --release-notes RELEASE_NOTES.md
+        env:
+          # goreleaser reads GITHUB_TOKEN for the release and for the tap
+          # (.goreleaser.yaml). The built-in token cannot write to the
+          # tap repository, so a PAT in the ACTION_TOKEN secret is used
+          # when it is set, and the built-in token otherwise.
+          GITHUB_TOKEN: ${{ secrets.ACTION_TOKEN || secrets.GITHUB_TOKEN }}
+      - name: Force release body from CHANGELOG (goreleaser's --release-notes is unreliable)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -s RELEASE_NOTES.md ]; then
+            gh release edit "${GITHUB_REF_NAME}" --notes-file RELEASE_NOTES.md
+          else
+            echo "RELEASE_NOTES.md is empty — skipping body override"
+          fi

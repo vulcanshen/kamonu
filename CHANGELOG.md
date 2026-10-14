@@ -2,7 +2,7 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
-## Unreleased — tdp v0.6.1
+## v0.1.0 — tdp v0.6.3
 
 - The repository: module `github.com/vulcanshen/kamonu`, GPL-3.0, READMEs in English and Traditional Chinese, built on
   terminu-go

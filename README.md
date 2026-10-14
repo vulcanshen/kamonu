@@ -24,6 +24,22 @@ each one in a colour of its own with the keyboard, and export the svg the family
 
 ## Install
 
+> kamonu is **macOS / Linux only** (WSL works). There is no Windows build.
+
+**Homebrew** (macOS / Linux):
+
+```bash
+brew install vulcanshen/tap/kamonu
+```
+
+**Install script** (the latest release binary into `~/.local/bin`, or `/usr/local/bin` as root):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/install.sh | sh
+```
+
+Building from source is in [`docs/dev-remarks.md`](docs/dev-remarks.md).
+
 **Requirements**: a terminal with 24-bit colour (truecolor) and a [Nerd Font](https://www.nerdfonts.com/).
 
 Some fonts make an icon two cells wide, and some make the powerline symbols (the ends of the capsules on the frames, the
@@ -32,12 +48,16 @@ arrow after the cursor) two cells wide too. kamonu measures both when it starts.
 `TERMINU__POWERLINE_WIDTH` for the whole terminu family: set them once and every app of the family reads them. A family
 app that runs a program in its own terminal sets the two `TERMINU__` variables for it.
 
-kamonu has no release yet. Until it has one, build it from source as [docs/dev-remarks.md](docs/dev-remarks.md)
-describes.
-
 **The first time it starts**, the list is empty: nothing is written until you add your first mark.
 
-**To remove it**, delete the `kamonu` binary; delete `~/.kamonu` too if you do not want your marks any more.
+### Uninstall
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh | sh
+```
+
+Removes the binary, then asks — never assumes — about `~/.kamonu`, where your marks are. Installed with Homebrew:
+`brew uninstall kamonu`, and delete `~/.kamonu` yourself if you do not want your marks any more.
 
 ## Quick start
 

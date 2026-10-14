@@ -23,6 +23,22 @@ terminu 家族的每個 app 都有自己那一版的家族 mark（家紋，*kamo
 
 ## 安裝
 
+> kamonu **只支援 macOS / Linux**（WSL 可以），沒有 Windows 版。
+
+**Homebrew**（macOS / Linux）：
+
+```bash
+brew install vulcanshen/tap/kamonu
+```
+
+**安裝腳本**（最新發布的執行檔裝到 `~/.local/bin`，root 則是 `/usr/local/bin`）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/install.sh | sh
+```
+
+從原始碼建置寫在 [`docs/dev-remarks.md`](docs/dev-remarks.md)。
+
 **需求**：支援 24-bit 色（truecolor）的終端機，與 [Nerd Font](https://www.nerdfonts.com/)。
 
 有些字型讓 icon 佔兩格，有些連 powerline 符號（框上膠囊的兩端、cursor 後面的箭頭）也佔兩格。kamonu 啟動時兩種都會自己量；
@@ -30,11 +46,16 @@ terminu 家族的每個 app 都有自己那一版的家族 mark（家紋，*kamo
 `TERMINU__POWERLINE_WIDTH` 給整個 terminu 家族：設一次，家族每個 app 都讀得到。在家族 app 自己的終端機裡跑的程式，外層的 app
 會替它把兩個 `TERMINU__` 變數設好。
 
-kamonu 還沒有發布。發布之前，照 [docs/dev-remarks.md](docs/dev-remarks.md) 從原始碼建置。
-
 **第一次啟動時**清單是空的：新增第一個 mark 之前，什麼都不會寫進磁碟。
 
-**移除**：刪掉 `kamonu` 執行檔；不要你的 mark 了，就連 `~/.kamonu` 一起刪。
+### 移除
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh | sh
+```
+
+先移除執行檔，再問你要不要刪掉放 mark 的 `~/.kamonu`，不會自己決定。用 Homebrew 裝的：`brew uninstall kamonu`，不要你的 mark
+了，就自己刪掉 `~/.kamonu`。
 
 ## 快速開始
 

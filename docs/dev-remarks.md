@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.6.1），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.6.3），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -254,7 +254,6 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 ## 已知的牆與未做
 
 - **當 locku 的保護程式**：locku 讀 kamonu 畫的圖當一種 saver。這是 locku 的功能，locku 改用 lib 之後再談。
-- E6 的發布（goreleaser、`install.sh`／`uninstall.sh`、Homebrew tap）、E7 的 demo gif（VHS）：還沒做，發布前問 user。
 
 ## 偏離 tdp
 
@@ -265,6 +264,9 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 偏離的地方：畫格子的 popup 上面的 discard confirm、`SAVE AS` 文字輸入、error popup、key reference、離開的 confirm，都由 kamonu 自己畫；kamonu 也自己跑 Bubble Tea 的 program，不用 `App.Run`（見「運作方式」）。
   - 為什麼：lib 的 popup 畫在 lib 自己那一疊裡，疊不到 app 自己畫的 popup 上面，而 lib 不放 app 自己的 popup（user 2026-10-14，紀錄 KM2）。
   - 其他地方的 popup（`NEW KAMON`、`EDIT`、delete 的 confirm、error、toast）都用 lib 的。
+- **E6、E7（demo gif）**，在 README：沒有 VHS 錄的 demo gif，`.local/demos/` 也沒有腳本，Makefile 沒有 `gif`。
+  - 為什麼：kamonu 大部分是 user 自己在用，放上 GitHub 但不推廣（user 2026-10-14：「不需要 vhs 錄 gif」）。
+  - 其他照 E6：goreleaser、`install.sh`／`uninstall.sh`、Homebrew tap、L4 與 icon 的測試。
 
 ## 設計文件導讀
 
@@ -272,7 +274,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.1）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.3）。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
     lib 一改馬上看得到。`go.work`、`go.work.sum` 不進版控。
   - commit 與發版前，關掉 go.work 跑一次（`make check-lib`：`GOWORK=off go build ./...`、`GOWORK=off go test ./...`）。過不了，
@@ -284,9 +286,28 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `make test`：約 40 秒（每個 popup 的開關動畫照真的時間跑）；`make test-race`：帶 race detector。
   - `make check`：fmt-check、vet、test -race、check-lib 一次跑，commit 前跑，約一分半。
   - `make install`／`make uninstall`、`make package`（`dist/` 的 tar.gz）、`make clean`。
-  - 跟家族不同的地方：main 在根目錄（`PKG := .`）；多了 `check-lib`（go.work 的關係）；goreleaser 與 demo gif 的 target 等發布時再加。
+  - `make release-check`、`make snapshot`：見「發布」。
+  - 跟家族不同的地方：main 在根目錄（`PKG := .`）；多了 `check-lib`（go.work 的關係）；沒有 `gif`（見「偏離 tdp」）。
 - 不想動到自己的 `~/.kamonu`，就用 `KAMONU__DATA=<別的目錄> ./kamonu`。
 
 ## 發布
 
-（還沒發布。）
+照家族的做法（E6）：goreleaser 打包 linux／darwin × amd64／arm64，`install.sh`／`uninstall.sh`，Homebrew tap 的 formula。
+
+- **步驟**：
+  1. CHANGELOG 的 `## Unreleased — tdp vX.Y.Z` 改成 `## v0.1.0 — tdp vX.Y.Z`。
+  2. `make check`。
+  3. commit、打 tag `v0.1.0`、push tag。
+  4. `.github/workflows/release.yml` 接手：在 ubuntu 與 macos 上跑 `go test -race`；goreleaser 發 release、把 formula 推到
+     `vulcanshen/homebrew-tap`；最後用 CHANGELOG 那一段蓋掉 release 的說明。
+- **release 說明**：workflow 用 awk 取 CHANGELOG 裡 `## <tag> ` 開頭的那一段，到下一個 `## ` 為止。kamonu 的標題是
+  `## v0.1.0 — tdp v0.6.3`（跟 terminu-go 一樣），不是 locku 那種 `## [0.1.0] - 日期`，所以 awk 跟 locku 的不同。
+- **版號**：goreleaser 用 `-X main.version=v{{.Version}}` 寫進去，`kamonu version` 印 `kamonu v0.1.0`，splash 也寫 `v0.1.0`
+  （tdp S5：跟 `<app> version` 印的一樣，帶 v）。`make build` 不寫版號，印 `dev`。
+- **推 tap 要 PAT**：workflow 內建的 token 寫不了 `homebrew-tap`，要在 repo 的 secret 設 `ACTION_TOKEN`（家族其他 repo 都有）。
+  沒設的話用內建的 token，release 會發出去，但推 formula 那一步會失敗。也可以在本機手動發：shell 裡的 `GITHUB_TOKEN` 有權限的話，
+  `GOWORK=off goreleaser release --clean`。
+- **`make release-check` 會報錯**：`brews` 在 goreleaser v2 是 deprecated，`goreleaser check` 把它當錯誤。家族都刻意用 `brews`
+  （formula，不是 cask：formula 的執行檔不會被蓋上 `com.apple.quarantine`，沒簽章也能直接跑），所以這個錯誤是預期的；
+  `make snapshot` 照樣打得出包、寫得出 formula。
+- 本機試打包：`make snapshot`（不發布、不推 tap），結果在 `dist/`。
