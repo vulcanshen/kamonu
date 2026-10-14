@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.6.3），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.6.5），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -205,6 +205,9 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 標題 `DRAW: <名字>`，glyph `nf-md-grid`（U+F02C1）。打開時 cursor 在第一個能停的格子。
   - 按鈕 `Save As`、`Save` 並排靠右。`Tab` 到動作列時停在 `Save`，`h|l` 在兩個之間移（K12，不繞）。
   - hint：在格子上是 `Enter|Space:cycle Tab:actions Esc:cancel`，在按鈕上是 `Enter:save Tab:grid Esc:cancel`（或 `Enter:save as`）。
+    按鈕上寫 `Tab:grid`，不是表單的 `Tab:fields`（user 2026-10-14，經 terminu 的 session）：`Tab` 的 hint 寫要去的那一塊
+    （components/dialog/form），這裡要去的是格子；`Tab:fields` 是表單與有按鈕的 input popup 的字，那裡要去的是欄位。
+    tdp v0.6.5 的 K2 只管 `Tab` 在欄位區與動作列之間來回，格子 popup 本來就是這樣。
   - `q` 在這個 popup 上不作用（照表單：`q` 不進離開流程）。`Ctrl-C` 開離開的 confirm；畫的東西沒存時，多一句 Peach `Changes to <名字> are not saved.`。
   - `SAVE AS` 沒有灰字提議（沒有舊值）；說明列是 `Name for the new kamon; <名字> stays as it was`。
 
