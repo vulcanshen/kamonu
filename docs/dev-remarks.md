@@ -311,3 +311,11 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   （formula，不是 cask：formula 的執行檔不會被蓋上 `com.apple.quarantine`，沒簽章也能直接跑），所以這個錯誤是預期的；
   `make snapshot` 照樣打得出包、寫得出 formula。
 - 本機試打包：`make snapshot`（不發布、不推 tap），結果在 `dist/`。
+- **踩過的坑**：
+  - 推 `.github/workflows/` 裡的檔案要 `workflow` 權限（v0.1.0，2026-10-14）。shell 的環境變數 `GITHUB_TOKEN` 只有 `repo`，
+    `git push` 會被擋（`refusing to allow a Personal Access Token to create or update workflow … without workflow scope`）。
+    `gh` 在 keyring 裡的登入有 `workflow`，所以改 workflow 的 commit 用 `env -u GITHUB_TOKEN git push`。
+  - `ACTION_TOKEN` 是用環境變數的 `GITHUB_TOKEN` 設的（user 2026-10-14）：`gh secret set ACTION_TOKEN -R vulcanshen/kamonu`，
+    值從 stdin 給，不印出來。它只有 `repo`，推 tap 夠用。
+- **發過的版本**：v0.1.0（2026-10-14，tdp v0.6.3，terminu-go v0.1.3），第一版；release、tap 的 formula、`install.sh`／
+  `uninstall.sh` 都確認過。
