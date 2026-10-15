@@ -2,7 +2,7 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
-## Unreleased
+## v0.1.2 — tdp v0.6.11
 
 - Draw opens on the lib's popup stack (terminu-go `App.Popup`): the confirms, Save As, error popups and key reference
   over it are the lib's, as everywhere else in the family; it looks and works as before
