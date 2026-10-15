@@ -2,6 +2,13 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
+## Unreleased
+
+- `Ex[P]ort` asks first when the svg is there: **Overwrite** it, or **Export** a new file, at first `<name>_1.svg` (the
+  first number not taken), or a name you give
+- Draw: on the buttons `h|j|k|l` move to the one before or after, round, and `gg|G` to the first or the last
+- Built on terminu-go v0.1.7
+
 ## v0.1.0 — tdp v0.6.3
 
 - The repository: module `github.com/vulcanshen/kamonu`, GPL-3.0, READMEs in English and Traditional Chinese, built on

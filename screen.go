@@ -16,7 +16,8 @@ import (
 const (
 	glyphAdd    = "\U000F0415" // nf-md-plus_box: NEW KAMON
 	glyphCog    = "\U000F0493" // nf-md-cog: EDIT
-	glyphPencil = "\U000F03EB" // nf-md-pencil: a name, the letters
+	glyphExport = "\U000F0207" // nf-md-export: EXPORT
+	glyphPencil = "\U000F03EB" // nf-md-pencil: a name, the letters, a file
 	glyphSave   = "\U000F0193" // nf-md-content_save: SAVE AS
 )
 
@@ -222,17 +223,55 @@ func (k *kamonu) edit() tea.Cmd {
 }
 
 // export writes the svg of the kamon under the cursor to svg/<name>.svg and
-// says where in a toast.
+// says where in a toast. When <name>.svg is there, EXPORT: <name> asks
+// first: Overwrite writes over it; Export, the main submit, writes File, a
+// new one, at first the next <name>_<n>.svg.
 func (k *kamonu) export() tea.Cmd {
 	name := k.current()
 	km, err := k.st.load(name)
-	if err == nil {
+	if err == nil && !k.st.svgExists(name) {
 		err = k.st.export(name, km)
+		if err == nil {
+			return k.exported(name)
+		}
 	}
 	if err != nil {
 		return k.a.Toast(terminu.Error, "Can't export "+name+": "+why(err))
 	}
-	return k.a.Toast(terminu.Info, "Exported to "+shown(k.st.svgPath(name)))
+	// <name>.svg is there.
+	file := k.st.nextSVG(name)
+	write := func(f string) (tea.Cmd, error) {
+		if err := k.st.export(f, km); err != nil {
+			return nil, errors.New("Can't export " + name + ": " + why(err))
+		}
+		return k.exported(f), nil
+	}
+	return k.a.Form(&terminu.Form{
+		Title: "Export", Subject: name, Glyph: glyphExport, Name: "Export", Button: "Export",
+		Fields: []*terminu.FormField{{Label: "File", Value: func() string { return file + ".svg" },
+			Edit: func() terminu.Input {
+				return terminu.TextInput{Title: "File", Glyph: glyphPencil, Prompt: "Name of the new svg; " + name + ".svg stays as it is",
+					Verb: "set", Old: file,
+					Check: func(v string) error { return k.st.checkSVG(strings.TrimSuffix(v, ".svg")) },
+					Done:  func(v string) tea.Cmd { file = strings.TrimSuffix(v, ".svg"); return nil }}
+			}}},
+		// The file it writes over is on the button (the user's ask).
+		// TODO(lib KM6): the hint writes the button in small letters, the
+		// name too: "Enter:overwrite kbu.svg" for KBU; the name stays as it
+		// is (tdp v0.6.9, components/dialog/form).
+		Buttons: [][]*terminu.FormButton{{{Label: "Overwrite " + name + ".svg", Submit: func() (tea.Cmd, error) { return write(name) }}}},
+		Submit: func() (tea.Cmd, error) {
+			if err := k.st.checkSVG(file); err != nil {
+				return nil, errors.New("Can't export " + name + ": " + err.Error())
+			}
+			return write(file)
+		},
+	})
+}
+
+// exported says in a toast where the svg went.
+func (k *kamonu) exported(file string) tea.Cmd {
+	return k.a.Toast(terminu.Info, "Exported to "+shown(k.st.svgPath(file)))
 }
 
 func (k *kamonu) delete() tea.Cmd {

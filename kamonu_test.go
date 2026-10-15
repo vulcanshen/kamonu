@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -593,6 +594,36 @@ func TestEscAsksWhenChanged(t *testing.T) {
 	}
 }
 
+// The buttons move as a form's action area: hjkl the one before or after,
+// round, gg and G the first and the last (tdp v0.6.7, components/dialog/form).
+func TestEditorButtons(t *testing.T) {
+	hs := newHarness(t, 80, 40, map[string][]byte{"blank": blank()})
+	hs.keys("Enter", "Tab")
+	hs.contains("Enter:save Tab:grid") // Save first
+	for _, step := range []struct{ key, hint string }{
+		{"j", "Enter:save as Tab:grid"}, // after the last, round to the first
+		{"j", "Enter:save Tab:grid"},
+		{"k", "Enter:save as Tab:grid"},
+		{"k", "Enter:save Tab:grid"}, // before the first, round to the last
+		{"h", "Enter:save as Tab:grid"},
+		{"l", "Enter:save Tab:grid"},
+		{"gg", "Enter:save as Tab:grid"},
+		{"G", "Enter:save Tab:grid"},
+	} {
+		if step.key == "gg" {
+			hs.keys("g", "g")
+		} else {
+			hs.keys(step.key)
+		}
+		hs.contains(step.hint)
+	}
+	// Tab goes back to the button left.
+	hs.keys("h", "Tab")
+	hs.contains("Enter|Space:cycle")
+	hs.keys("Tab")
+	hs.contains("Enter:save as Tab:grid")
+}
+
 func TestSaveAs(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"blank": blank(), "webu": blank()})
 	hs.keys("Enter", "Space", "Tab", "h")
@@ -760,18 +791,62 @@ func TestExport(t *testing.T) {
 	hs.contains("Ex[P]ort")
 	hs.contains("[X] Delete")
 	hs.keys("Esc", "P")
+	hs.lacks("EXPORT: filu") // none there yet: nothing to ask
 	hs.contains("Exported to")
-	b, err := os.ReadFile(hs.k.st.svgPath("filu"))
+	svgIs(t, hs, "filu", fil(t))
+}
+
+// svgIs fails unless svg/<file>.svg is km's.
+func svgIs(t *testing.T, hs *harness, file string, km kamon) {
+	t.Helper()
+	b, err := os.ReadFile(hs.k.st.svgPath(file))
 	if err != nil {
 		t.Fatal(err)
 	}
-	km := fil(t)
 	if !bytes.Equal(b, km.svg()) {
-		t.Fatal("the exported svg is not the kamon's")
+		t.Fatalf("%s.svg is not the kamon's", file)
 	}
-	hs.keys("P") // over the one there
-	if _, err := os.ReadFile(hs.k.st.svgPath("filu")); err != nil {
+}
+
+func TestExportWhenThere(t *testing.T) {
+	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
+	km := fil(t)
+	hs.keys("P", "P")
+	hs.contains("EXPORT: filu")
+	hs.contains("filu_1.svg")
+	hs.contains("Overwrite filu.svg")
+	hs.contains("Enter:edit Tab:actions Esc:cancel")
+	// Tab goes to Export, the main submit: a new file, the next number.
+	hs.keys("Tab")
+	hs.contains("Enter:export Tab:fields Esc:cancel")
+	hs.keys("Enter")
+	hs.lacks("EXPORT: filu")
+	svgIs(t, hs, "filu_1", km)
+	// A name of its own; one there is refused, with ".svg" or without.
+	hs.keys("P")
+	hs.contains("filu_2.svg")
+	hs.keys("Enter", "f", "i", "l", "u", ".", "s", "v", "g", "Enter")
+	hs.contains("filu.svg is already there")
+	hs.keys("Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace",
+		"m", "a", "r", "k", "Enter", "Tab", "Enter")
+	svgIs(t, hs, "mark", km)
+	if hs.k.st.svgExists("filu_2") {
+		t.Fatal("Export wrote the number it offered, not the name given")
+	}
+	// Overwrite, left of Export.
+	if err := os.WriteFile(hs.k.st.svgPath("filu"), []byte("old"), 0o644); err != nil {
 		t.Fatal(err)
+	}
+	hs.keys("P", "Tab", "h")
+	hs.contains("Enter:overwrite filu.svg")
+	hs.keys("Enter")
+	hs.lacks("EXPORT: filu")
+	svgIs(t, hs, "filu", km)
+	// Esc writes nothing (the first Esc puts the toast away: tdp K4).
+	hs.keys("Esc", "P", "Esc")
+	hs.lacks("EXPORT: filu")
+	if hs.k.st.svgExists("filu_2") {
+		t.Fatal("Esc wrote an svg")
 	}
 }
 
@@ -783,6 +858,20 @@ func TestExportFailure(t *testing.T) {
 	defer os.Chmod(hs.k.st.dir, 0o755)
 	hs.keys("P")
 	hs.contains("Can't export filu: permission denied")
+}
+
+func TestExportWhenThereFails(t *testing.T) {
+	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
+	hs.keys("P")
+	dir := filepath.Dir(hs.k.st.svgPath("filu"))
+	if err := os.Chmod(dir, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chmod(dir, 0o755)
+	hs.keys("P", "Tab", "Enter")
+	hs.contains("Can't export filu: permission denied")
+	hs.keys("Esc")
+	hs.contains("EXPORT: filu") // the form stays: Enter tries again
 }
 
 func TestDelete(t *testing.T) {

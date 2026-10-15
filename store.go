@@ -5,11 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 )
 
 // store is the data directory (tdp E3): conf/<name>.yaml a kamon, and
-// svg/<name>.svg what Export writes of it.
+// svg/<file>.svg what Export writes of it, <name>.svg or another file.
 type store struct{ dir string }
 
 // dataDir is KAMONU__DATA, or ~/.kamonu/data (tdp E2, E3).
@@ -26,7 +27,7 @@ func dataDir() (string, error) {
 
 func (s store) conf() string               { return filepath.Join(s.dir, "conf") }
 func (s store) path(name string) string    { return filepath.Join(s.conf(), name+".yaml") }
-func (s store) svgPath(name string) string { return filepath.Join(s.dir, "svg", name+".svg") }
+func (s store) svgPath(file string) string { return filepath.Join(s.dir, "svg", file+".svg") }
 
 // shown is a path as the user reads it: the home directory as ~.
 func shown(p string) string {
@@ -90,10 +91,10 @@ func (s store) create(name string, km kamon) error {
 // save writes km over the kamon.
 func (s store) save(name string, km kamon) error { return replace(s.path(name), km.yaml()) }
 
-// export writes the kamon's svg (tdp S5) to svg/<name>.svg, over the one
-// there: it is made from the yaml, which is what is kept.
-func (s store) export(name string, km kamon) error {
-	p := s.svgPath(name)
+// export writes the kamon's svg (tdp S5) to svg/<file>.svg, over the one
+// there: whether to write over it is asked first (kamonu.export).
+func (s store) export(file string, km kamon) error {
+	p := s.svgPath(file)
 	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 		return err
 	}
@@ -121,6 +122,37 @@ func replace(p string, b []byte) error {
 		os.Remove(tmp.Name())
 	}
 	return err
+}
+
+func (s store) svgExists(file string) bool {
+	_, err := os.Stat(s.svgPath(file))
+	return err == nil
+}
+
+// nextSVG is the first of <name>_1, <name>_2, … with no svg yet: where an
+// export goes when <name>.svg is kept.
+func (s store) nextSVG(name string) string {
+	for n := 1; ; n++ {
+		if f := name + "_" + strconv.Itoa(n); !s.svgExists(f) {
+			return f
+		}
+	}
+}
+
+// checkSVG is every rule of a new svg's name, without ".svg": given, a file
+// name in svg/, not there yet.
+func (s store) checkSVG(v string) error {
+	switch {
+	case v == "":
+		return errors.New("File can't be empty")
+	case strings.Contains(v, "/"):
+		return errors.New("File can't have /")
+	case strings.HasPrefix(v, "."):
+		return errors.New("File can't start with .")
+	case s.svgExists(v):
+		return errors.New(v + ".svg is already there")
+	}
+	return nil
 }
 
 func (s store) rename(old, name string) error {

@@ -74,7 +74,7 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh
 |---|---|
 | `Enter` | 畫 cursor 那一個 mark |
 | `E` | 改它的名字、字、要不要 U 框 |
-| `P` | 匯出它的 svg |
+| `P` | 匯出它的 svg；已經有了時先問要蓋掉，還是寫成新的檔 |
 | `X` | 刪除（先問） |
 | `A` | 新增 mark：名字、字、要不要從 U 框開始 |
 | `Space` | 這裡能做的事 |
@@ -93,7 +93,7 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh
 | `p` | 字全變成金色，看 splash 畫出來的樣子；再按一次 `p` 變回分字的顏色 |
 | `x` | 把所有格子清空（先問） |
 | `Tab` | 在格子與按鈕之間切換 |
-| `h` `l` | 在按鈕上：在 **Save As** 與 **Save** 之間移動 |
+| `h` `j` `k` `l` | 在按鈕上：在 **Save As** 與 **Save** 之間移動 |
 | `Enter` | 在按鈕上：**Save** 存回原本的 mark；**Save As** 先問新名字，原本的 mark 不動 |
 | `?` | 畫格子時的按鍵 |
 | `Esc` | 離開；改過的話先問 |
@@ -110,7 +110,7 @@ kamonu 沒有設定檔。所有東西都在 `~/.kamonu/data`；要放在別的�
 | 位置 | 是什麼 |
 |---|---|
 | `conf/<名字>.yaml` | mark 本身：字、要不要 U 框、每一格，格子寫成一張看得懂的圖 |
-| `svg/<名字>.svg` | **匯出**寫出來的檔，已經有的會被蓋掉 |
+| `svg/<名字>.svg` | **匯出**寫出來的檔。已經有了時先問：**Overwrite** 蓋掉它，或 **Export** 寫成新的檔，`<名字>_1.svg`（第一個還沒用掉的號碼）或自己取的名字 |
 
 ## 限制
 

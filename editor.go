@@ -128,8 +128,9 @@ func (e *editor) draw(w, h int, layer terminu.Color) []string {
 		for c := range cols {
 			st := terminu.Fg(e.color(r, c))
 			if !e.onButtons && r == e.r && c == e.c {
-				// TODO(tdp KM3): the cursor is the layer colour behind the
-				// square, which keeps its own colour: the cell's state shows.
+				// The cursor is the layer colour behind the square, which
+				// keeps its own colour: a cell's colour is its value (tdp
+				// components/color, the cursor block).
 				st.Bg = layer
 			}
 			b.WriteString(st.Render(square))
@@ -215,11 +216,19 @@ func (e *editor) key(k *kamonu, key string, _ tea.KeyMsg) (bool, tea.Cmd) {
 		return true, nil
 	}
 	if e.onButtons {
+		// The buttons are a row of their own: the next and the one before,
+		// round, and the first and the last (components/dialog/form, the
+		// action area; tdp K12).
+		n := len(buttonLabels)
 		switch key {
-		case "h", "←":
-			e.button = saveAs
-		case "l", "→":
-			e.button = save
+		case "l", "→", "j", "↓":
+			e.button = (e.button + 1) % n
+		case "h", "←", "k", "↑":
+			e.button = (e.button + n - 1) % n
+		case "gg":
+			e.button = 0
+		case "G":
+			e.button = n - 1
 		case "Enter":
 			if e.button == save {
 				return true, k.save(e)
@@ -273,7 +282,8 @@ func (e *editor) keyRef() []refSection {
 		}},
 		{title: "move", rows: []terminu.KeyRow{
 			{Key: "h|j|k|l", Desc: "left, down, up, right, past the U frame"},
-			{Key: "h|l", Desc: "on the buttons: between them"},
+			{Key: "h|j|k|l", Desc: "on the buttons: the one before or after, round"},
+			{Key: "gg|G", Desc: "on the buttons: the first or the last"},
 		}},
 	}
 }

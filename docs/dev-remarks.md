@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.6.5），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.6.9），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -38,6 +38,8 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - Save 與 Save As：名字的檢查、控制字元、原檔不動、cursor 停在新檔。
   - 存檔失敗開 error popup，`Enter` 關掉後回到按鈕；打開的動畫播完前不收鍵；`Ctrl-C` 兩次離開。
   - 匯出寫出跟 yaml 一致的 svg，失敗時用 toast 說原因；壞掉的 yaml 在預覽、Draw、Edit 都說讀不了。
+  - 已經有 svg 時開 `EXPORT: <名字>`：`Tab`、`Enter` 寫成下一個號碼；自己取的名字照用，已經有的擋下（加不加 `.svg` 都一樣）；
+    `Overwrite` 蓋掉原檔；`Esc` 什麼都不寫；寫檔失敗開 error popup，關掉後表單還在。
 
 ## 設計決定
 
@@ -143,8 +145,14 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 ### 匯出
 
 - **`Ex[P]ort` 直接寫到 `svg/<名字>.svg`**，再用 toast 說寫到哪裡（2026-10-14，user 選 B）。
-  - 已經有同名的檔就直接蓋掉：svg 是從 yaml 產生的，yaml 才是要留的東西。
   - 失敗時用 Error toast：這是清單上的動作，不是 popup 裡的動作（components/dialog/toast）。
+- **已經有 `<名字>.svg` 時先問**（2026-10-15，user）：開表單 `EXPORT: <名字>`，照 tdp v0.6.7 的多個按鈕（dialog/form 的動作區）。
+  - 欄位 `File`：新檔的名字，預設 `<名字>_<n>.svg`，n 是從 1 起第一個還沒用掉的號碼；`Enter` 可以改，打不打 `.svg` 都可以。
+    已經有的名字在 input popup 裡就擋下：它是這一欄自己的事，擋在表單上的話，`Overwrite` 也會被這一欄的錯誤擋住。
+  - 按鈕：`Overwrite <名字>.svg` 與主要的送出 `Export`（右下角）。`Overwrite` 寫上原檔名（user）：旁邊的欄位寫的是另一個名字，
+    不看按鈕不知道它蓋哪個檔。
+  - `Tab` 第一次停在 `Export`，所以 `Tab`、`Enter` 是寫新檔；要蓋掉是 `Tab`、`h`、`Enter`。按錯時新檔刪掉就好，蓋掉的舊 svg 回不來。
+  - 寫檔失敗開 error popup，蓋在表單上（dialog/form 的「送出的動作失敗」）。
 - **格式照 S5**：
   - 底 `#000000`。
   - `frame: true` 時寫 `<!-- U -->` 加上 U 框。
@@ -200,10 +208,12 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 理由：家族裡停用的東西 cursor 一律跳過（menu 的停用列、表單的停用欄位、日曆）。
   - 沒有 U 框的 mark，每一格都能畫。
 - 格子裡 hjkl 上下左右，到邊停住（K12：照空間走的不繞）。沒有錯誤列：格子不會不合格，存檔失敗開 error popup。改過時 `Esc` 先問。
-- cursor 的畫法規範沒寫（紀錄 KM3）：暫時照紀錄的 A，層色底、方塊保留自己的顏色（`TODO(tdp KM3)`）。
+- cursor：層色底，方塊保留自己的顏色，格子的顏色就是它的值（tdp v0.6.7 components/color 的 cursor 色塊例外，紀錄 KM3）。
 - 下面這些是寫程式時照預設定的（2026-10-14，跟 user 報告過）：
   - 標題 `DRAW: <名字>`，glyph `nf-md-grid`（U+F02C1）。打開時 cursor 在第一個能停的格子。
-  - 按鈕 `Save As`、`Save` 並排靠右。`Tab` 到動作列時停在 `Save`，`h|l` 在兩個之間移（K12，不繞）。
+  - 按鈕 `Save As`、`Save` 並排靠右。`Tab` 第一次到動作列時停在 `Save`，之後回到離開前的那一個。
+  - 按鈕上 `h|j|k|l` 移到前一個、後一個，到頭尾繞回；`gg|G` 到第一個、最後一個（tdp v0.6.7 dialog/form 的動作區）。
+    v0.1.0 只有 `h|l`、不繞：那時規範的動作列只有一個按鈕，兩個按鈕之間怎麼移沒寫（紀錄 KM1）。
   - hint：在格子上是 `Enter|Space:cycle Tab:actions Esc:cancel`，在按鈕上是 `Enter:save Tab:grid Esc:cancel`（或 `Enter:save as`）。
     按鈕上寫 `Tab:grid`，不是表單的 `Tab:fields`（user 2026-10-14，經 terminu 的 session）：`Tab` 的 hint 寫要去的那一塊
     （components/dialog/form），這裡要去的是格子；`Tab:fields` 是表單與有按鈕的 input popup 的字，那裡要去的是欄位。
@@ -247,6 +257,10 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - `Enter` 先開一個選單（`Edit kamon`／`Edit properties`）：每次畫格子都多一步，而且跟 Space menu 重複。
 - `Enter` 先開資訊 popup，動作列有 `Edit Kamon` 與 `Save`：表單兩個按鈕（KM1）；畫格子的 popup 疊不到 lib 的表單上；兩個 `Save` 意思不清。
 - 匯出用 `x`：跟家族的刪除鍵 `X` 只差一個 Shift。
+- **已經有 svg 時直接蓋掉**（v0.1.0 的做法）：user 要先問，舊的成品可能還要留著。
+- **已經有 svg 時用 menu 問**（`[N]ew file`、`[O]verwrite`，2026-10-15）：user 選表單的多個按鈕。
+- **一句話加兩個按鈕**（`filu.svg is already in …`，下面 `Overwrite`、`Save as filu_1`）：confirm 沒有按鈕、表單要有欄位，
+  規範沒有這種 popup，要補規範與 lib；user 選有 `File` 欄位的表單，現在就做得出來。
 - 匯出時用 lib 的「選目錄」挑地方、寫成那裡的 `icon.svg`：user 選固定寫到資料目錄（按一下就好），要放進 app 的 `docs/` 時自己複製。
 - yaml 放在 `~/.config/kamonu`：照 E3，畫出來的東西算資料。
 - 預覽用分字的顏色：kamonu 裡就看不到金色的成品了。
@@ -256,6 +270,8 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 已知的牆與未做
 
+- **匯出表單 `Overwrite <名字>.svg` 的 hint**：tdp v0.6.9 要名稱照原樣（`Enter:overwrite KBU.svg`），terminu-go 還沒補，
+  現在整串小寫（紀錄 KM6，`TODO(lib KM6)`）。terminu-go 打 tag 後升級、改用新的 API。
 - **當 locku 的保護程式**：locku 讀 kamonu 畫的圖當一種 saver。這是 locku 的功能，locku 改用 lib 之後再談。
 
 ## 偏離 tdp
@@ -277,7 +293,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.3）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.7）。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
     lib 一改馬上看得到。`go.work`、`go.work.sum` 不進版控。
   - commit 與發版前，關掉 go.work 跑一次（`make check-lib`：`GOWORK=off go build ./...`、`GOWORK=off go test ./...`）。過不了，
