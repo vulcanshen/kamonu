@@ -2,7 +2,7 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
-## Unreleased
+## v0.1.1 — tdp v0.6.9
 
 - `Ex[P]ort` asks first when the svg is there: **Overwrite** it, or **Export** a new file, at first `<name>_1.svg` (the
   first number not taken), or a name you give

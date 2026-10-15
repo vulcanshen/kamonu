@@ -336,3 +336,4 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
     值從 stdin 給，不印出來。它只有 `repo`，推 tap 夠用。
 - **發過的版本**：v0.1.0（2026-10-14，tdp v0.6.3，terminu-go v0.1.3），第一版；release、tap 的 formula、`install.sh`／
   `uninstall.sh` 都確認過。
+  v0.1.1（2026-10-15，tdp v0.6.9，terminu-go v0.1.8）：匯出時已經有 svg 先問；Draw 的按鈕照表單的動作區移動。
