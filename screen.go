@@ -31,11 +31,6 @@ type kamonu struct {
 	list    *terminu.List
 	panel   *terminu.Panel // [1] KAMON
 	preview *preview
-
-	pops     []*layer // kamonu's own popups (popup.go)
-	anim     bool     // an animation tick is on its way
-	quitting bool     // the quit confirm is open (tdp K9)
-	pending  string   // a g waiting for its second key (tdp K12)
 }
 
 func newKamonu(st store) *kamonu {
@@ -74,11 +69,6 @@ func newKamonu(st store) *kamonu {
 	return k
 }
 
-// frame is the screen: the lib's, with kamonu's popups over it.
-func (k *kamonu) frame() []string { return k.compose(k.a.Frame()) }
-
-func (k *kamonu) width() int { w, _ := k.a.Size(); return w }
-
 // current is the kamon under the cursor; "" when there is none.
 func (k *kamonu) current() string {
 	r, ok := k.list.Current()
@@ -115,7 +105,7 @@ func (k *kamonu) draw() tea.Cmd {
 	if err != nil {
 		return k.a.Error("Draw", "Can't read "+name+": "+why(err))
 	}
-	return k.open(newEditor(name, km))
+	return k.openEditor(name, km)
 }
 
 // The fields NEW KAMON and EDIT share: the name, the letters, and
@@ -172,7 +162,7 @@ func (k *kamonu) add() tea.Cmd {
 				return nil, errors.New("Can't create " + name + ": " + why(err))
 			}
 			k.reload(name)
-			return k.open(newEditor(name, km)), nil
+			return k.openEditor(name, km), nil
 		},
 	})
 }

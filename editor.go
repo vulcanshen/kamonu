@@ -7,7 +7,8 @@ package main
 // letter, and p shows every letter gold as the splash will. Under that the
 // action row, Save As and Save, and Tab between the two (as on a form). It is
 // kamonu's own popup, outside tdp F1's seven kinds: docs/dev-remarks.md,
-// 偏離 tdp.
+// 偏離 tdp. kamonu draws the inside; the frame, the animation and the popups
+// over it are the lib's (terminu.Popup).
 
 import (
 	"strconv"
@@ -17,7 +18,10 @@ import (
 	terminu "github.com/vulcanshen/terminu-go"
 )
 
-const glyphDraw = "\U000F02C1" // nf-md-grid: the editor's title
+const (
+	glyphDraw   = "\U000F02C1" // nf-md-grid: the editor's title
+	glyphSquare = "\U0000F0C8" // nf-fa-square: a cell of a mark (tdp S5)
+)
 
 // The buttons, left to right.
 const (
@@ -28,6 +32,7 @@ const (
 var buttonLabels = [...]string{saveAs: "Save As", save: "Save"}
 
 type editor struct {
+	k         *kamonu
 	kamon     string // the kamon's name
 	km        kamon
 	r, c      int // the cursor on the grid
@@ -47,8 +52,8 @@ func (e *editor) color(r, c int) terminu.Color {
 }
 
 // newEditor opens on the first cell the cursor can stop on.
-func newEditor(name string, km kamon) *editor {
-	e := &editor{kamon: name, km: km, button: save}
+func newEditor(k *kamonu, name string, km kamon) *editor {
+	e := &editor{k: k, kamon: name, km: km, button: save}
 	for i := range rows * cols {
 		if !km.onFrame(i/cols, i%cols) {
 			e.r, e.c = i/cols, i%cols
@@ -56,6 +61,11 @@ func newEditor(name string, km kamon) *editor {
 		}
 	}
 	return e
+}
+
+// openEditor opens the editor on the kamon name: "DRAW: <name>".
+func (k *kamonu) openEditor(name string, km kamon) tea.Cmd {
+	return k.a.Popup(terminu.Popup{Title: "Draw", Glyph: glyphDraw, Subject: name, Body: newEditor(k, name, km)})
 }
 
 // move steps the cursor dr rows and dc columns, past the U frame's cells
@@ -104,20 +114,18 @@ func (e *editor) empty() bool { return e.km.cells == [rows][cols]uint8{} }
 // clear empties the cell, whatever letter it is.
 func (e *editor) clear() { e.set(0) }
 
-func (e *editor) size(sw, sh int) (int, int) {
-	// The grid, a blank row, the letters, the separator, the action row.
-	return popupWidth(sw, 2*cols), min(rows+4+4, max(sh-2, 3))
-}
+// Size is the inside: the grid with a blank cell on either side; the grid, a
+// blank row, the letters, the separator, the action row.
+func (e *editor) Size(sw, sh int) (int, int) { return 2*cols + 2, rows + 4 }
 
-func (e *editor) hint() []terminu.KeyHint {
+func (e *editor) Hint() []terminu.KeyHint {
 	if !e.onButtons {
 		return []terminu.KeyHint{{Key: "Enter|Space", Desc: "cycle"}, {Key: "Tab", Desc: "actions"}, {Key: "Esc", Desc: "cancel"}}
 	}
 	return []terminu.KeyHint{{Key: "Enter", Desc: strings.ToLower(buttonLabels[e.button])}, {Key: "Tab", Desc: "grid"}, {Key: "Esc", Desc: "cancel"}}
 }
 
-func (e *editor) draw(w, h int, layer terminu.Color) []string {
-	inner := w - 2
+func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 	square := glyphSquare
 	if terminu.IconWidth() == 1 {
 		square += " " // a square takes two columns (tdp S5, E5)
@@ -135,7 +143,7 @@ func (e *editor) draw(w, h int, layer terminu.Color) []string {
 			}
 			b.WriteString(st.Render(square))
 		}
-		body = append(body, padRow(b.String(), inner))
+		body = append(body, padRow(b.String(), w))
 	}
 	// The letters, each after the digit that paints it (a hotkey is shown:
 	// tdp M5) and its colour, gold with the rest under p; one space between
@@ -150,16 +158,16 @@ func (e *editor) draw(w, h int, layer terminu.Color) []string {
 			terminu.Fg(swatch).Render(square)+terminu.Fg(terminu.Text).Render(l))
 	}
 	letters := strings.Join(legend, "  ")
-	if terminu.Width(letters) > inner-2 {
+	if terminu.Width(letters) > w-2 {
 		letters = strings.Join(legend, " ")
 	}
 	// A blank row above the letters when there is room: on a screen 28 rows
 	// high the popup is one short, and the action row must stay.
-	if rows+4 <= h-4 {
+	if rows+4 <= h {
 		body = append(body, "")
 	}
-	body = append(body, padRow(letters, inner),
-		" "+terminu.Fg(terminu.Overlay0).Render(terminu.Repeat("─", inner-2))+" ")
+	body = append(body, padRow(letters, w),
+		" "+terminu.Fg(terminu.Overlay0).Render(terminu.Repeat("─", w-2))+" ")
 	var buttons []string
 	for i, label := range buttonLabels {
 		b := " " + label + " "
@@ -170,23 +178,25 @@ func (e *editor) draw(w, h int, layer terminu.Color) []string {
 		}
 		buttons = append(buttons, b)
 	}
-	body = append(body, terminu.PadLeft(strings.Join(buttons, " "), inner-1)+" ")
-	return box(layer, glyphDraw, "DRAW: "+e.kamon, e.hint(), "", w, body[:min(len(body), max(h-4, 0))])
+	body = append(body, terminu.PadLeft(strings.Join(buttons, " "), w-1)+" ")
+	return body[:min(len(body), max(h, 0))]
 }
 
-func (e *editor) key(k *kamonu, key string, _ tea.KeyMsg) (bool, tea.Cmd) {
+// padRow is a row of the inside, one cell from the frame on either side.
+func padRow(s string, w int) string { return " " + terminu.Fit(s, w-2) + " " }
+
+func (e *editor) Key(key string, _ tea.KeyMsg) (bool, tea.Cmd) {
 	switch key {
 	case "Tab", "Shift-Tab":
 		e.onButtons = !e.onButtons
 		return true, nil
 	case "Esc":
 		if !e.dirty {
-			return true, k.closeTop()
+			return false, nil // the lib closes it
 		}
-		return true, k.open(&confirm{
-			ask:    terminu.Ask{Title: "Discard", Question: "Discard changes to " + e.kamon + "?", Verb: "discard"},
-			accept: k.closeAll,
-		})
+		a := e.k.a
+		return true, a.Confirm(terminu.Ask{Title: "Discard", Question: "Discard changes to " + e.kamon + "?", Verb: "discard"},
+			func() tea.Cmd { return a.ClosePopup(e) })
 	case "q":
 		return true, nil // no quit flow from a form (components/dialog/form)
 	case "p":
@@ -196,14 +206,12 @@ func (e *editor) key(k *kamonu, key string, _ tea.KeyMsg) (bool, tea.Cmd) {
 		if e.empty() {
 			return true, nil // nothing to clear: nothing to ask
 		}
-		return true, k.open(&confirm{
-			ask: terminu.Ask{Title: "Clear", Question: "Clear every cell of " + e.kamon + "?", Verb: "clear"},
-			accept: func() tea.Cmd {
+		return true, e.k.a.Confirm(terminu.Ask{Title: "Clear", Question: "Clear every cell of " + e.kamon + "?", Verb: "clear"},
+			func() tea.Cmd {
 				e.km.cells = [rows][cols]uint8{}
 				e.dirty = true
 				return nil
-			},
-		})
+			})
 	case "Space":
 		if !e.onButtons {
 			e.cycle()
@@ -231,9 +239,9 @@ func (e *editor) key(k *kamonu, key string, _ tea.KeyMsg) (bool, tea.Cmd) {
 			e.button = n - 1
 		case "Enter":
 			if e.button == save {
-				return true, k.save(e)
+				return true, e.k.save(e)
 			}
-			return true, k.saveAs(e)
+			return true, e.k.saveAs(e)
 		default:
 			return false, nil
 		}
@@ -258,7 +266,14 @@ func (e *editor) key(k *kamonu, key string, _ tea.KeyMsg) (bool, tea.Cmd) {
 	return true, nil
 }
 
-func (e *editor) name() string { return "Draw" }
+// QuitNote is what quitting now loses: the quit flow's confirm says it in
+// Peach (tdp K9).
+func (e *editor) QuitNote() string {
+	if !e.dirty {
+		return ""
+	}
+	return "Changes to " + e.kamon + " are not saved."
+}
 
 // digits are the keys of n letters: "1", or a range, "1–3" (tdp M5).
 func digits(n int) string {
@@ -268,9 +283,9 @@ func digits(n int) string {
 	return "1–" + strconv.Itoa(n)
 }
 
-func (e *editor) keyRef() []refSection {
-	return []refSection{
-		{rows: []terminu.KeyRow{
+func (e *editor) Keys() []terminu.KeySection {
+	return []terminu.KeySection{
+		{Rows: []terminu.KeyRow{
 			{Key: "Enter|Space", Desc: "the cell's next letter; after the last, none"},
 			{Key: digits(len(e.km.letters)), Desc: "make the cell that letter; again to empty it"},
 			{Key: "Backspace", Desc: "empty the cell"},
@@ -280,7 +295,7 @@ func (e *editor) keyRef() []refSection {
 			{Key: "Tab|Shift-Tab", Desc: "between the grid and the buttons, back to the cell left"},
 			{Key: "Esc", Desc: "cancel (asks first when something changed)"},
 		}},
-		{title: "move", rows: []terminu.KeyRow{
+		{Title: "move", Rows: []terminu.KeyRow{
 			{Key: "h|j|k|l", Desc: "left, down, up, right, past the U frame"},
 			{Key: "h|j|k|l", Desc: "on the buttons: the one before or after, round"},
 			{Key: "gg|G", Desc: "on the buttons: the first or the last"},
@@ -288,30 +303,30 @@ func (e *editor) keyRef() []refSection {
 	}
 }
 
-func (e *editor) typing() bool { return false }
-
 // save writes the kamon back to its file and closes the editor; a failed
 // write opens an error popup over it (components/layout/popup).
 func (k *kamonu) save(e *editor) tea.Cmd {
 	if err := k.st.save(e.kamon, e.km); err != nil {
-		return k.open(errorPopup("Save", "Can't save "+e.kamon+": "+why(err), k.width()))
+		return k.a.Error("Save", "Can't save "+e.kamon+": "+why(err))
 	}
 	k.reload(e.kamon)
-	return k.closeAll()
+	return k.a.ClosePopup(e)
 }
 
 // saveAs asks for a new name and writes the drawing there, the letters and
-// the U frame with it; the kamon it came from stays as it was.
+// the U frame with it; the kamon it came from stays as it was. The title says
+// what is done, so an error names the value besides: "Name can't have
+// control characters" (tdp v0.6.11 components/input).
 func (k *kamonu) saveAs(e *editor) tea.Cmd {
-	return k.open(&lineInput{
-		title: "Save as", glyph: glyphSave, prompt: "Name for the new kamon; " + e.kamon + " stays as it was", verb: "save",
-		check: k.st.checkName,
-		done: func(v string) tea.Cmd {
+	return k.a.Text(terminu.TextInput{
+		Title: "Save as", Name: "Name", Glyph: glyphSave, Prompt: "Name for the new kamon; " + e.kamon + " stays as it was", Verb: "save",
+		Check: k.st.checkName,
+		Done: func(v string) tea.Cmd {
 			if err := k.st.create(v, e.km); err != nil {
-				return k.open(errorPopup("Save as", "Can't save "+v+": "+why(err), k.width()))
+				return k.a.Error("Save as", "Can't save "+v+": "+why(err))
 			}
 			k.reload(v)
-			return k.closeAll()
+			return k.a.ClosePopup(e)
 		},
 	})
 }

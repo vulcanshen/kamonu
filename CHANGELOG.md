@@ -2,6 +2,13 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
+## Unreleased
+
+- Draw opens on the lib's popup stack (terminu-go `App.Popup`): the confirms, Save As, error popups and key reference
+  over it are the lib's, as everywhere else in the family; it looks and works as before
+- Save As: `Enter` with nothing typed closes it, as an input with no old value does
+- Built on terminu-go v0.1.10 (tdp v0.6.11)
+
 ## v0.1.1 — tdp v0.6.9
 
 - `Ex[P]ort` asks first when the svg is there: **Overwrite** it, or **Export** a new file, at first `<name>_1.svg` (the

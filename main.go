@@ -3,13 +3,10 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
 	"fmt"
 	"os"
-	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
 )
 
@@ -58,55 +55,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	k := newKamonu(store{dir: dir})
-	terminu.Probe(k.a.Name)
-	_, err = tea.NewProgram(model{k}, tea.WithAltScreen(), tea.WithOutput(screenOutput{os.Stdout})).Run()
-	return err
-}
-
-// model is the lib's App with kamonu's own popups over it: kamonu runs the
-// program itself, so that it can draw them after the lib's frame (see
-// popup.go).
-type model struct{ k *kamonu }
-
-func (m model) Init() tea.Cmd { return m.k.a.Init() }
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	k := m.k
-	switch msg := msg.(type) {
-	case animMsg:
-		return m, k.step()
-	case tea.KeyMsg:
-		if l := k.top(); l != nil {
-			return m, k.popKey(l, msg)
-		}
-	case tea.WindowSizeMsg:
-		_, cmd := k.a.Update(msg)
-		for _, l := range k.pops {
-			k.place(l)
-		}
-		return m, cmd
-	}
-	_, cmd := k.a.Update(msg)
-	return m, cmd
-}
-
-func (m model) View() string { return strings.Join(m.k.frame(), "\n") }
-
-// screenOutput is the terminal minus every erase-to-the-end-of-the-line, as
-// the lib's own App.Run writes it: every line is the full width (tdp L4),
-// and when an icon takes two cells the erase would wipe the right frame
-// (tdp E5). It embeds the file so bubbletea still finds the terminal.
-type screenOutput struct{ *os.File }
-
-var eraseRight = []byte("\x1b[K")
-
-func (o screenOutput) Write(p []byte) (int, error) {
-	if !bytes.Contains(p, eraseRight) {
-		return o.File.Write(p)
-	}
-	_, err := o.File.Write(bytes.ReplaceAll(p, eraseRight, nil))
-	return len(p), err
+	return newKamonu(store{dir: dir}).a.Run()
 }
 
 // icon is the mark the splash draws (tdp S5, E6): kamonu's own, K, A, M, O

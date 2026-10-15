@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.6.9），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.6.11），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -9,14 +9,14 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `[1] KAMON`（`terminu.List`）與 `[2] PREVIEW`（kamonu 自己的 `Body`）。
   - `NEW KAMON`、`EDIT: <名字>`（lib 的表單）。
   - delete 的 confirm、匯出的 toast、splash、Space menu、key reference、footer。
-- **kamonu 自己跑 Bubble Tea 的 program**（`main.go` 的 `model`）：包住 lib 的 `App`，不呼叫 `App.Run`。
-  - 理由：kamonu 自己的 popup 要畫在 lib 的畫面（`App.Frame()`）上面，`App.Run` 拿 `App` 本身當 model，插不進去。
-  - 所以 `App.Run` 做的兩件事 kamonu 自己做：`terminu.Probe`，以及把輸出裡的 `\x1b[K` 拿掉（`screenOutput`，照 lib 的寫法：icon 佔兩格時這個 erase 會擦掉右框）。
-- **kamonu 自己的 popup**（`popup.go`）：一疊 `layer`。
-  - 有 popup 開著時，按鍵都先給最上面那一個；畫的時候整個 lib 畫面淡化，各層照層色。
-  - 開關動畫、`Esc`、`?`、`Ctrl-C`、`q`、`gg` 都照 lib 的做法寫。popup 全部關掉之後，按鍵回到 lib。
-  - `editor.go`：畫格子的 popup（`DRAW`）。
-  - `dialogs.go`：疊在它上面的 confirm（discard、離開）、note（key reference、error popup）、一行文字輸入（`SAVE AS`）。
+- **畫格子的 popup 放在 lib 的 popup 疊裡**（`editor.go`，terminu-go v0.1.9 的 `App.Popup`）：
+  - kamonu 的 `editor` 是 `PopupBody`：畫框裡的東西（格子、色標、動作列）、處理按鍵、依狀態給 hint 與 key reference。
+  - 框、標題、開關動畫、淡化、層色歸 lib。kamonu 沒收下的鍵也歸 lib：沒改過時的 `Esc` 關掉它、`?` 開 key reference、
+    `Ctrl-C` 進離開流程（`q` kamonu 收下，不作用）。
+  - 上面再開的 confirm（discard、clear、離開）、`SAVE AS` 文字輸入、error popup、key reference 都是 lib 的。
+  - 沒存時離開的 confirm 多的那句 Peach，由 `editor.QuitNote` 給 lib。
+- **`main.go` 呼叫 `App.Run`**：`terminu.Probe` 與輸出裡 `\x1b[K` 的處理都是 lib 的。
+  - v0.1.1 以前 kamonu 自己跑 Bubble Tea 的 program、自己畫一疊 popup：那時 lib 的 popup 疊不到 app 自己畫的 popup 上面（紀錄 KM2）。
 - **mark**（`mark.go`）：
   - `kamon`：yaml 裡存的東西，包括要不要 U 框、有哪些字、每一格是第幾個字。
   - `mark`：splash 畫出來的樣子，只有底、U 框、金色三種格子。
@@ -89,6 +89,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `Letters`：框裡有哪些字（見「分字」）
   - `Base`：一個 checkbox `U frame`，預設勾著，決定要不要 U 框
 - **按 `Create` 當場建檔**，不是畫完存檔才建（2026-10-14，user）。理由：名字一開始就定，檔案一開始就在，之後只是改它。建好之後打開畫格子的 popup。
+  `NEW KAMON` 收起與 `DRAW` 打開同時播，`DRAW` 從第一格起就是第 1 層色，不跳色（tdp v0.6.10 的 T1 與 components/color 的層色）。
 
 ### 改資料：`EDIT: <名字>` 表單
 
@@ -177,8 +178,8 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 - **kamonu 自己的 popup**（2026-10-14，user：「這個屬於 kamon 自己的 popup，lib 不會有這個東西，也不應該有」）：
   - 不是表單加一種欄位，在 F1 七類以外（見「偏離 tdp」）。
-  - 框、標題、hint、開關動畫、淡化、層色都由 kamonu 畫，照 components/layout/popup 與 F。
-  - 上面再開的 discard confirm、`SAVE AS` 文字輸入、error popup 也由 kamonu 畫，因為 lib 的 popup 疊不到 app 自己畫的 popup 上面。照 components 的 confirm、text、note。
+  - 框裡的東西與按鍵由 kamonu 做；框、標題、hint 的位置、開關動畫、淡化、層色由 lib 畫（terminu-go v0.1.9 的 `App.Popup`）。
+  - 上面再開的 discard confirm、`SAVE AS` 文字輸入、error popup 都用 lib 的。v0.1.1 以前這些都由 kamonu 自己畫（見「運作方式」）。
 - **按 `Enter` 或 `Space`，那一格依序切換**：底 → 第 1 個字 → … → 最後一個字 → 底（K5 的 checkbox 例外）。
   - 格子下面一列色標，每個字寫成 `[1] ■ F`：按哪個數字、什麼顏色、哪個字。數字照 tdp M5 標成熱鍵（數字放前面）。
     排不下時（6 個字、icon 佔兩格）字與字之間從兩格空白縮成一格。
@@ -219,7 +220,10 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
     （components/dialog/form），這裡要去的是格子；`Tab:fields` 是表單與有按鈕的 input popup 的字，那裡要去的是欄位。
     tdp v0.6.5 的 K2 只管 `Tab` 在欄位區與動作列之間來回，格子 popup 本來就是這樣。
   - `q` 在這個 popup 上不作用（照表單：`q` 不進離開流程）。`Ctrl-C` 開離開的 confirm；畫的東西沒存時，多一句 Peach `Changes to <名字> are not saved.`。
-  - `SAVE AS` 沒有灰字提議（沒有舊值）；說明列是 `Name for the new kamon; <名字> stays as it was`。
+  - `SAVE AS` 沒有灰字提議（沒有舊值）；說明列是 `Name for the new kamon; <名字> stays as it was`。什麼都沒打就按 `Enter`
+    等於取消（lib 的單行輸入）。名字有控制字元時，錯誤列寫 `Name can't have control characters`：錯誤點名的是值的名字，
+    標題 `SAVE AS` 說的是在做什麼，所以 kamonu 另外給值的名字（tdp v0.6.11 的 components/input、terminu-go v0.1.10 的
+    `TextInput.Name`；紀錄 KM7）。
 
 ### 名字
 
@@ -227,7 +231,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 不能空：`Name can't be empty`。
   - 不能有 `/`、不能 `.` 開頭：這兩條是名字本身的格式，在輸入框裡就擋。
   - 不能跟現有的重複：`Name is taken`，表單在送出時擋。
-  - 不能有控制字元：lib 與 `SAVE AS` 在 `Enter` 時擋。
+  - 不能有控制字元：lib 的輸入在 `Enter` 時擋。
   - 前後的空白字元會去掉。
 - 清單照名字排，不分大小寫。
 
@@ -277,10 +281,6 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **F1（popup 只有七類）**，在畫格子的 popup：它是 kamonu 自己的一類。
   - 為什麼：內容是 25 × 19 的格子，七類都裝不下（最接近的 form 是「一列一個值」）。
   - 長相與按鍵盡量照 form：`Tab` 在格子與動作列之間、按鈕送出、改過時 `Esc` 先問；格子裡照 K12。
-- **E8（lib 給的，自己不另外做）**：
-  - 偏離的地方：畫格子的 popup 上面的 discard confirm、`SAVE AS` 文字輸入、error popup、key reference、離開的 confirm，都由 kamonu 自己畫；kamonu 也自己跑 Bubble Tea 的 program，不用 `App.Run`（見「運作方式」）。
-  - 為什麼：lib 的 popup 畫在 lib 自己那一疊裡，疊不到 app 自己畫的 popup 上面，而 lib 不放 app 自己的 popup（user 2026-10-14，紀錄 KM2）。
-  - 其他地方的 popup（`NEW KAMON`、`EDIT`、delete 的 confirm、error、toast）都用 lib 的。
 - **E6、E7（demo gif）**，在 README：沒有 VHS 錄的 demo gif，`.local/demos/` 也沒有腳本，Makefile 沒有 `gif`。
   - 為什麼：kamonu 大部分是 user 自己在用，放上 GitHub 但不推廣（user 2026-10-14：「不需要 vhs 錄 gif」）。
   - 其他照 E6：goreleaser、`install.sh`／`uninstall.sh`、Homebrew tap、L4 與 icon 的測試。
@@ -291,7 +291,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.8）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.10）。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
     lib 一改馬上看得到。`go.work`、`go.work.sum` 不進版控。
   - commit 與發版前，關掉 go.work 跑一次（`make check-lib`：`GOWORK=off go build ./...`、`GOWORK=off go test ./...`）。過不了，

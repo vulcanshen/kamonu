@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
 )
 
@@ -348,7 +347,7 @@ func TestNamesSorted(t *testing.T) {
 // --- the editor -------------------------------------------------------------
 
 func TestEditorSkipsTheFrame(t *testing.T) {
-	e := newEditor("x", kamon{frame: true, letters: []string{"K"}})
+	e := newEditor(nil, "x", kamon{frame: true, letters: []string{"K"}})
 	if e.r != 0 || e.c != 0 {
 		t.Fatalf("opens on %d,%d, want the first cell", e.r, e.c)
 	}
@@ -382,7 +381,7 @@ func TestEditorSkipsTheFrame(t *testing.T) {
 		t.Fatalf("moved off the grid to %d,%d", e.r, e.c)
 	}
 	// Without the U frame, every cell is the user's.
-	e = newEditor("x", kamon{letters: []string{"K"}})
+	e = newEditor(nil, "x", kamon{letters: []string{"K"}})
 	e.r, e.c = 1, 2
 	e.move(0, 1)
 	if e.c != 3 {
@@ -391,7 +390,7 @@ func TestEditorSkipsTheFrame(t *testing.T) {
 }
 
 func TestEditorCycle(t *testing.T) {
-	e := newEditor("x", kamon{letters: []string{"F", "I", "L"}})
+	e := newEditor(nil, "x", kamon{letters: []string{"F", "I", "L"}})
 	for _, want := range []uint8{1, 2, 3, 0, 1} {
 		e.cycle()
 		if got := e.km.cells[0][0]; got != want {
@@ -404,7 +403,7 @@ func TestEditorCycle(t *testing.T) {
 }
 
 func TestEditorClear(t *testing.T) {
-	e := newEditor("x", kamon{letters: []string{"F", "I", "L"}})
+	e := newEditor(nil, "x", kamon{letters: []string{"F", "I", "L"}})
 	e.clear()
 	if e.dirty {
 		t.Fatal("emptying an empty cell marked the drawing changed")
@@ -432,7 +431,7 @@ func TestEditorShowsTheLetters(t *testing.T) {
 	hs.contains("[1] " + glyphSquare + " F  [2] " + glyphSquare + " I  [3] " + glyphSquare + " L")
 	hs.contains("Enter|Space:cycle Tab:actions Esc:cancel")
 	// Each letter in its own colour.
-	for _, l := range hs.k.frame() {
+	for _, l := range hs.k.a.Frame() {
 		if strings.Contains(terminu.StripStyles(l), "[1] "+glyphSquare) {
 			for i, c := range letterColors[:3] {
 				if !strings.Contains(l, terminu.Fg(c).Render(glyphSquare+" ")) {
@@ -446,23 +445,23 @@ func TestEditorShowsTheLetters(t *testing.T) {
 }
 
 func TestEditorDigits(t *testing.T) {
-	e := newEditor("x", kamon{letters: []string{"F", "I", "L"}})
+	e := newEditor(nil, "x", kamon{letters: []string{"F", "I", "L"}})
 	for _, c := range []struct {
 		key  string
 		want uint8
 	}{{"2", 2}, {"3", 3}, {"4", 3}, {"6", 3}, {"3", 0}, {"3", 3}, {"1", 1}, {"Backspace", 0}} {
-		e.key(nil, c.key, keyMsg(c.key))
+		e.Key(c.key, keyMsg(c.key))
 		if got := e.km.cells[0][0]; got != c.want {
 			t.Fatalf("after %s the cell is %d, want %d", c.key, got, c.want)
 		}
 	}
-	e = newEditor("x", kamon{letters: []string{"F", "I", "L"}})
-	e.key(nil, "4", keyMsg("4")) // FIL has no fourth letter
+	e = newEditor(nil, "x", kamon{letters: []string{"F", "I", "L"}})
+	e.Key("4", keyMsg("4")) // FIL has no fourth letter
 	if e.dirty {
 		t.Fatal("a digit past the letters changed the drawing")
 	}
 	e.onButtons = true
-	e.key(nil, "1", keyMsg("1"))
+	e.Key("1", keyMsg("1"))
 	if e.km.cells[0][0] != 0 {
 		t.Fatal("a digit on the buttons painted the cell")
 	}
@@ -478,7 +477,7 @@ func TestEditorDigits(t *testing.T) {
 func TestEditorGold(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
 	hs.keys("Enter")
-	frame := func() string { return strings.Join(hs.k.frame(), "\n") }
+	frame := func() string { return strings.Join(hs.k.a.Frame(), "\n") }
 	gold, f := terminu.Fg(goldColor).Render(glyphSquare+" "), terminu.Fg(letterColors[0]).Render(glyphSquare+" ")
 	if strings.Contains(frame(), gold) || !strings.Contains(frame(), f) {
 		t.Fatal("the editor does not open in the letters' colours")
@@ -492,12 +491,12 @@ func TestEditorGold(t *testing.T) {
 	if strings.Contains(frame(), gold) || !strings.Contains(frame(), f) {
 		t.Fatal("p again did not bring the colours back")
 	}
-	e := hs.k.pops[0].p.(*editor)
-	if e.km.cells[0][0] != 2 {
-		t.Fatal("a digit did not paint in gold view")
-	}
 	hs.keys("?")
 	hs.contains("every letter gold, as in the splash, or back")
+	hs.keys("Esc", "Tab", "Enter")
+	if km, _ := hs.k.st.load("filu"); km.cells[0][0] != 2 {
+		t.Fatal("a digit did not paint in gold view")
+	}
 }
 
 // TestShortScreen: on a screen 28 rows high the editor is one row short;
@@ -523,17 +522,17 @@ func TestEditorClearAll(t *testing.T) {
 	hs.contains("Clear every cell of filu?")
 	hs.contains("Enter:clear Esc:cancel")
 	hs.keys("Esc")
-	e := hs.k.pops[0].p.(*editor)
-	if e.empty() || e.dirty {
-		t.Fatal("Esc on the confirm cleared the drawing")
-	}
-	hs.keys("x", "Enter")
+	hs.lacks("Clear every cell")
+	hs.keys("Esc") // Esc on the confirm changed nothing: Esc closes the drawing
+	hs.lacks("Discard changes")
+	hs.lacks("DRAW: filu")
+
+	hs.keys("Enter", "x", "Enter")
 	hs.lacks("Clear every cell")
 	hs.contains("DRAW: filu") // back to the drawing, to draw again or save
-	if !e.empty() || !e.dirty {
-		t.Fatal("Enter on the confirm did not clear every cell")
-	}
-	hs.keys("?")
+	hs.keys("Esc")            // changed: Esc asks first
+	hs.contains("Discard changes to filu?")
+	hs.keys("Esc", "?")
 	hs.contains("empty every cell (asks first)")
 	hs.keys("Esc", "Tab", "Enter")
 	if km, _ := hs.k.st.load("filu"); count(km, 0) != rows*cols {
@@ -696,12 +695,14 @@ func TestQuitFromTheEditor(t *testing.T) {
 
 func TestNoKeysWhileOpening(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"blank": blank()})
-	hs.k.draw() // its animation ticks never run
-	e := hs.k.pops[0].p.(*editor)
-	hs.m.Update(keyMsg("Space"))
-	if e.dirty {
+	opening := hs.k.draw() // its animation has not run yet
+	hs.k.a.Update(keyMsg("Space"))
+	hs.run(opening)
+	hs.keys("Esc") // the Space changed nothing: Esc closes it without asking
+	if strings.Contains(hs.text(), "Discard changes") {
 		t.Fatal("a key reached the editor while it was opening (tdp F2)")
 	}
+	hs.lacks("DRAW: blank")
 }
 
 // --- the screen -------------------------------------------------------------
@@ -946,19 +947,3 @@ func TestFullWidth(t *testing.T) {
 	}
 	terminu.SetIconWidth(1, 1)
 }
-
-func TestScreenOutputDropsEraseRight(t *testing.T) {
-	f, err := os.CreateTemp(t.TempDir(), "out")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := (screenOutput{f}).Write([]byte("a\x1b[Kb")); err != nil {
-		t.Fatal(err)
-	}
-	f.Close()
-	if b, _ := os.ReadFile(f.Name()); !bytes.Equal(b, []byte("ab")) {
-		t.Fatalf("wrote %q", b)
-	}
-}
-
-var _ tea.Model = model{}

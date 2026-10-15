@@ -14,7 +14,6 @@ import (
 // harness runs kamonu without a terminal: keys in, the frame out as text.
 type harness struct {
 	t    *testing.T
-	m    model
 	k    *kamonu
 	quit bool // the program asked to quit
 }
@@ -36,7 +35,7 @@ func newHarness(t *testing.T, w, h int, kamon map[string][]byte) *harness {
 		}
 	}
 	k := newKamonu(st)
-	hs := &harness{t: t, m: model{k}, k: k}
+	hs := &harness{t: t, k: k}
 	hs.send(tea.WindowSizeMsg{Width: w, Height: h})
 	return hs
 }
@@ -44,7 +43,7 @@ func newHarness(t *testing.T, w, h int, kamon map[string][]byte) *harness {
 // send gives msg to the program and runs what it sets off, animations
 // included, until nothing is left to run.
 func (hs *harness) send(msg tea.Msg) {
-	_, cmd := hs.m.Update(msg)
+	_, cmd := hs.k.a.Update(msg)
 	hs.run(cmd)
 }
 
@@ -78,7 +77,7 @@ func (hs *harness) run(cmd tea.Cmd) {
 			hs.quit = true
 			return
 		default:
-			_, next := hs.m.Update(msg)
+			_, next := hs.k.a.Update(msg)
 			queue = append(queue, next)
 		}
 	}
@@ -116,7 +115,7 @@ func (hs *harness) paste(text string) {
 // frame is the screen as plain text.
 func (hs *harness) frame() []string {
 	var out []string
-	for _, l := range hs.k.frame() {
+	for _, l := range hs.k.a.Frame() {
 		out = append(out, terminu.StripStyles(l))
 	}
 	return out
@@ -143,7 +142,7 @@ func (hs *harness) lacks(s string) {
 func (hs *harness) fullWidth() {
 	hs.t.Helper()
 	w, h := hs.k.a.Size()
-	lines := hs.k.frame()
+	lines := hs.k.a.Frame()
 	if len(lines) != h {
 		hs.t.Fatalf("%d lines on a screen %d high", len(lines), h)
 	}
