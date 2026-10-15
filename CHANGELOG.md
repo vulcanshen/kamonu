@@ -7,7 +7,7 @@ Each release names the version of terminu design (tdp) it follows.
 - `Ex[P]ort` asks first when the svg is there: **Overwrite** it, or **Export** a new file, at first `<name>_1.svg` (the
   first number not taken), or a name you give
 - Draw: on the buttons `h|j|k|l` move to the one before or after, round, and `gg|G` to the first or the last
-- Built on terminu-go v0.1.7
+- Built on terminu-go v0.1.8
 
 ## v0.1.0 — tdp v0.6.3
 

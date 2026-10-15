@@ -150,7 +150,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 欄位 `File`：新檔的名字，預設 `<名字>_<n>.svg`，n 是從 1 起第一個還沒用掉的號碼；`Enter` 可以改，打不打 `.svg` 都可以。
     已經有的名字在 input popup 裡就擋下：它是這一欄自己的事，擋在表單上的話，`Overwrite` 也會被這一欄的錯誤擋住。
   - 按鈕：`Overwrite <名字>.svg` 與主要的送出 `Export`（右下角）。`Overwrite` 寫上原檔名（user）：旁邊的欄位寫的是另一個名字，
-    不看按鈕不知道它蓋哪個檔。
+    不看按鈕不知道它蓋哪個檔。hint 裡的檔名照原樣（`Enter:overwrite KBU.svg`，tdp v0.6.9，紀錄 KM6；lib 的 `FormButton.Subject`）。
   - `Tab` 第一次停在 `Export`，所以 `Tab`、`Enter` 是寫新檔；要蓋掉是 `Tab`、`h`、`Enter`。按錯時新檔刪掉就好，蓋掉的舊 svg 回不來。
   - 寫檔失敗開 error popup，蓋在表單上（dialog/form 的「送出的動作失敗」）。
 - **格式照 S5**：
@@ -270,8 +270,6 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 已知的牆與未做
 
-- **匯出表單 `Overwrite <名字>.svg` 的 hint**：tdp v0.6.9 要名稱照原樣（`Enter:overwrite KBU.svg`），terminu-go 還沒補，
-  現在整串小寫（紀錄 KM6，`TODO(lib KM6)`）。terminu-go 打 tag 後升級、改用新的 API。
 - **當 locku 的保護程式**：locku 讀 kamonu 畫的圖當一種 saver。這是 locku 的功能，locku 改用 lib 之後再談。
 
 ## 偏離 tdp
@@ -293,7 +291,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.7）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.8）。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
     lib 一改馬上看得到。`go.work`、`go.work.sum` 不進版控。
   - commit 與發版前，關掉 go.work 跑一次（`make check-lib`：`GOWORK=off go build ./...`、`GOWORK=off go test ./...`）。過不了，

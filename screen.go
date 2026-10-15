@@ -255,11 +255,9 @@ func (k *kamonu) export() tea.Cmd {
 					Check: func(v string) error { return k.st.checkSVG(strings.TrimSuffix(v, ".svg")) },
 					Done:  func(v string) tea.Cmd { file = strings.TrimSuffix(v, ".svg"); return nil }}
 			}}},
-		// The file it writes over is on the button (the user's ask).
-		// TODO(lib KM6): the hint writes the button in small letters, the
-		// name too: "Enter:overwrite kbu.svg" for KBU; the name stays as it
-		// is (tdp v0.6.9, components/dialog/form).
-		Buttons: [][]*terminu.FormButton{{{Label: "Overwrite " + name + ".svg", Submit: func() (tea.Cmd, error) { return write(name) }}}},
+		// The file it writes over is on the button (the user's ask), as it
+		// is in the hint too: "Enter:overwrite KBU.svg" (tdp v0.6.9).
+		Buttons: [][]*terminu.FormButton{{{Label: "Overwrite", Subject: name + ".svg", Submit: func() (tea.Cmd, error) { return write(name) }}}},
 		Submit: func() (tea.Cmd, error) {
 			if err := k.st.checkSVG(file); err != nil {
 				return nil, errors.New("Can't export " + name + ": " + err.Error())

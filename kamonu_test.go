@@ -850,6 +850,16 @@ func TestExportWhenThere(t *testing.T) {
 	}
 }
 
+// The name on Overwrite is the file's, in the hint too (tdp v0.6.9, KM6).
+func TestExportOverwriteKeepsTheCase(t *testing.T) {
+	hs := newHarness(t, 80, 40, map[string][]byte{"KBU": blank()})
+	hs.keys("P", "Esc", "P") // Esc: the toast first (tdp K4)
+	hs.contains("EXPORT: KBU")
+	hs.contains("Overwrite KBU.svg")
+	hs.keys("Tab", "h")
+	hs.contains("Enter:overwrite KBU.svg")
+}
+
 func TestExportFailure(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
 	if err := os.Chmod(hs.k.st.dir, 0o555); err != nil {
