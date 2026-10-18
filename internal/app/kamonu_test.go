@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"bytes"
@@ -218,9 +218,10 @@ func TestUFrameIsTdps(t *testing.T) {
 }
 
 // TestIconIsTheSplash is tdp E6: the splash draws docs/icon.svg, kamonu's
-// own mark as S5 has it, the family's U frame and then K, A, M, O, N.
+// own mark as S5 has it, the family's U frame and then K, A, M, O, N; the
+// copy in the program is the same, byte for byte (tdp project, 目錄).
 func TestIconIsTheSplash(t *testing.T) {
-	b, err := os.ReadFile("docs/icon.svg")
+	b, err := os.ReadFile("../../docs/icon.svg")
 	if err != nil {
 		t.Fatal(err)
 	}

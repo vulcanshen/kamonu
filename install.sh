@@ -1,17 +1,31 @@
 #!/bin/sh
-# kamonu installer for macOS / Linux (unix-only — on Windows use WSL).
+# kamonu installer for macOS / Linux.
 # Usage: curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/install.sh | sh
+#
+# terminu family template (tdp project/install.sh). Replace kamonu; set
+# WINDOWS; the blocks marked "app's own" are the app's, the rest stays as it is.
 
 set -e
 
-REPO="vulcanshen/kamonu"
+APP="kamonu"
+REPO="vulcanshen/$APP"
+# yes when the app ships a Windows build and an install.ps1.
+WINDOWS="no"
 
 # Detect OS
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 case "$OS" in
   linux*)  OS="linux" ;;
   darwin*) OS="darwin" ;;
-  *) echo "Error: kamonu is unix-only (no Windows build — use WSL). Unsupported OS: $OS"; exit 1 ;;
+  *)
+    echo "Error: unsupported OS: $OS."
+    if [ "$WINDOWS" = "yes" ]; then
+      echo "On Windows, run in PowerShell:"
+      echo "  irm https://raw.githubusercontent.com/$REPO/main/install.ps1 | iex"
+    else
+      echo "$APP is unix-only (no Windows build — use WSL)."
+    fi
+    exit 1 ;;
 esac
 
 # Detect architecture
@@ -21,6 +35,9 @@ case "$ARCH" in
   aarch64|arm64) ARCH="arm64" ;;
   *) echo "Error: unsupported architecture: $ARCH"; exit 1 ;;
 esac
+
+# --- app's own: checks before the download (none by default) ---
+# --- end of the app's own ---
 
 # Get latest version
 echo "Fetching latest release..."
@@ -34,7 +51,7 @@ else
   INSTALL_DIR="$HOME/.local/bin"
 fi
 
-FILENAME="kamonu_${VERSION}_${OS}_${ARCH}.tar.gz"
+FILENAME="${APP}_${VERSION}_${OS}_${ARCH}.tar.gz"
 DOWNLOAD_URL="https://github.com/$REPO/releases/download/v${VERSION}/$FILENAME"
 
 # Download
@@ -48,12 +65,12 @@ tar xzf "$TMPDIR/$FILENAME" -C "$TMPDIR"
 
 # Install
 mkdir -p "$INSTALL_DIR"
-cp "$TMPDIR/kamonu" "$INSTALL_DIR/kamonu"
-chmod +x "$INSTALL_DIR/kamonu"
+cp "$TMPDIR/$APP" "$INSTALL_DIR/$APP"
+chmod +x "$INSTALL_DIR/$APP"
 rm -rf "$TMPDIR"
 
 echo ""
-echo "kamonu $VERSION installed to $INSTALL_DIR"
+echo "$APP $VERSION installed to $INSTALL_DIR"
 
 # Check if install dir is in PATH
 case ":$PATH:" in
@@ -66,9 +83,11 @@ case ":$PATH:" in
     ;;
 esac
 
+# --- app's own: what to know, and what to run first ---
 echo ""
 echo "NOTE: kamonu draws the cells with Nerd Font glyphs. Use a Nerd Font"
 echo "      terminal profile (https://www.nerdfonts.com) or the cells will"
 echo "      render as boxes."
 echo ""
 echo "Run 'kamonu' and press A to add your first mark."
+# --- end of the app's own ---

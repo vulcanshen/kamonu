@@ -3,21 +3,18 @@
 package main
 
 import (
-	_ "embed"
 	"fmt"
 	"os"
 
-	terminu "github.com/vulcanshen/terminu-go"
+	"github.com/vulcanshen/kamonu/internal/app"
+	"github.com/vulcanshen/kamonu/internal/version"
 )
-
-// version is set when it is built for a release (tdp E6).
-var version = "dev"
 
 func main() {
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "version", "--version", "-v":
-			fmt.Println("kamonu " + version)
+			fmt.Println("kamonu " + version.Display())
 			return
 		case "help", "--help", "-h":
 			fmt.Print(usage)
@@ -27,7 +24,7 @@ func main() {
 			os.Exit(2)
 		}
 	}
-	if err := run(); err != nil {
+	if err := app.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, "kamonu:", err)
 		os.Exit(1)
 	}
@@ -49,26 +46,3 @@ Environment:
   TERMINU__ICON_WIDTH         the same as KAMONU__ICON_WIDTH, for every terminu app
   TERMINU__POWERLINE_WIDTH    the same as KAMONU__POWERLINE_WIDTH, for every terminu app
 `
-
-func run() error {
-	dir, err := dataDir()
-	if err != nil {
-		return err
-	}
-	return newKamonu(store{dir: dir}).a.Run()
-}
-
-// icon is the mark the splash draws (tdp S5, E6): kamonu's own, K, A, M, O
-// and N in the U frame, drawn and exported with kamonu.
-//
-//go:embed docs/icon.svg
-var icon []byte
-
-// splash is the family's easter egg, V on a panel (tdp S).
-func splash() terminu.Splash {
-	s, err := terminu.NewSplash(icon, "kamonu", version, "Draw the mark of a terminu family app")
-	if err != nil {
-		panic(err) // the embedded icon is broken: a mistake in the program
-	}
-	return s
-}

@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"bytes"
@@ -56,7 +56,7 @@ type mark [rows][cols]cell
 // does not hold its cells, only whether it goes in, so it cannot be drawn
 // over or deleted.
 //
-//go:embed assets/u-frame.svg
+//go:embed u-frame.svg
 var uFrameSVG []byte
 
 var uFrame = func() mark {

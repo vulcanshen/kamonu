@@ -1,4 +1,4 @@
-package main
+package app
 
 // The editor: a kamon's 25 × 19 cells in a popup, each cell turned by Enter
 // or Space to the next letter and back to none (the checkbox's Space, tdp

@@ -1,4 +1,4 @@
-package main
+package app
 
 // The screen: [1] KAMON, the kamon in the data directory, and [2] PREVIEW,
 // the one under the cursor (docs/dev-remarks.md, the screen).

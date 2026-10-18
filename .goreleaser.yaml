@@ -1,21 +1,27 @@
+# terminu family template (tdp project/goreleaser.yaml), copied to an app's
+# .goreleaser.yaml. Replace kamonu with the app's name and fill the lines
+# marked "app:". An app with a Windows build uncomments the lines marked
+# "Windows"; nothing else changes.
 version: 2
 
 project_name: kamonu
 
 builds:
-  - main: .
+  - main: ./cmd/kamonu
     binary: kamonu
     env:
       - CGO_ENABLED=0
     flags:
       - -trimpath
     ldflags:
-      # `kamonu version` and the splash print it with its v (tdp S5).
-      - -s -w -X main.version=v{{.Version}}
+      # internal/version.Version takes the tag without its v; the app prints
+      # it with the v (internal/version.Display).
+      - -s -w -X github.com/vulcanshen/kamonu/internal/version.Version={{.Version}}
     goos:
-      # unix-first, like the rest of the u-family: no windows target.
+      # unix-first: no Windows build unless the app needs one.
       - linux
       - darwin
+      # - windows   # Windows
     goarch:
       - amd64
       - arm64
@@ -23,28 +29,35 @@ builds:
 archives:
   - formats:
       - tar.gz
+    # format_overrides:   # Windows
+    #   - goos: windows
+    #     formats:
+    #       - zip
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   name_template: "checksums.txt"
 
+# The release notes come from CHANGELOG.md (.github/workflows/release.yml).
 changelog:
   disable: true
 
-# A formula, not a cask, like the rest of the u-family: a formula binary is
-# never stamped com.apple.quarantine, so an unsigned binary runs clean.
-#
-# No dependencies: a single static binary.
+# A formula, not a cask: a formula binary is never stamped
+# com.apple.quarantine, so an unsigned binary runs clean.
 brews:
   - repository:
       owner: vulcanshen
       name: homebrew-tap
-      # GITHUB_TOKEN for the release and the tap, as in the family: a
-      # release run by hand takes the shell's; the workflow hands it a PAT
-      # when one is set, since the built-in token cannot write to the tap.
+      # One token for everything, GITHUB_TOKEN (user, 2026-09-25): a release
+      # run by hand takes the shell's; the workflow hands it the PAT in
+      # ACTION_TOKEN when one is set, since the built-in token cannot write
+      # to the tap repository.
       token: "{{ .Env.GITHUB_TOKEN }}"
     homepage: "https://github.com/vulcanshen/kamonu"
+    # app: one line, what the app is, ending in (u-family).
     description: "Draw the mark of a terminu family app, letter by letter, in the terminal (u-family)"
+    # app: what to run first, where the settings and data live, the Nerd
+    # Font requirement, the platforms.
     caveats: |
       `kamonu` lists your marks and draws them a cell at a time, each letter
       in a colour of its own; Ex[P]ort writes the svg an app keeps as
@@ -52,5 +65,15 @@ brews:
 
       A Nerd Font terminal profile is required: the cells are Nerd Font
       glyphs. macOS and Linux (WSL too); Windows is not supported.
+    # app: dependencies, when the app calls other programs.
     test: |
       system "#{bin}/kamonu", "version"
+
+# scoops:   # Windows
+#   - repository:
+#       owner: vulcanshen
+#       name: scoop-bucket
+#       token: "{{ .Env.GITHUB_TOKEN }}"
+#     homepage: "https://github.com/vulcanshen/kamonu"
+#     # app: the same line as the brews description above.
+#     description: "kamonu: what it is (u-family)"
