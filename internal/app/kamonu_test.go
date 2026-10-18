@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -930,19 +931,83 @@ func TestErrorsWithoutPaths(t *testing.T) {
 	hs.lacks(hs.k.st.dir)
 }
 
-// TestFullWidth is tdp L4: every line exactly as wide as the terminal, on
-// every screen and popup, with icons one cell wide and two.
+// TestFullWidth is tdp L4 and E5: every line exactly as wide as the
+// terminal, on the screen and every kind of popup kamonu opens, with icons
+// and powerline symbols one cell wide, icons two, and both two; on screens
+// the drawing fits, and ones it is wider than, taller than, or both.
 func TestFullWidth(t *testing.T) {
-	steps := [][]string{nil, {"Enter"}, {"Space", "Esc"}, {"Esc", "?"}, {"Esc", "Tab", "h", "Enter"}, {"n", "Enter"},
-		{"E"}, {"Esc", "P"}}
+	steps := [][]string{
+		nil,                          // [1] KAMON, [2] PREVIEW of a kamon it cannot read
+		{"Enter"},                    // an error popup: Can't read broken
+		{"Esc", "j", "Enter"},        // DRAW: terminu
+		{"?"},                        // its key reference
+		{"Esc", "Space", "Esc"},      // a cell turned: Esc asks to discard
+		{"Esc", "Tab", "h", "Enter"}, // SAVE AS
+		{"Esc", "x"},                 // clear every cell
+		{"Esc", "Ctrl-C"},            // the quit confirm, saying what is not saved
+		{"Esc", "Esc", "Enter"},      // discarded: the screen again
+		{"Space"},                    // the Space menu
+		{"G", "Enter"},               // the global operation popup over it
+		{"Esc", "Esc", "?"},          // the panel's key reference
+		{"Esc", "A"},                 // NEW KAMON
+		{"Enter"},                    // its Name
+		{"Esc", "Esc", "E"},          // EDIT: terminu
+		{"Esc", "P"},                 // exported: a toast
+		{"Esc", "P"},                 // EXPORT: terminu, the svg there
+		{"Esc", "X"},                 // delete
+		{"Esc", "q"},                 // quit
+	}
+	sizes := [][2]int{{80, 40}, {120, 50}, {60, 30}, {56, 28}, {40, 20}, {120, 16}, {50, 50}}
+	km := standIn(t)
+	for _, widths := range [][2]int{{1, 1}, {2, 1}, {2, 2}} {
+		t.Run(fmt.Sprintf("icon %d, powerline %d", widths[0], widths[1]), func(t *testing.T) {
+			// The widths are the lib's, one for the whole program: set once
+			// the harnesses are made (newHarness sets them back), and only
+			// read while the sizes run side by side.
+			var hss []*harness
+			for _, size := range sizes {
+				hss = append(hss, newHarness(t, size[0], size[1], map[string][]byte{"terminu": km.yaml(), "broken": []byte("cells: [")}))
+			}
+			terminu.SetIconWidth(widths[0], widths[1])
+			for i, size := range sizes {
+				hs := hss[i]
+				t.Run(fmt.Sprintf("%d×%d", size[0], size[1]), func(t *testing.T) {
+					t.Parallel()
+					hs.t = t
+					for j, s := range steps {
+						hs.keys(s...)
+						t.Logf("step %d", j)
+						hs.fullWidth()
+					}
+				})
+			}
+		})
+	}
+	terminu.SetIconWidth(1, 1)
+}
+
+// TestEditorBodyWidth is tdp E5 for the inside kamonu draws itself: every
+// row exactly as wide as the lib asks for, never more rows than it has room
+// for, however small the screen leaves it.
+func TestEditorBodyWidth(t *testing.T) {
+	km := standIn(t)
 	for _, icon := range []int{1, 2} {
-		for _, size := range [][2]int{{80, 40}, {120, 50}, {60, 30}, {56, 28}} {
-			km := standIn(t)
-			hs := newHarness(t, size[0], size[1], map[string][]byte{"terminu": km.yaml()})
-			terminu.SetIconWidth(icon, 1)
-			for _, s := range steps {
-				hs.keys(s...)
-				hs.fullWidth()
+		terminu.SetIconWidth(icon, 1)
+		for _, onButtons := range []bool{false, true} {
+			e := newEditor(nil, "terminu", km)
+			e.onButtons = onButtons
+			for w := 1; w <= 2*cols+2; w++ {
+				for _, h := range []int{0, 1, 5, rows + 3, rows + 4, rows + 10} {
+					body := e.Draw(w, h, terminu.Lavender)
+					if len(body) > h {
+						t.Fatalf("icon %d, %d×%d: %d rows", icon, w, h, len(body))
+					}
+					for i, l := range body {
+						if got := terminu.Width(l); got != w {
+							t.Fatalf("icon %d, %d×%d: row %d is %d cells: %q", icon, w, h, i, got, terminu.StripStyles(l))
+						}
+					}
+				}
 			}
 		}
 	}

@@ -179,7 +179,11 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 		buttons = append(buttons, b)
 	}
 	body = append(body, terminu.PadLeft(strings.Join(buttons, " "), w-1)+" ")
-	return body[:min(len(body), max(h, 0))]
+	body = body[:min(len(body), max(h, 0))]
+	for i, l := range body {
+		body[i] = terminu.Fit(l, w) // a screen too small for the drawing cuts it (tdp E5)
+	}
+	return body
 }
 
 // padRow is a row of the inside, one cell from the frame on either side.

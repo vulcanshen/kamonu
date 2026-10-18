@@ -30,7 +30,12 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 錯誤訊息不帶路徑（`why`）：使用者知道是哪一個 mark，而路徑可能只是暫存檔的名字。
 - **測試守著的**（`kamonu_test.go`）：
   - `harness_test.go` 是不用終端機就能跑整個 app 的工具：送按鍵、跑完動畫、讀畫面。超過 200ms 的計時器（toast 留在畫面上的時間）不等，所以 toast 會留在畫面上讓測試讀。
-  - L4：80×40、120×50、60×30、56×28 四種大小，icon 一格與兩格，主畫面和每一種 popup（含 `EDIT: <名字>` 與 toast），每一列都剛好等於終端機寬。
+  - L4 與 E5：80×40、120×50、60×30、56×28，加上畫格子的 popup 放不下的 40×20（太寬又太高）、120×16（太高）、50×50（太寬）；
+    icon 與 powerline 符號都一格、icon 兩格、兩種都兩格。主畫面和 kamonu 開的每一種 popup（error popup、`DRAW`、它的 key reference、
+    discard 與 clear 的 confirm、`SAVE AS`、離開的 confirm、Space menu、global operation popup、`NEW KAMON` 與它的 `Name`、
+    `EDIT: <名字>`、toast、`EXPORT: <名字>`、delete），每一列都剛好等於終端機寬。三種寬度依序跑，同一種寬度的七種大小並排跑
+    （寬度是 lib 全程式共用的一個值）。
+  - 畫格子的 popup 自己畫的那一塊：不管 lib 給多窄、多矮，每一列都剛好是給的寬，列數不超過給的高。
   - U 框跟 tdp 的 `principle/icon.svg` 一模一樣（`internal/app/testdata/tdp-icon.svg` 是它的副本，只給測試用）。
   - E6：splash 畫的 `internal/app/icon.svg` 跟 `docs/icon.svg` 一模一樣，lib 的 splash 吃得下；它的 U 框是家族的，註解依序是 U、K、A、M、O、N。
   - yaml：寫出去再讀回來不變；手改出錯一律回錯誤，不會讀成另一張圖。
