@@ -1,10 +1,12 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.6.11），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.7.4），
 建在 terminu-go 上。
 
 ## 運作方式
 
+- **目錄**照 tdp 的 project：`cmd/kamonu/main.go` 只管參數（`version`、`help`）；app 本身在 `internal/app`；版本在
+  `internal/version`（`kamonu version` 與 splash 印 `version.Display()`）。下面的檔名都在 `internal/app` 裡。
 - **畫面交給 lib**（`screen.go`）：這些都是 terminu-go 畫的。
   - `[1] KAMON`（`terminu.List`）與 `[2] PREVIEW`（kamonu 自己的 `Body`）。
   - `NEW KAMON`、`EDIT: <名字>`（lib 的表單）。
@@ -15,12 +17,12 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
     `Ctrl-C` 進離開流程（`q` kamonu 收下，不作用）。
   - 上面再開的 confirm（discard、clear、離開）、`SAVE AS` 文字輸入、error popup、key reference 都是 lib 的。
   - 沒存時離開的 confirm 多的那句 Peach，由 `editor.QuitNote` 給 lib。
-- **`main.go` 呼叫 `App.Run`**：`terminu.Probe` 與輸出裡 `\x1b[K` 的處理都是 lib 的。
+- **`app.Run` 呼叫 `App.Run`**（`run.go`）：`terminu.Probe` 與輸出裡 `\x1b[K` 的處理都是 lib 的。
   - v0.1.1 以前 kamonu 自己跑 Bubble Tea 的 program、自己畫一疊 popup：那時 lib 的 popup 疊不到 app 自己畫的 popup 上面（紀錄 KM2）。
 - **mark**（`mark.go`）：
   - `kamon`：yaml 裡存的東西，包括要不要 U 框、有哪些字、每一格是第幾個字。
   - `mark`：splash 畫出來的樣子，只有底、U 框、金色三種格子。
-  - U 框從 `assets/u-frame.svg` 讀進來，編進執行檔。
+  - U 框從 `u-frame.svg` 讀進來，編進執行檔。
   - 讀 yaml 時，格子不合規定一律算錯（見「存檔格式」）。
 - **存檔**（`store.go`）：
   - `Save`、`Edit` 與匯出都先寫到同一個目錄的暫存檔再 rename，寫到一半失敗時原檔還在。
@@ -29,8 +31,8 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **測試守著的**（`kamonu_test.go`）：
   - `harness_test.go` 是不用終端機就能跑整個 app 的工具：送按鍵、跑完動畫、讀畫面。超過 200ms 的計時器（toast 留在畫面上的時間）不等，所以 toast 會留在畫面上讓測試讀。
   - L4：80×40、120×50、60×30、56×28 四種大小，icon 一格與兩格，主畫面和每一種 popup（含 `EDIT: <名字>` 與 toast），每一列都剛好等於終端機寬。
-  - U 框跟 tdp 的 `principle/icon.svg` 一模一樣（`testdata/tdp-icon.svg` 是它的副本，只給測試用）。
-  - E6：splash 畫的就是 `docs/icon.svg`，lib 的 splash 吃得下；它的 U 框是家族的，註解依序是 U、K、A、M、O、N。
+  - U 框跟 tdp 的 `principle/icon.svg` 一模一樣（`internal/app/testdata/tdp-icon.svg` 是它的副本，只給測試用）。
+  - E6：splash 畫的 `internal/app/icon.svg` 跟 `docs/icon.svg` 一模一樣，lib 的 splash 吃得下；它的 U 框是家族的，註解依序是 U、K、A、M、O、N。
   - yaml：寫出去再讀回來不變；手改出錯一律回錯誤，不會讀成另一張圖。
   - 匯出的 svg：註解的順序是 U 框再照字的順序；沒有格子的字不寫；字全是金色；lib 的 splash 吃得下。
   - 改字、打開 U 框之後格子的變化（見「改資料」）。
@@ -164,13 +166,14 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ### U 框
 
-- **U 框是一個獨立的檔案**，從家族 mark（tdp 的 `principle/icon.svg`）的 U 那一部分抽出來，放在 repo 的 `assets/u-frame.svg`、編進執行檔：使用者碰不到、刪不掉。tdp S5 規定 U 框全家族一樣、不改。
+- **U 框是一個獨立的檔案**，從家族 mark（tdp 的 `principle/icon.svg`）的 U 那一部分抽出來，放在 repo 的 `internal/app/u-frame.svg`、編進執行檔：使用者碰不到、刪不掉。tdp S5 規定 U 框全家族一樣、不改。
 - **mark 只記要不要 U 框**（yaml 的 `frame`，2026-10-14，user）：U 框的格子不存在 mark 裡，畫不到、刪不掉。
 
 ### kamonu 自己的 mark
 
-- **`docs/icon.svg` 是 user 用 kamonu 畫、匯出的**（2026-10-14）：U 框裡 K、A、M、O、N。splash 直接把這個檔編進執行檔（E6），
-  換掉了原本借用的 tdp mark。
+- **`docs/icon.svg` 是 user 用 kamonu 畫、匯出的**（2026-10-14）：U 框裡 K、A、M、O、N。splash 畫的是它（E6），換掉了原本借用的 tdp mark。
+- **程式裡另有一份 `internal/app/icon.svg`**（tdp v0.7.0 的 project）：`go:embed` 讀不到 `docs/`，splash 編進執行檔的是這一份，
+  `TestIconIsTheSplash` 守住兩份一模一樣。`docs/icon.svg` 是正本：改它時把它複製到 `internal/app/icon.svg`。
 - **repo 只放 `docs/icon.svg`，不放 yaml**（2026-10-14，user）：`docs/icon.svg` 是家族的慣例，yaml 是 kamonu 自己的東西。原稿在
   user 的 `~/.kamonu/data/conf/kamonu.yaml`。
 
@@ -281,7 +284,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **F1（popup 只有七類）**，在畫格子的 popup：它是 kamonu 自己的一類。
   - 為什麼：內容是 25 × 19 的格子，七類都裝不下（最接近的 form 是「一列一個值」）。
   - 長相與按鍵盡量照 form：`Tab` 在格子與動作列之間、按鈕送出、改過時 `Esc` 先問；格子裡照 K12。
-- **E6、E7（demo gif）**，在 README：沒有 VHS 錄的 demo gif，`.local/demos/` 也沒有腳本，Makefile 沒有 `gif`。
+- **E6、E7（demo gif）**，在 README：沒有 VHS 錄的 demo gif，`.local/demos/` 也沒有腳本（`make gif` 是 family.mk 給的，跑了會找不到 tape）。
   - 為什麼：kamonu 大部分是 user 自己在用，放上 GitHub 但不推廣（user 2026-10-14：「不需要 vhs 錄 gif」）。
   - 其他照 E6：goreleaser、`install.sh`／`uninstall.sh`、Homebrew tap、L4 與 icon 的測試。
 
@@ -291,42 +294,47 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.10）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.13）。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
     lib 一改馬上看得到。`go.work`、`go.work.sum` 不進版控。
   - commit 與發版前，關掉 go.work 跑一次（`make check-lib`：`GOWORK=off go build ./...`、`GOWORK=off go test ./...`）。過不了，
     表示用到了 lib 還沒發版的東西，要等 terminu-go 打新 tag。
   - 升級：`go get github.com/vulcanshen/terminu-go@vX.Y.Z`，再 `make tidy`（`GOWORK=off go mod tidy`），commit `go.mod` 與 `go.sum`。
     發版時 `go.mod` 只能指向 terminu-go 打過的 tag，不用 replace、不用 pseudo-version。
-- **`Makefile`** 照家族的寫法（`make` 列出所有指令）：
-  - `make build`：編出 `./kamonu`（`CGO_ENABLED=0`、`-trimpath`、strip）；`make run`：直接跑。
-  - `make test`：約 40 秒（每個 popup 的開關動畫照真的時間跑）；`make test-race`：帶 race detector。
-  - `make check`：fmt-check、vet、test -race、check-lib 一次跑，commit 前跑，約一分半。
+- **`Makefile`** 只設 `BINARY := kamonu`、`include family.mk`（tdp v0.7.0 的 project）：`family.mk` 是 tdp 的範本，照原樣複製，
+  不在這裡改；要改先回報給 tdp。`make` 列出所有指令。
+  - `make build`：編出 `./kamonu`（`CGO_ENABLED=0`、`-trimpath`、strip，版本是 `dev`）；`make run`：直接跑。
+  - `make test`：約一分鐘（每個 popup 的開關動畫照真的時間跑）；`make test-race`：帶 race detector。
+  - `make check`：fmt-check、vet、test -race，有 `go.work` 時再加 check-lib，commit 前跑，約兩分鐘。
   - `make install`／`make uninstall`、`make package`（`dist/` 的 tar.gz）、`make clean`。
   - `make release-check`、`make snapshot`：見「發布」。
-  - 跟家族不同的地方：main 在根目錄（`PKG := .`）；多了 `check-lib`（go.work 的關係）；沒有 `gif`（見「偏離 tdp」）。
+  - kamonu 自己的 target：沒有（`##@ kamonu 自己的` 是空的）。
+- **project 圖上沒有的頂層檔案**：`CLAUDE.md`（跟 AI 協作的交代）。
+- **從原始碼裝**：`go install github.com/vulcanshen/kamonu/cmd/kamonu@latest`（v0.1.2 以前 main 在根目錄，是
+  `github.com/vulcanshen/kamonu@latest`）；或 clone 下來 `make build`。
 - 不想動到自己的 `~/.kamonu`，就用 `KAMONU__DATA=<別的目錄> ./kamonu`。
 
 ## 發布
 
-照家族的做法（E6）：goreleaser 打包 linux／darwin × amd64／arm64，`install.sh`／`uninstall.sh`，Homebrew tap 的 formula。
+照 tdp 的 project「發布」（E6）：goreleaser 打包 linux／darwin × amd64／arm64，`install.sh`／`uninstall.sh`，Homebrew tap 的
+formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、`uninstall.sh` 都是 tdp 的範本，只改範本表上寫的地方
+（formula 的 description 與 caveats、安裝完最後那段提示）。
 
 - **步驟**：
-  1. CHANGELOG 的 `## Unreleased — tdp vX.Y.Z` 改成 `## v0.1.0 — tdp vX.Y.Z`。
-  2. `make check`。
-  3. commit、打 tag `v0.1.0`、push tag。
+  1. `make check`。
+  2. CHANGELOG 的 `## Unreleased` 改成 `## vX.Y.Z — tdp vA.B.C`。
+  3. commit、打 tag `vX.Y.Z`、push commit 與 tag。
   4. `.github/workflows/release.yml` 接手：在 ubuntu 與 macos 上跑 `go test -race`；goreleaser 發 release、把 formula 推到
-     `vulcanshen/homebrew-tap`；最後用 CHANGELOG 那一段蓋掉 release 的說明。
-- **release 說明**：workflow 用 awk 取 CHANGELOG 裡 `## <tag> ` 開頭的那一段，到下一個 `## ` 為止。kamonu 的標題是
-  `## v0.1.0 — tdp v0.6.3`（跟 terminu-go 一樣），不是 locku 那種 `## [0.1.0] - 日期`，所以 awk 跟 locku 的不同。
-- **版號**：goreleaser 用 `-X main.version=v{{.Version}}` 寫進去，`kamonu version` 印 `kamonu v0.1.0`，splash 也寫 `v0.1.0`
-  （tdp S5：跟 `<app> version` 印的一樣，帶 v）。`make build` 不寫版號，印 `dev`。
+     `vulcanshen/homebrew-tap`；最後用 CHANGELOG 那一段蓋掉 release 的說明（推 tap 失敗時照樣蓋，release 還沒建好就跳過）。
+- **release 說明**：workflow 用 awk 取 CHANGELOG 裡 `## <tag> ` 開頭的那一段，到下一個 `## ` 為止。
+- **版號**：goreleaser 把去掉 v 的版號注入 `internal/version.Version`（`-X github.com/vulcanshen/kamonu/internal/version.Version=…`），
+  `kamonu version` 與 splash 印 `version.Display()`，補上 v（`kamonu v0.1.0`；tdp S5）。`make build` 不注入，印 `dev`。
+  v0.1.2 以前是 `-X main.version=v…`，注入時就帶 v。
 - **推 tap 要 PAT**：workflow 內建的 token 寫不了 `homebrew-tap`，要在 repo 的 secret 設 `ACTION_TOKEN`（家族其他 repo 都有）。
   沒設的話用內建的 token，release 會發出去，但推 formula 那一步會失敗。也可以在本機手動發：shell 裡的 `GITHUB_TOKEN` 有權限的話，
   `GOWORK=off goreleaser release --clean`。
-- **`make release-check` 會報錯**：`brews` 在 goreleaser v2 是 deprecated，`goreleaser check` 把它當錯誤。家族都刻意用 `brews`
-  （formula，不是 cask：formula 的執行檔不會被蓋上 `com.apple.quarantine`，沒簽章也能直接跑），所以這個錯誤是預期的；
-  `make snapshot` 照樣打得出包、寫得出 formula。
+- **`make release-check`**：`brews` 在 goreleaser v2 是 deprecated，`goreleaser check` 因此回失敗；family.mk 照樣印出警告，只有這一種
+  不算失敗。家族刻意用 `brews`（formula，不是 cask：formula 的執行檔不會被蓋上 `com.apple.quarantine`，沒簽章也能直接跑）。
 - 本機試打包：`make snapshot`（不發布、不推 tap），結果在 `dist/`。
 - **踩過的坑**：
   - 推 `.github/workflows/` 裡的檔案要 `workflow` 權限（v0.1.0，2026-10-14）。shell 的環境變數 `GITHUB_TOKEN` 只有 `repo`，
