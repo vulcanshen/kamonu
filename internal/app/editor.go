@@ -40,6 +40,7 @@ type editor struct {
 	button    int
 	dirty     bool // a cell was turned: Esc asks first (components/dialog/form)
 	gold      bool // p: every letter gold, as the splash draws it
+	top       int  // the first row of the grid shown, when it does not all fit
 }
 
 // color is how the editor draws a cell: its letter's colour, or gold for
@@ -130,7 +131,7 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 	if terminu.IconWidth() == 1 {
 		square += " " // a square takes two columns (tdp S5, E5)
 	}
-	body := make([]string, 0, rows+4)
+	grid := make([]string, 0, rows)
 	for r := range rows {
 		var b strings.Builder
 		for c := range cols {
@@ -143,7 +144,7 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 			}
 			b.WriteString(st.Render(square))
 		}
-		body = append(body, padRow(b.String(), w))
+		grid = append(grid, padRow(b.String(), w))
 	}
 	// The letters, each after the digit that paints it (a hotkey is shown:
 	// tdp M5) and its colour, gold with the rest under p; one space between
@@ -161,13 +162,8 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 	if terminu.Width(letters) > w-2 {
 		letters = strings.Join(legend, " ")
 	}
-	// A blank row above the letters when there is room: on a screen 28 rows
-	// high the popup is one short, and the action row must stay.
-	if rows+4 <= h {
-		body = append(body, "")
-	}
-	body = append(body, padRow(letters, w),
-		" "+terminu.Fg(terminu.Overlay0).Render(terminu.Repeat("─", w-2))+" ")
+	// The letters, the separator and the action row stay at the bottom.
+	tail := []string{padRow(letters, w), " " + terminu.Fg(terminu.Overlay0).Render(terminu.Repeat("─", w-2)) + " "}
 	var buttons []string
 	for i, label := range buttonLabels {
 		b := " " + label + " "
@@ -178,7 +174,28 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 		}
 		buttons = append(buttons, b)
 	}
-	body = append(body, terminu.PadLeft(strings.Join(buttons, " "), w-1)+" ")
+	tail = append(tail, terminu.PadLeft(strings.Join(buttons, " "), w-1)+" ")
+
+	var body []string
+	switch {
+	case h >= rows+4:
+		body = append(append(grid, ""), tail...) // a blank row above the letters
+	case h >= rows+3:
+		body = append(grid, tail...) // one row short: the blank row goes
+	default:
+		// Shorter still (a terminal under 27 rows): the grid scrolls the
+		// least that keeps the cursor's row in view, and the rows under it
+		// stay, as a form's fields scroll over its buttons
+		// (components/dialog/form, layout/popup).
+		// TODO(lib KM9): the bottom frame line cannot say which rows show.
+		area := max(h-len(tail), 0)
+		if !e.onButtons && area > 0 {
+			e.top = min(e.top, e.r)
+			e.top = max(e.top, e.r-area+1)
+		}
+		e.top = min(max(e.top, 0), rows-area)
+		body = append(grid[e.top:e.top+area:e.top+area], tail...)
+	}
 	body = body[:min(len(body), max(h, 0))]
 	for i, l := range body {
 		body[i] = terminu.Fit(l, w) // a screen too small for the drawing cuts it (tdp E5)
@@ -311,7 +328,7 @@ func (e *editor) Keys() []terminu.KeySection {
 // write opens an error popup over it (components/layout/popup).
 func (k *kamonu) save(e *editor) tea.Cmd {
 	if err := k.st.save(e.kamon, e.km); err != nil {
-		return k.a.Error("Save", "Can't save "+e.kamon+": "+why(err))
+		return k.a.Error("Save failed", "Can't save "+e.kamon+": "+why(err))
 	}
 	k.reload(e.kamon)
 	return k.a.ClosePopup(e)
@@ -327,7 +344,7 @@ func (k *kamonu) saveAs(e *editor) tea.Cmd {
 		Check: k.st.checkName,
 		Done: func(v string) tea.Cmd {
 			if err := k.st.create(v, e.km); err != nil {
-				return k.a.Error("Save as", "Can't save "+v+": "+why(err))
+				return k.a.Error("Save as failed", "Can't save "+v+": "+why(err))
 			}
 			k.reload(v)
 			return k.a.ClosePopup(e)

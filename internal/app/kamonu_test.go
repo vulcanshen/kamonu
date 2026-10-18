@@ -511,6 +511,27 @@ func TestShortScreen(t *testing.T) {
 	hs.fullWidth()
 }
 
+// TestDrawScrolls: on an 80 × 24 terminal the grid does not all fit; it
+// scrolls with the cursor, and the letters and the buttons stay in view.
+func TestDrawScrolls(t *testing.T) {
+	hs := newHarness(t, 80, 24, map[string][]byte{"filu": []byte(filYAML)})
+	hs.keys("Enter")
+	hs.contains("[3] " + glyphSquare + " L")
+	hs.contains("Save As")
+	frameSquare := terminu.Fg(frameColor).Render(glyphSquare + " ")
+	before := strings.Count(strings.Join(hs.k.a.Frame(), "\n"), frameSquare)
+	for range rows {
+		hs.keys("j")
+	}
+	after := strings.Count(strings.Join(hs.k.a.Frame(), "\n"), frameSquare)
+	if after <= before {
+		t.Fatalf("the grid did not scroll down to the U frame's bottom: %d frame cells, then %d", before, after)
+	}
+	hs.contains("[3] " + glyphSquare + " L")
+	hs.contains("Save As")
+	hs.fullWidth()
+}
+
 // TestEditorClearAll: x empties every cell, after a confirm; with nothing to
 // empty it asks nothing.
 func TestEditorClearAll(t *testing.T) {
@@ -663,7 +684,7 @@ func TestSaveFailureOpensAnError(t *testing.T) {
 	}
 	defer os.Chmod(hs.k.st.conf(), 0o755)
 	hs.keys("Enter")
-	hs.contains("SAVE")
+	hs.contains("SAVE FAILED") // what failed (components/dialog/note, error popup)
 	hs.contains("Enter|Esc:close")
 	hs.keys("Enter") // closes the error popup, back on the button
 	hs.contains("DRAW: blank")
@@ -953,6 +974,7 @@ func TestBrokenFile(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"broken": []byte(strings.Replace(filYAML, "..3......", "..3.....", 1))})
 	hs.contains("Can't draw broken")
 	hs.keys("Enter")
+	hs.contains("DRAW FAILED")
 	hs.contains("Can't read broken")
 	hs.keys("Esc", "E")
 	hs.contains("Can't read broken")

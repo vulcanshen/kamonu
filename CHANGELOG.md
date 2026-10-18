@@ -8,6 +8,9 @@ Each release names the version of terminu design (tdp) it follows.
   characters
 - On `[2] PREVIEW`, `Enter` draws the mark it shows; on a terminal too short for the whole mark, the preview scrolls
   with `j|k`, `u|d` and `gg|G` and says which rows it shows
+- Draw on a terminal under 27 rows (80 × 24, say): the cells scroll with the cursor, and the letters and the buttons
+  stay in view; they were cut off before
+- An error popup's title says what failed: `SAVE FAILED`, `DRAW FAILED`
 - The repository takes the terminu family's shape: the program is in `cmd/kamonu` (`go install
   github.com/vulcanshen/kamonu/cmd/kamonu@latest`), and the release files are the family's
 

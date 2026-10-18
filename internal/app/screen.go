@@ -109,7 +109,7 @@ func (k *kamonu) draw() tea.Cmd {
 	name := k.current()
 	km, err := k.st.load(name)
 	if err != nil {
-		return k.a.Error("Draw", "Can't read "+name+": "+why(err))
+		return k.a.Error("Draw failed", "Can't read "+name+": "+why(err))
 	}
 	return k.openEditor(name, km)
 }
@@ -180,7 +180,7 @@ func (k *kamonu) edit() tea.Cmd {
 	old := k.current()
 	km, err := k.st.load(old)
 	if err != nil {
-		return k.a.Error("Edit", "Can't read "+old+": "+why(err))
+		return k.a.Error("Edit failed", "Can't read "+old+": "+why(err))
 	}
 	name, letters := old, strings.Join(km.letters, "")
 	base := baseField(km.frame)
@@ -275,7 +275,7 @@ func (k *kamonu) delete() tea.Cmd {
 		Details: []string{name + ".yaml is removed from " + shown(k.st.conf()) + "."}, Warn: []int{0},
 	}, func() tea.Cmd {
 		if err := k.st.remove(name); err != nil {
-			return k.a.Error("Delete", "Can't delete "+name+": "+why(err))
+			return k.a.Error("Delete failed", "Can't delete "+name+": "+why(err))
 		}
 		k.reload("")
 		return nil

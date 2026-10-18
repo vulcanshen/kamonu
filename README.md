@@ -146,6 +146,7 @@ share. The others:
 | [sshu](https://github.com/vulcanshen/sshu) | A terminal front end for ssh and sftp |
 | [webu](https://github.com/vulcanshen/webu) | A terminal browser that reads a web page as a document |
 | [locku](https://github.com/vulcanshen/locku) | A screensaver with a PIN lock, for the terminal |
+| [ccdrawu](https://github.com/vulcanshen/ccdrawu) | A sidebar and a status line for Claude Code |
 
 ## License
 
