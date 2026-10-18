@@ -22,7 +22,7 @@
 
 ## 從 Space menu 刪除時，confirm 底下的 Space menu 不見了
 
-- **違反**：Rules T1 與 F4：target 是短的 confirm 或訊息時保留 source，取消 confirm 回到 source（清單 T1-1、T1-2、F4-1、F4-2）。
+- **違反**：tdp T1 與 tdp F4：target 是短的 confirm 或訊息時保留 source，取消 confirm 回到 source（清單 T1-1、T1-2、F4-1、F4-2）。
 - **在哪裡**：`[1]` 的 Space menu → `[X] Delete`（`screen.go` 的 `delete`）；同一類：Space menu → `Draw`、`Edit` 在讀不了的
   kamon 上開出的 error popup。
 - **現況**：lib 從 menu 執行動作時先關掉整疊 menu，再跑 `Do`；`Do` 裡開的 confirm 與 error popup 底下就沒有 menu 了，`Esc` 回到
@@ -32,7 +32,7 @@
 
 ## key reference 列出沒有對象的鍵
 
-- **違反**：Rules M6：key reference 裡，對象不存在的鍵不列（清單 M6-6）。
+- **違反**：tdp M6：key reference 裡，對象不存在的鍵不列（清單 M6-6）。
 - **在哪裡**：都是 lib 畫的：
   - 清單是空的時，`[1]` 的 key reference 照樣列 `j|k`、`u|d`、`gg|G`。
   - 一列就放得下的 error popup，key reference 照樣列捲動的鍵。

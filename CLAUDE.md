@@ -31,14 +31,14 @@ terminu 家族的一員：畫家族 mark（家紋）的 TUI app。名字是日�
   - Edit 打開編輯 popup；Add 先開 `NEW KAMON` 表單（名字、要不要注入 U 框），`Create` 當場建檔，再打開編輯 popup
     （2026-10-14 改，見 `docs/dev-remarks.md`）。
 - **編輯 popup**：
-  - 外框、標題、hint 照 tdp。內容是格子，每一格當成 checkbox，`Space` 切換亮暗（rules K5 的 checkbox 例外）。
+  - 外框、標題、hint 照 tdp。內容是格子，每一格當成 checkbox，`Space` 切換亮暗（tdp K5 的 checkbox 例外）。
   - 下面是動作列，`Tab` 在欄位區與動作列之間切換（跟 tdp 的表單一樣）。
   - 按鈕是 `Save`（存回原檔）與 `Save As`（存成新檔）。
-- **格子的畫法、svg 的格式照 rules S5**：
+- **格子的畫法、svg 的格式照 tdp S5**：
   - 一格一個 `nf-fa-square`、佔兩欄；底是 Surface0；U 框 `#205090`；金色 `#f2b753`。
   - viewBox 250×250，一格 10×10 的 rect。
   - XML 註解分字。kamonu **不分字**：存好之後，由開發 app 的人自己加註解。
-- **位置與名字**：資料 `~/.kamonu/data/`（rules E3）；環境變數 `KAMONU__…`（E2）。
+- **位置與名字**：資料 `~/.kamonu/data/`（tdp E3）；環境變數 `KAMONU__…`（tdp E2）。
 
 ## user 提了、還沒細定的（跟 user 一題一題定）
 
@@ -90,9 +90,9 @@ terminu 家族的一員：畫家族 mark（家紋）的 TUI app。名字是日�
 ## repo 一開始要做的
 
 1. `git init`、`go.mod`、`LICENSE`（GPL-3.0 全文，可以從 terminu-go 複製）。
-2. `README.md` 與 `README-zh_TW.md`（照 rules E7 與 user 的 README 規範：README 是工具介紹，開發者的東西放 `docs/dev-remarks.md`）。
+2. `README.md` 與 `README-zh_TW.md`（照 tdp E7 與 user 的 README 規範：README 是工具介紹，開發者的東西放 `docs/dev-remarks.md`）。
 3. `CHANGELOG.md`。
-4. 自己的家族 mark：用 kamonu 自己畫（U 框裡 K、A、M、O、N），存成 `docs/icon.svg`，再照 S5 加分字註解。
+4. 自己的家族 mark：用 kamonu 自己畫（U 框裡 K、A、M、O、N），存成 `docs/icon.svg`，再照 tdp S5 加分字註解。
 5. 建 GitHub repo、push、打 tag、發布都先問 user。
 
 ## 參考
