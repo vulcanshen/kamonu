@@ -30,7 +30,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 錯誤訊息不帶路徑（`why`）：使用者知道是哪一個 mark，而路徑可能只是暫存檔的名字。
 - **測試守著的**（`kamonu_test.go`）：
   - `harness_test.go` 是不用終端機就能跑整個 app 的工具：送按鍵、跑完動畫、讀畫面。超過 200ms 的計時器（toast 留在畫面上的時間）不等，所以 toast 會留在畫面上讓測試讀。
-  - L4 與 E5：80×40、120×50、60×30、56×28，加上畫格子的 popup 放不下的 40×20（太寬又太高）、120×16（太高）、50×50（太寬）；
+  - tdp L4 與 E5：80×40、120×50、60×30、56×28，加上畫格子的 popup 放不下的 40×20（太寬又太高）、120×16（太高）、50×50（太寬）；
     icon 與 powerline 符號都一格、icon 兩格、兩種都兩格。主畫面和 kamonu 開的每一種 popup（error popup、`DRAW`、它的 key reference、
     discard 與 clear 的 confirm、`SAVE AS`、離開的 confirm、Space menu、global operation popup、`NEW KAMON` 與它的 `Name`、
     `EDIT: <名字>`、toast、`EXPORT: <名字>`、delete），每一列都剛好等於終端機寬。三種寬度依序跑，同一種寬度的七種大小並排跑
@@ -38,7 +38,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `[2] PREVIEW`：`Enter` 畫它顯示的那一個，沒有東西時不出現；比 mark 矮時捲動、寫 `N-M of 21`，放得下時不寫、也不列捲動的鍵。
   - 畫格子的 popup 自己畫的那一塊：不管 lib 給多窄、多矮，每一列都剛好是給的寬，列數不超過給的高。
   - U 框跟 tdp 的 `principle/icon.svg` 一模一樣（`internal/app/testdata/tdp-icon.svg` 是它的副本，只給測試用）。
-  - E6：splash 畫的 `internal/app/icon.svg` 跟 `docs/icon.svg` 一模一樣，lib 的 splash 吃得下；它的 U 框是家族的，註解依序是 U、K、A、M、O、N。
+  - tdp E6：splash 畫的 `internal/app/icon.svg` 跟 `docs/icon.svg` 一模一樣，lib 的 splash 吃得下；它的 U 框是家族的，註解依序是 U、K、A、M、O、N。
   - yaml：寫出去再讀回來不變；手改出錯一律回錯誤，不會讀成另一張圖。
   - 匯出的 svg：註解的順序是 U 框再照字的順序；沒有格子的字不寫；字全是金色；lib 的 splash 吃得下。
   - 改字、打開 U 框之後格子的變化（見「改資料」）。
@@ -131,10 +131,10 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - catppuccin 的 14 個彩色去掉藍色系（會跟 U 框、cursor 混在一起）剩 10 個，一眼分得開的大約 7 個。
   - 家族最長的是 kamonu 的 5 個字。
 - **每個字一個顏色，照順序固定**：Peach、Teal、Mauve、Green、Red、Yellow。
-  - 顏色只在 kamonu 裡用來分字；匯出的 svg 照 S5，字一律是金色。
+  - 顏色只在 kamonu 裡用來分字；匯出的 svg 照 tdp S5，字一律是金色。
   - 冷暖交錯排，順序相鄰的字通常也畫在隔壁，這樣顏色差最多。
   - user 說顏色由 kamonu 決定、分得出來就好；不每次隨機，同一個 mark 每次看起來一樣才認得。
-  - 規範：內容本身的顏色由 app 決定（components/color 開頭、P4 最後一段）。格子裡的字是內容。
+  - 規範：內容本身的顏色由 app 決定（components/color 開頭、tdp P4 最後一段）。格子裡的字是內容。
 
 ### 存檔格式
 
@@ -168,11 +168,11 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
     不看按鈕不知道它蓋哪個檔。hint 裡的檔名照原樣（`Enter:overwrite KBU.svg`，tdp v0.6.9，紀錄 KM6；lib 的 `FormButton.Subject`）。
   - `Tab` 第一次停在 `Export`，所以 `Tab`、`Enter` 是寫新檔；要蓋掉是 `Tab`、`h`、`Enter`。按錯時新檔刪掉就好，蓋掉的舊 svg 回不來。
   - 寫檔失敗開 error popup，蓋在表單上（dialog/form 的「送出的動作失敗」）。
-- **格式照 S5**：
+- **格式照 tdp S5**：
   - 底 `#000000`。
   - `frame: true` 時寫 `<!-- U -->` 加上 U 框。
   - 接著照字的順序，每個字一個註解（`<!-- F -->`），後面是它的格子，全部金色 `#f2b753`。
-  - 格子照列的順序寫，S5 的揭露動畫會把同一個字的格子打散。
+  - 格子照列的順序寫，tdp S5 的揭露動畫會把同一個字的格子打散。
 - **沒有格子的字不寫**：splash 沒有東西可以揭露，空的一段只會多停一下。
 - 改名、刪除都不動 `svg/` 裡匯出過的檔。
 
@@ -183,7 +183,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ### kamonu 自己的 mark
 
-- **`docs/icon.svg` 是 user 用 kamonu 畫、匯出的**（2026-10-14）：U 框裡 K、A、M、O、N。splash 畫的是它（E6），換掉了原本借用的 tdp mark。
+- **`docs/icon.svg` 是 user 用 kamonu 畫、匯出的**（2026-10-14）：U 框裡 K、A、M、O、N。splash 畫的是它（tdp E6），換掉了原本借用的 tdp mark。
 - **程式裡另有一份 `internal/app/icon.svg`**（tdp v0.7.0 的 project）：`go:embed` 讀不到 `docs/`，splash 編進執行檔的是這一份，
   `TestIconIsTheSplash` 守住兩份一模一樣。`docs/icon.svg` 是正本：改它時把它複製到 `internal/app/icon.svg`。
 - **repo 只放 `docs/icon.svg`，不放 yaml**（2026-10-14，user）：`docs/icon.svg` 是家族的慣例，yaml 是 kamonu 自己的東西。原稿在
@@ -192,10 +192,10 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 ### 畫格子的 popup
 
 - **kamonu 自己的 popup**（2026-10-14，user：「這個屬於 kamon 自己的 popup，lib 不會有這個東西，也不應該有」）：
-  - 不是表單加一種欄位，在 F1 七類以外（見「偏離 tdp」）。
+  - 不是表單加一種欄位，在 tdp F1 七類以外（見「偏離 tdp」）。
   - 框裡的東西與按鍵由 kamonu 做；框、標題、hint 的位置、開關動畫、淡化、層色由 lib 畫（terminu-go v0.1.9 的 `App.Popup`）。
   - 上面再開的 discard confirm、`SAVE AS` 文字輸入、error popup 都用 lib 的。v0.1.1 以前這些都由 kamonu 自己畫（見「運作方式」）。
-- **按 `Enter` 或 `Space`，那一格依序切換**：底 → 第 1 個字 → … → 最後一個字 → 底（K5 的 checkbox 例外）。
+- **按 `Enter` 或 `Space`，那一格依序切換**：底 → 第 1 個字 → … → 最後一個字 → 底（tdp K5 的 checkbox 例外）。
   - 格子下面一列色標，每個字寫成 `[1] ■ F`：按哪個數字、什麼顏色、哪個字。數字照 tdp M5 標成熱鍵（數字放前面）。
     排不下時（6 個字、icon 佔兩格）字與字之間從兩格空白縮成一格。
   - 下面是動作列，`Tab` 在格子與動作列之間切換，跟表單一樣。
@@ -213,7 +213,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 為什麼：user 用分字的顏色畫好 kamonu 自己的 mark，匯出才發現字黏在一起 —— 顏色不同時分得開，全是金色就成了一整塊。
     右邊的預覽是金色的，但畫的時候被 popup 蓋住。
   - 金色時照樣可以畫；每次打開都從分字的顏色開始。
-  - 用 `p`（preview）：tdp 裡 `v` 是選取模式（K11）、`V` 是 splash（S1），`p` 沒有用到。
+  - 用 `p`（preview）：tdp 裡 `v` 是選取模式（tdp K11）、`V` 是 splash（tdp S1），`p` 沒有用到。
 - **`x` 清空所有格子，先 confirm**（2026-10-14，user）：`Clear every cell of <名字>?`，`Enter` 清空、回到格子，`Esc` 不動。
   - 一格都沒畫時不問，什麼都不做。
   - 清空只改 popup 裡的圖，`Save` 才寫進檔案；改過了，`Esc` 離開時照樣先問要不要丟掉。
@@ -228,7 +228,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 照日曆範圍外的日子：停在那個方向下一個能停的格子，那個方向沒有了就不動。
   - 理由：家族裡停用的東西 cursor 一律跳過（menu 的停用列、表單的停用欄位、日曆）。
   - 沒有 U 框的 mark，每一格都能畫。
-- 格子裡 hjkl 上下左右，到邊停住（K12：照空間走的不繞）。沒有錯誤列：格子不會不合格，存檔失敗開 error popup。改過時 `Esc` 先問。
+- 格子裡 hjkl 上下左右，到邊停住（tdp K12：照空間走的不繞）。沒有錯誤列：格子不會不合格，存檔失敗開 error popup。改過時 `Esc` 先問。
 - cursor：層色底，方塊保留自己的顏色，格子的顏色就是它的值（tdp v0.6.7 components/color 的 cursor 色塊例外，紀錄 KM3）。
 - 下面這些是寫程式時照預設定的（2026-10-14，跟 user 報告過）：
   - 標題 `DRAW: <名字>`，glyph `nf-md-grid`（U+F02C1）。打開時 cursor 在第一個能停的格子。
@@ -261,10 +261,10 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ### 位置
 
-- 資料目錄 `~/.kamonu/data/`（tdp E3），`KAMONU__DATA` 覆寫（E2）。裡面分兩個子目錄（2026-10-14，user）：
+- 資料目錄 `~/.kamonu/data/`（tdp E3），`KAMONU__DATA` 覆寫（tdp E2）。裡面分兩個子目錄（2026-10-14，user）：
   - `conf/<名字>.yaml`：mark 本身。
   - `svg/<名字>.svg`：匯出的成品。
-- yaml 算資料不算設定：E3 的設定目錄（`~/.config/kamonu`）放的是決定 app 怎麼運作的設定檔，yaml 是使用者畫出來的東西。
+- yaml 算資料不算設定：tdp E3 的設定目錄（`~/.config/kamonu`）放的是決定 app 怎麼運作的設定檔，yaml 是使用者畫出來的東西。
 
 ## 已否決，不要重提
 
@@ -276,7 +276,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **用 popup 的層色分字**：
   - 只有 4 個，kamonu 自己就有 5 個字。
   - 4 個都是 Lavender 到 Sapphire 之間的淺藍，相鄰的字分不出來。
-  - 層色另有用途（popup 的框與 cursor，P4）。
+  - 層色另有用途（popup 的框與 cursor，tdp P4）。
 - 字建好就不能改：user 要可以改，後果自付。
 - `Enter` 先開一個選單（`Edit kamon`／`Edit properties`）：每次畫格子都多一步，而且跟 Space menu 重複。
 - `Enter` 先開資訊 popup，動作列有 `Edit Kamon` 與 `Save`：表單兩個按鈕（KM1）；畫格子的 popup 疊不到 lib 的表單上；兩個 `Save` 意思不清。
@@ -286,7 +286,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **一句話加兩個按鈕**（`filu.svg is already in …`，下面 `Overwrite`、`Save as filu_1`）：confirm 沒有按鈕、表單要有欄位，
   規範沒有這種 popup，要補規範與 lib；user 選有 `File` 欄位的表單，現在就做得出來。
 - 匯出時用 lib 的「選目錄」挑地方、寫成那裡的 `icon.svg`：user 選固定寫到資料目錄（按一下就好），要放進 app 的 `docs/` 時自己複製。
-- yaml 放在 `~/.config/kamonu`：照 E3，畫出來的東西算資料。
+- yaml 放在 `~/.config/kamonu`：照 tdp E3，畫出來的東西算資料。
 - 預覽用分字的顏色：kamonu 裡就看不到金色的成品了。
 - **用那個字母本身當熱鍵**（按 `k` 畫 K，2026-10-14）：小寫撞到格子裡的移動鍵（kamonu 的 K 是 `k` 往上、filu 的 L 是 `l` 往右），
   還有 `p`、`q`、`g`；大寫（`Shift-K`）不撞，但 user 選維持只用數字，改成數字可以 toggle。
@@ -298,20 +298,21 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 偏離 tdp
 
-- **F1（popup 只有七類）**，在畫格子的 popup：它是 kamonu 自己的一類（tdp v0.7.x 的 F1 拿它當七類以外的例子）。
+- **tdp F1（popup 只有七類）**，在畫格子的 popup：它是 kamonu 自己的一類（tdp v0.7.x 的 F1 拿它當七類以外的例子）。
   - 為什麼：內容是 25 × 19 的格子，七類都裝不下（最接近的 form 是「一列一個值」）。
-  - 長相與按鍵盡量照 form：`Tab` 在格子與動作列之間、按鈕送出、改過時 `Esc` 先問；格子裡照 K12。
-- **K5（popup 上的 `Space` 不作用）**，在畫格子的 popup 的格子上：`Space` 把這一格換成下一個字（跟 `Enter` 一樣）。
-  - 為什麼：每一格當成 checkbox（K5 唯一的例外是 checkbox 的選項，`Space` 勾或取消勾；2026-10-13 跟 user 定的）。後來一個 mark
+  - 長相與按鍵盡量照 form：`Tab` 在格子與動作列之間、按鈕送出、改過時 `Esc` 先問；格子裡照 tdp K12。
+- **tdp K5（popup 上的 `Space` 不作用）**，在畫格子的 popup 的格子上：`Space` 把這一格換成下一個字（跟 `Enter` 一樣）。
+  - 為什麼：每一格當成 checkbox（tdp K5 唯一的例外是 checkbox 的選項，`Space` 勾或取消勾；2026-10-13 跟 user 定的）。後來一個 mark
     可以有好幾個字，一格不只亮暗兩種，`Space` 改成照順序換字，最後一個字之後回到空的 —— 已經不只是勾或不勾。
-  - 在按鈕上 `Space` 不作用，照 K5。
-- **E6、E7（demo gif）**，在 README：沒有 VHS 錄的 demo gif，`.local/demos/` 也沒有腳本（`make gif` 是 family.mk 給的，跑了會找不到 tape）。
+  - 在按鈕上 `Space` 不作用，照 tdp K5。
+- **tdp E6、E7（demo gif）**，在 README：沒有 VHS 錄的 demo gif，`.local/demos/` 也沒有腳本（`make gif` 是 family.mk 給的，跑了會找不到 tape）。
   - 為什麼：kamonu 大部分是 user 自己在用，放上 GitHub 但不推廣（user 2026-10-14：「不需要 vhs 錄 gif」）。
-  - 其他照 E6：goreleaser、`install.sh`／`uninstall.sh`、Homebrew tap、L4 與 icon 的測試。
+  - 其他照 tdp E6：goreleaser、`install.sh`／`uninstall.sh`、Homebrew tap、tdp L4 與 icon 的測試。
 
 ## 設計文件導讀
 
 - 規範的盲點與 lib 要補的地方記在 terminu 的 `.local/family-fix/kamonu/README.md`（編號 KM）。
+- 還沒符合 tdp 的地方逐條在 [`kamonu-terminu-fix.md`](kamonu-terminu-fix.md)（tdp E7），全部修完就刪掉。
 
 ## 建置與開發
 
@@ -337,7 +338,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 發布
 
-照 tdp 的 project「發布」（E6）：goreleaser 打包 linux／darwin × amd64／arm64，`install.sh`／`uninstall.sh`，Homebrew tap 的
+照 tdp 的 project「發布」（tdp E6）：goreleaser 打包 linux／darwin × amd64／arm64，`install.sh`／`uninstall.sh`，Homebrew tap 的
 formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、`uninstall.sh` 都是 tdp 的範本，只改範本表上寫的地方
 （formula 的 description 與 caveats、安裝完最後那段提示）。
 
