@@ -219,7 +219,7 @@ func TestUFrameIsTdps(t *testing.T) {
 }
 
 // TestIconIsTheSplash is tdp E6: the splash draws docs/icon.svg, kamonu's
-// own mark as S5 has it, the family's U frame and then K, A, M, O, N; the
+// own mark as tdp S5 has it, the family's U frame and then K, A, M, O, N; the
 // copy in the program is the same, byte for byte (tdp project, 目錄).
 func TestIconIsTheSplash(t *testing.T) {
 	b, err := os.ReadFile("../../docs/icon.svg")
@@ -243,7 +243,7 @@ func TestIconIsTheSplash(t *testing.T) {
 			}
 		}
 	}
-	// The letters split as S5 has it: a comment each, in the order shown.
+	// The letters split as tdp S5 has it: a comment each, in the order shown.
 	var comments []string
 	for _, l := range strings.Split(string(icon), "\n") {
 		if c, ok := strings.CutPrefix(strings.TrimSpace(l), "<!-- "); ok {
@@ -494,7 +494,8 @@ func TestEditorGold(t *testing.T) {
 		t.Fatal("p again did not bring the colours back")
 	}
 	hs.keys("?")
-	hs.contains("every letter gold, as in the splash, or back")
+	hs.contains("every letter gold, as the svg has them, or back")
+	hs.lacks("splash") // tdp S2: not in a key reference
 	hs.keys("Esc", "Tab", "Enter")
 	if km, _ := hs.k.st.load("filu"); km.cells[0][0] != 2 {
 		t.Fatal("a digit did not paint in gold view")

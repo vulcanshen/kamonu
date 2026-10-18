@@ -129,7 +129,7 @@ func nameField(name *string, prompt string, check func() string) *terminu.FormFi
 func lettersField(letters *string) *terminu.FormField {
 	return &terminu.FormField{Label: "Letters", Value: func() string { return *letters }, Empty: "not set",
 		Edit: func() terminu.Input {
-			return terminu.TextInput{Title: "Letters", Glyph: glyphPencil, Prompt: "The letters in the U frame, in the order the splash shows them",
+			return terminu.TextInput{Title: "Letters", Glyph: glyphPencil, Prompt: "The letters in the U frame, in the order of the app's name",
 				Verb: "set", Old: *letters,
 				Check: checkLetters, Done: func(v string) tea.Cmd { *letters = strings.ToUpper(v); return nil }}
 		},

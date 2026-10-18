@@ -310,7 +310,7 @@ func (e *editor) Keys() []terminu.KeySection {
 			{Key: "Enter|Space", Desc: "the cell's next letter; after the last, none"},
 			{Key: digits(len(e.km.letters)), Desc: "make the cell that letter; again to empty it"},
 			{Key: "Backspace", Desc: "empty the cell"},
-			{Key: "p", Desc: "every letter gold, as in the splash, or back"},
+			{Key: "p", Desc: "every letter gold, as the svg has them, or back"},
 			{Key: "x", Desc: "empty every cell (asks first)"},
 			{Key: "Enter", Desc: "on a button: press it"},
 			{Key: "Tab|Shift-Tab", Desc: "between the grid and the buttons, back to the cell left"},
