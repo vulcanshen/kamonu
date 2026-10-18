@@ -16,6 +16,8 @@ Each release names the version of terminu design (tdp) it follows.
 - Export's `File`: a name already there is refused as `File is taken: …`, and the old value is offered as the form
   shows it, `.svg` and all
 - Edit's Letters say whose letters they are
+- Delete from the Space menu: `Esc` on the confirm goes back to the menu
+- With no mark in the list, its key reference lists no moving keys
 - Draw on a terminal under 27 rows (80 × 24, say): the cells scroll with the cursor, and the letters and the buttons
   stay in view; they were cut off before
 - An error popup's title says what failed: `SAVE FAILED`, `DRAW FAILED`

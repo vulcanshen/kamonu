@@ -925,6 +925,28 @@ func TestDelete(t *testing.T) {
 		t.Fatal("the file was not deleted")
 	}
 	hs.contains("No kamon yet")
+	// Nothing to move among: no moving keys in [1]'s key reference (tdp M6).
+	hs.keys("?")
+	hs.lacks("half a page up, down")
+}
+
+// TestDeleteFromTheMenu: the confirm opened from the Space menu keeps the
+// menu under it; Esc goes back to it (tdp T1, F4), and the question names
+// the kamon under the cursor when the action runs.
+func TestDeleteFromTheMenu(t *testing.T) {
+	hs := newHarness(t, 80, 40, map[string][]byte{"blank": blank(), "filu": []byte(filYAML)})
+	hs.keys("j", "Space", "X")
+	hs.contains("Delete filu?")
+	hs.keys("Esc")
+	hs.lacks("Delete filu?")
+	hs.contains("ITEM OPERATION") // the menu is still there
+	hs.keys("X", "Enter")         // from the menu again, accepted: deleted, and the menu goes with it
+	if !hs.k.st.exists("blank") || hs.k.st.exists("filu") {
+		t.Fatal("not the kamon under the cursor was deleted")
+	}
+	hs.lacks("ITEM OPERATION")
+	hs.keys("X") // on the panel, the kamon now under the cursor
+	hs.contains("Delete blank?")
 }
 
 func TestPreviewIsGold(t *testing.T) {

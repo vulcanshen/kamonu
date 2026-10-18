@@ -84,7 +84,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 | `Enter` | Draw：打開畫格子的 popup | item |
 | `E` | Edit：`EDIT: <名字>` 表單，改名字、字、U 框 | item |
 | `P` | Export：寫出 svg（label 是 `Ex[P]ort`） | item |
-| `X` | Delete：先 confirm | item |
+| `X` | Delete：先 confirm（lib 的 `Action.Ask`：從 Space menu 開時 menu 留在底下，`Esc` 回到 menu，tdp T1、F4） | item |
 | `A` | Add：`NEW KAMON` 表單 | panel |
 
 - **`Enter` 直接畫格子，`[E]dit` 改資料**：

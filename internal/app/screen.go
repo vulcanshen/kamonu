@@ -31,6 +31,23 @@ type kamonu struct {
 	list    *terminu.List
 	panel   *terminu.Panel // [1] KAMON
 	preview *preview
+	// delAsk is Delete's confirm, about the kamon under the cursor: the lib
+	// asks it when the action runs (Action.Ask), which keeps the Space menu
+	// under it (tdp T1, F4). The lib reads it right after Hidden, so Hidden
+	// writes it; TODO(lib KM12): a question made when the action runs.
+	delAsk terminu.Ask
+}
+
+// kamonList is [1]'s list. Its moving keys are in the key reference only
+// when there is a kamon to move among (tdp M6); TODO(lib KM13): the lib's
+// List lists them always.
+type kamonList struct{ *terminu.List }
+
+func (l kamonList) MoveKeys() []terminu.KeyRow {
+	if l.Empty() {
+		return nil
+	}
+	return l.List.MoveKeys()
 }
 
 func newKamonu(st store) *kamonu {
@@ -48,12 +65,13 @@ func newKamonu(st store) *kamonu {
 		// is cut to the frame (layout/screen, empty states).
 		EmptyHint: "Press [A] to add one",
 	}
-	k.panel = &terminu.Panel{Label: "Kamon", Body: k.list, Actions: []terminu.Action{
+	k.panel = &terminu.Panel{Label: "Kamon", Body: kamonList{k.list}, Actions: []terminu.Action{
 		{Key: "Enter", Label: "Draw", Desc: "its cells", Scope: terminu.ItemScope, Hint: "draw", Do: k.draw},
 		{Key: "E", Label: "Edit", Desc: "name, letters, U frame", Scope: terminu.ItemScope, Do: k.edit},
 		// "ExPort": the key is a capital P, written in its place (tdp M5).
 		{Key: "P", Label: "ExPort", Desc: "write its svg", Scope: terminu.ItemScope, Do: k.export},
-		{Key: "X", Label: "Delete", Desc: "this kamon's file", Scope: terminu.ItemScope, Do: k.delete},
+		{Key: "X", Label: "Delete", Desc: "this kamon's file", Scope: terminu.ItemScope, Ask: &k.delAsk,
+			Hidden: func() bool { k.delAsk = k.deleteAsk(k.current()); return k.current() == "" }, Do: k.delete},
 		{Key: "A", Label: "Add", Desc: "a new kamon", Scope: terminu.PanelScope, Hint: "add", Do: k.add},
 	}}
 	k.panel.Actions = append(k.panel.Actions, k.list.Actions()...)
@@ -278,18 +296,22 @@ func (k *kamonu) exported(file string) tea.Cmd {
 	return k.a.Toast(terminu.Info, msg)
 }
 
-func (k *kamonu) delete() tea.Cmd {
-	name := k.current()
-	return k.a.Confirm(terminu.Ask{
+// deleteAsk is the confirm before name is deleted, what goes said first.
+func (k *kamonu) deleteAsk(name string) terminu.Ask {
+	return terminu.Ask{
 		Title: "Delete", Question: "Delete " + name + "?", Verb: "delete",
 		Details: []string{name + ".yaml is removed from " + shown(k.st.conf()) + "."}, Warn: []int{0},
-	}, func() tea.Cmd {
-		if err := k.st.remove(name); err != nil {
-			return k.a.Error("Delete failed", "Can't delete "+name+": "+why(err))
-		}
-		k.reload("")
-		return nil
-	})
+	}
+}
+
+// delete runs once the confirm is accepted (Action.Ask).
+func (k *kamonu) delete() tea.Cmd {
+	name := k.current()
+	if err := k.st.remove(name); err != nil {
+		return k.a.Error("Delete failed", "Can't delete "+name+": "+why(err))
+	}
+	k.reload("")
+	return nil
 }
 
 // preview is [2]: the kamon under the cursor as the splash draws its mark,

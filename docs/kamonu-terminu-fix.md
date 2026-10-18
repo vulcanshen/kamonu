@@ -20,23 +20,22 @@
   做法，不只是填一個值；規範沒寫這種情況。
 - **該怎麼改**：等定案（紀錄 KM10）：維持表單、規範加例外；或改成帶按鈕的 text input popup；或先開 menu 選做法、再輸入檔名。
 
-## 從 Space menu 刪除時，confirm 底下的 Space menu 不見了
+## 從 Space menu 執行、失敗時開的 error popup 底下，Space menu 不見了
 
 - **違反**：tdp T1 與 tdp F4：target 是短的 confirm 或訊息時保留 source，取消 confirm 回到 source（清單 T1-1、T1-2、F4-1、F4-2）。
-- **在哪裡**：`[1]` 的 Space menu → `[X] Delete`（`screen.go` 的 `delete`）；同一類：Space menu → `Draw`、`Edit` 在讀不了的
-  kamon 上開出的 error popup。
-- **現況**：lib 從 menu 執行動作時先關掉整疊 menu，再跑 `Do`；`Do` 裡開的 confirm 與 error popup 底下就沒有 menu 了，`Esc` 回到
-  panel。lib 的 `Action.Ask` 會保留 menu，可是問句是寫死的，帶不了 `Delete <名字>?` 的名字。
-- **該怎麼改**：等 terminu-go 補上（紀錄 KM12，例：`Action` 的問句在執行時才產生），Delete 改用它；`Do` 失敗時開的訊息怎麼
-  保留 menu，一起定。
+- **在哪裡**：Space menu → `Draw`、`Edit` 在讀不了的 kamon 上開出的 error popup（`screen.go` 的 `draw`、`edit`）。
+- **現況**：lib 從 menu 執行動作時先關掉整疊 menu，再跑 `Do`；`Do` 失敗時開的 error popup 底下就沒有 menu 了。成功時打開
+  畫格子的 popup 或表單，清掉 menu 是對的（tdp T1：大幅切換）；lib 沒有讓 `Do` 依結果決定要不要保留的方法。
+  `Delete` 的 confirm 已經改走 lib 的 `Action.Ask`，menu 留在底下（2026-10-18）；它的問句靠 `Hidden` 每次寫成目前那一筆，
+  等 lib 有在執行時才產生問句的寫法再換（`TODO(lib KM12)`）。
+- **該怎麼改**：等 terminu-go 補上（紀錄 KM12）。
 
 ## key reference 列出沒有對象的鍵
 
 - **違反**：tdp M6：key reference 裡，對象不存在的鍵不列（清單 M6-6）。
-- **在哪裡**：都是 lib 畫的：
-  - 清單是空的時，`[1]` 的 key reference 照樣列 `j|k`、`u|d`、`gg|G`。
-  - 一列就放得下的 error popup，key reference 照樣列捲動的鍵。
-- **現況**：kamonu 自己的 `[2]` 已經只在放不下時列捲動的鍵；上面兩處是 lib 的 `List`、error popup 決定的。
+- **在哪裡**：一列就放得下的 error popup，key reference 照樣列捲動的鍵（lib 畫的）。
+- **現況**：kamonu 自己的 `[2]` 只在放不下時列捲動的鍵；`[1]` 清單是空的時不列移動鍵（2026-10-18，包一層 lib 的 `List`，
+  `TODO(lib KM13)`）。error popup 的 key reference 是 lib 自己的，kamonu 改不到。
 - **該怎麼改**：等 terminu-go 補上（紀錄 KM13）。
 
 ## 空狀態的字太長時貼著框、`…` 不是 Overlay0
