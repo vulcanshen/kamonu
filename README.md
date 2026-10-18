@@ -9,16 +9,17 @@
 Every app of the terminu family has its own version of the family mark (家紋, *kamon*): the same blue U frame, with the
 app's letters in gold inside it, on a grid of 25 × 19 cells. With kamonu you say which letters go in the frame, draw
 each one in a colour of its own with the keyboard, and export the svg the family uses, ready to become an app's
-`docs/icon.svg`: every letter gold and marked, so the splash screen shows them one at a time.
+`docs/icon.svg`: every letter gold, and marked one by one in the order of the app's name.
 
 ## Features
 
-- A list of your marks beside a preview of the one under the cursor, drawn as the splash screen draws it.
+- A list of your marks beside a preview of the one under the cursor, as the family draws its marks: gold letters in
+  the blue U frame.
 - A new mark starts with the U frame in place, or blank if you like.
 - Each letter in a colour of its own while you draw, so you always see which cell belongs to which letter.
 - Draw with `hjkl` and `Space`; the U frame cannot be changed by mistake, and the cursor steps over it.
 - Change a mark's name, letters or U frame later, without losing the drawing.
-- Export writes the svg in one key press, the letters split in the order the splash shows them.
+- Export writes the svg in one key press, each letter marked in its order.
 - Save over the mark, or save the drawing as a new one and keep the old.
 - Nothing is lost by accident: leaving a drawing with changes asks first, and so does deleting a mark.
 
@@ -83,21 +84,24 @@ Removes the binary, then asks — never assumes — about `~/.kamonu`, where you
 | `A` | Add a new mark: its name, its letters, and whether it starts with the U frame |
 | `Space` | Everything you can do here |
 | `?` | The keys of this panel |
-| `Tab` / `1`–`2` | The other panel |
+| `Tab\|1–2` | The other panel |
 | `q` | Quit |
+
+On **[2] PREVIEW**, `Enter` draws the mark it shows. When the terminal is too short for the whole mark, `j|k`,
+`u|d` and `gg|G` scroll it.
 
 ### Drawing
 
 | Key | What it does |
 |---|---|
-| `h` `j` `k` `l` | Move a cell left, down, up, right; the cursor steps over the U frame |
-| `Enter` / `Space` | Turn the cell to the next letter; after the last one, back to empty |
+| `h\|j\|k\|l` | Move a cell left, down, up, right; the cursor steps over the U frame |
+| `Enter\|Space` | Turn the cell to the next letter; after the last one, back to empty |
 | `Backspace` | Empty the cell, whatever letter it is |
 | `1`–`6` | Make the cell that letter: `1` the first, `2` the second, …; the same digit again empties it |
-| `p` | Show every letter gold, as the splash will draw the mark; `p` again for their colours |
+| `p` | Show every letter gold, as the svg has them; `p` again for their colours |
 | `x` | Empty every cell (asks first) |
 | `Tab` | Between the cells and the buttons |
-| `h` `j` `k` `l` | On the buttons: between **Save As** and **Save** |
+| `h\|j\|k\|l` | On the buttons: between **Save As** and **Save** |
 | `Enter` | On a button: **Save** writes over the mark, **Save As** asks for a new name and leaves the old mark as it was |
 | `?` | The keys of the drawing |
 | `Esc` | Leave; asks first when something changed |

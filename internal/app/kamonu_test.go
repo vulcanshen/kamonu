@@ -908,6 +908,47 @@ func TestPreviewIsGold(t *testing.T) {
 	}
 }
 
+// TestPreviewEnter: Enter on [2] PREVIEW draws the kamon it shows (tdp K3);
+// with nothing shown, it is not there.
+func TestPreviewEnter(t *testing.T) {
+	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
+	hs.keys("Tab")
+	hs.contains("Enter:draw")
+	hs.keys("Space")
+	hs.contains("[Enter] Draw")
+	hs.keys("Esc", "Enter")
+	hs.contains("DRAW: filu")
+
+	hs = newHarness(t, 80, 40, nil)
+	hs.keys("Tab")
+	hs.lacks("Enter:draw")
+	hs.keys("Enter")
+	hs.lacks("DRAW")
+}
+
+// TestPreviewScrolls: on a panel shorter than the mark, [2] PREVIEW
+// scrolls and says which rows it shows; when the mark fits, it says
+// nothing and lists no scrolling keys.
+func TestPreviewScrolls(t *testing.T) {
+	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
+	hs.keys("Tab", "?")
+	hs.lacks("scroll down, up")
+	hs.keys("Esc")
+	hs.lacks(" of 21")
+
+	hs = newHarness(t, 80, 16, map[string][]byte{"filu": []byte(filYAML)})
+	hs.keys("Tab")
+	hs.contains("1-13 of 21")
+	hs.keys("j")
+	hs.contains("2-14 of 21")
+	hs.keys("G")
+	hs.contains("9-21 of 21")
+	hs.keys("j") // stops at the bottom
+	hs.contains("9-21 of 21")
+	hs.keys("?")
+	hs.contains("scroll down, up")
+}
+
 func TestBrokenFile(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"broken": []byte(strings.Replace(filYAML, "..3......", "..3.....", 1))})
 	hs.contains("Can't draw broken")

@@ -6,6 +6,8 @@ Each release names the version of terminu design (tdp) it follows.
 
 - Built on terminu-go v0.1.13: text in a confirm, a toast and an error popup wraps at spaces, and between wide
   characters
+- On `[2] PREVIEW`, `Enter` draws the mark it shows; on a terminal too short for the whole mark, the preview scrolls
+  with `j|k`, `u|d` and `gg|G` and says which rows it shows
 - The repository takes the terminu family's shape: the program is in `cmd/kamonu` (`go install
   github.com/vulcanshen/kamonu/cmd/kamonu@latest`), and the release files are the family's
 

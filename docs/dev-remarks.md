@@ -35,6 +35,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
     discard 與 clear 的 confirm、`SAVE AS`、離開的 confirm、Space menu、global operation popup、`NEW KAMON` 與它的 `Name`、
     `EDIT: <名字>`、toast、`EXPORT: <名字>`、delete），每一列都剛好等於終端機寬。三種寬度依序跑，同一種寬度的七種大小並排跑
     （寬度是 lib 全程式共用的一個值）。
+  - `[2] PREVIEW`：`Enter` 畫它顯示的那一個，沒有東西時不出現；比 mark 矮時捲動、寫 `N-M of 21`，放得下時不寫、也不列捲動的鍵。
   - 畫格子的 popup 自己畫的那一塊：不管 lib 給多窄、多矮，每一列都剛好是給的寬，列數不超過給的高。
   - U 框跟 tdp 的 `principle/icon.svg` 一模一樣（`internal/app/testdata/tdp-icon.svg` 是它的副本，只給測試用）。
   - E6：splash 畫的 `internal/app/icon.svg` 跟 `docs/icon.svg` 一模一樣，lib 的 splash 吃得下；它的 U 框是家族的，註解依序是 U、K、A、M、O、N。
@@ -59,6 +60,12 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **`[1]` 的 label 是 `KAMON`**（不是 `ICONS`）：user 定的，清單裡的東西就是家紋。
 - **`[2]` 至少 54 欄**（mark 50 欄、左右各一格留白、框兩格）。80 欄時 `[1]` 剩 26 欄；更窄時一次只畫一個 panel。
 - **預覽照 splash 的樣子，字全是金色**（2026-10-14，user）。理由：kamonu 裡只有這裡看得到成品的樣子；想看分字，按 `Enter` 打開畫格子的 popup。
+- **暫定：`[2] PREVIEW` 上的 `Enter` 是 Draw**（2026-10-18，重構時 kamonu 自己定，回報 terminu 等 user 確認）：tdp K3 要內容區的
+  panel 由 app 定一個對整個 panel 最直觀的動作；對著一張 mark 的圖，最直接的就是打開來畫。它是 `[2]` 的 panel operation，
+  hint `Enter:draw`；沒有東西可以預覽時不出現（tdp M6）。之前 `[2]` 上的 `Enter` 不作用。
+- **預覽放不下時捲動**（2026-10-18，components/layout/panel 的「沒有 cursor 的 panel」）：mark 21 列，`[2]` 比它矮時（終端機不到
+  24 列）用 lib 的 `Pager` 捲，下框右邊寫 `N-M of 21`，`j|k`、`u|d`、`gg|G` 只在這時候有、也只在這時候列進 key reference。
+  放得下時照舊上下置中。寬度不夠（窄寬時 `[2]` 不到 52 欄）照舊從右邊截掉。
 
 ### 動作
 
@@ -286,9 +293,13 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 偏離 tdp
 
-- **F1（popup 只有七類）**，在畫格子的 popup：它是 kamonu 自己的一類。
+- **F1（popup 只有七類）**，在畫格子的 popup：它是 kamonu 自己的一類（tdp v0.7.x 的 F1 拿它當七類以外的例子）。
   - 為什麼：內容是 25 × 19 的格子，七類都裝不下（最接近的 form 是「一列一個值」）。
   - 長相與按鍵盡量照 form：`Tab` 在格子與動作列之間、按鈕送出、改過時 `Esc` 先問；格子裡照 K12。
+- **K5（popup 上的 `Space` 不作用）**，在畫格子的 popup 的格子上：`Space` 把這一格換成下一個字（跟 `Enter` 一樣）。
+  - 為什麼：每一格當成 checkbox（K5 唯一的例外是 checkbox 的選項，`Space` 勾或取消勾；2026-10-13 跟 user 定的）。後來一個 mark
+    可以有好幾個字，一格不只亮暗兩種，`Space` 改成照順序換字，最後一個字之後回到空的 —— 已經不只是勾或不勾。
+  - 在按鈕上 `Space` 不作用，照 K5。
 - **E6、E7（demo gif）**，在 README：沒有 VHS 錄的 demo gif，`.local/demos/` 也沒有腳本（`make gif` 是 family.mk 給的，跑了會找不到 tape）。
   - 為什麼：kamonu 大部分是 user 自己在用，放上 GitHub 但不推廣（user 2026-10-14：「不需要 vhs 錄 gif」）。
   - 其他照 E6：goreleaser、`install.sh`／`uninstall.sh`、Homebrew tap、L4 與 icon 的測試。

@@ -56,9 +56,15 @@ func newKamonu(st store) *kamonu {
 	}}
 	k.panel.Actions = append(k.panel.Actions, k.list.Actions()...)
 	k.preview = &preview{k: k}
+	// Enter on the preview draws the kamon it shows: the most direct thing to
+	// do with a picture of a mark (tdp K3; provisional, docs/dev-remarks.md).
+	preview := &terminu.Panel{Label: "Preview", Body: k.preview, Actions: []terminu.Action{
+		{Key: "Enter", Label: "Draw", Desc: "the kamon shown here", Scope: terminu.PanelScope, Hint: "draw",
+			Hidden: func() bool { return k.current() == "" }, Do: k.draw},
+	}}
 	a.AddScreen(&terminu.Screen{
 		Name:   "Kamon",
-		Panels: []*terminu.Panel{k.panel, {Label: "Preview", Body: k.preview}},
+		Panels: []*terminu.Panel{k.panel, preview},
 		Layout: func(w, h int) []terminu.Rect {
 			left := max(w-previewWidth, 0)
 			return []terminu.Rect{{X: 0, Y: 0, W: left, H: h}, {X: left, Y: 0, W: w - left, H: h}}
@@ -277,13 +283,17 @@ func (k *kamonu) delete() tea.Cmd {
 }
 
 // preview is [2]: the kamon under the cursor as the splash draws its mark,
-// every letter gold, with a row of background above and below (tdp S5).
+// every letter gold, with a row of background above and below (tdp S5),
+// centred in the panel. The lib's Pager shows it: when the panel is shorter
+// than the mark, it scrolls and says which rows it shows
+// (components/layout/panel, a panel with no cursor).
 type preview struct {
-	k    *kamonu
-	name string // what m and err are of
-	m    mark
-	err  error
-	read bool
+	k     *kamonu
+	name  string // what m and err are of
+	m     mark
+	err   error
+	read  bool
+	pager terminu.Pager
 }
 
 // forget makes the next draw read the file again.
@@ -292,6 +302,7 @@ func (p *preview) forget() { p.read = false }
 func (p *preview) Draw(w, h int, focused bool) []string {
 	name := p.k.current()
 	if name == "" {
+		p.pager.SetLines(nil)
 		return terminu.EmptyState(w, h, "Nothing to preview", "")
 	}
 	if !p.read || name != p.name {
@@ -301,36 +312,42 @@ func (p *preview) Draw(w, h int, focused bool) []string {
 		p.m = km.picture()
 	}
 	if p.err != nil {
+		p.pager.SetLines(nil)
 		return terminu.EmptyState(w, h, "Can't draw "+name, why(p.err))
 	}
 	square := glyphSquare
 	if terminu.IconWidth() == 1 {
 		square += " " // a square takes two columns (tdp S5, E5)
 	}
-	backRow := terminu.Fg(backColor).Render(strings.Repeat(square, cols))
+	// The pager keeps a cell from the frame on either side.
+	inner := max(w-2, 0)
+	backRow := terminu.Center(terminu.Fg(backColor).Render(strings.Repeat(square, cols)), inner)
 	mark := []string{backRow}
 	for r := range rows {
 		var b strings.Builder
 		for c := range cols {
 			b.WriteString(terminu.Fg(p.m[r][c].color()).Render(square))
 		}
-		mark = append(mark, b.String())
+		mark = append(mark, terminu.Center(b.String(), inner))
 	}
 	mark = append(mark, backRow)
-
-	lines := make([]string, h)
-	top := (h - len(mark)) / 2
-	for i := range lines {
-		if j := i - top; j >= 0 && j < len(mark) {
-			lines[i] = terminu.Fit(terminu.Center(mark[j], w), w)
-		} else {
-			lines[i] = strings.Repeat(" ", w)
-		}
+	// Centred when it fits: blank rows above make up the difference.
+	if pad := (h - len(mark)) / 2; pad > 0 {
+		mark = append(make([]string, pad), mark...)
 	}
-	return lines
+	p.pager.SetLines(mark)
+	return p.pager.Draw(w, h, focused)
 }
 
-func (p *preview) Key(string, tea.KeyMsg) (bool, tea.Cmd) { return false, nil }
-func (p *preview) HasItem() bool                          { return false }
-func (p *preview) Scroll() string                         { return "" }
-func (p *preview) MoveKeys() []terminu.KeyRow             { return nil }
+func (p *preview) Key(key string, msg tea.KeyMsg) (bool, tea.Cmd) { return p.pager.Key(key, msg) }
+func (p *preview) HasItem() bool                                  { return false }
+func (p *preview) Scroll() string                                 { return p.pager.Scroll() }
+
+// MoveKeys are the pager's, only while the mark does not fit (tdp M6: a key
+// with nothing to act on is not listed).
+func (p *preview) MoveKeys() []terminu.KeyRow {
+	if p.pager.Scroll() == "" {
+		return nil
+	}
+	return p.pager.MoveKeys()
+}
