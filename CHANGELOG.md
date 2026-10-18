@@ -8,6 +8,14 @@ Each release names the version of terminu design (tdp) it follows.
   characters
 - On `[2] PREVIEW`, `Enter` draws the mark it shows; on a terminal too short for the whole mark, the preview scrolls
   with `j|k`, `u|d` and `gg|G` and says which rows it shows
+- `[2] PREVIEW` draws the mark from its top left, as other panels show their content; a mark it cannot read says so in
+  red, and `Enter` shows why
+- Draw: a cell between each letter's square and the letter, and two between letters; on a screen too narrow for
+  them on one row, the rest go on the next
+- Export: a failure opens an error popup with all of it, instead of a toast that could cut it
+- Export's `File`: a name already there is refused as `File is taken: …`, and the old value is offered as the form
+  shows it, `.svg` and all
+- Edit's Letters say whose letters they are
 - Draw on a terminal under 27 rows (80 × 24, say): the cells scroll with the cursor, and the letters and the buttons
   stay in view; they were cut off before
 - An error popup's title says what failed: `SAVE FAILED`, `DRAW FAILED`

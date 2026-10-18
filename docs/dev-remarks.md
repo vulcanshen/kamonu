@@ -65,7 +65,15 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   hint `Enter:draw`；沒有東西可以預覽時不出現（tdp M6）。之前 `[2]` 上的 `Enter` 不作用。
 - **預覽放不下時捲動**（2026-10-18，components/layout/panel 的「沒有 cursor 的 panel」）：mark 21 列，`[2]` 比它矮時（終端機不到
   24 列）用 lib 的 `Pager` 捲，下框右邊寫 `N-M of 21`，`j|k`、`u|d`、`gg|G` 只在這時候有、也只在這時候列進 key reference。
-  放得下時照舊上下置中。寬度不夠（窄寬時 `[2]` 不到 52 欄）照舊從右邊截掉。
+  寬度不夠（窄寬時 `[2]` 不到 52 欄）從右邊截掉。
+- **預覽從左上角畫起**（2026-10-18，components/layout/panel 的框：內容離左框一格、第一列緊接上框）：以前上下左右置中，像 splash；
+  照 panel 的規定改成跟其他 panel 一樣從左上角開始。
+- **預覽的空狀態與讀不了**（2026-10-18，layout/screen 的空狀態、layout/panel 的錯誤）：
+  - 清單是空的：`Nothing to preview`，提示 `Press [1], then [A] to add one`（`[A]` 是 `[1]` 的鍵，先到 `[1]`）。
+  - yaml 讀不了：事實 `Can't draw <名字>` 用 Red（`[2]` 的 `Failure`），提示 `Press [Enter] to see why` —— `Enter` 打開的
+    error popup 寫著原因。以前兩句都是 Overlay0，第二句是原因本身。
+- **`[1]` 的空狀態提示是 `Press [A] to add one`**（2026-10-18）：原本還有 `, or [Space] to see what you can do here`，80 欄時
+  `[1]` 內寬 24，被 lib 截到貼著框（紀錄 KM11）；縮短後放得下。`Space` 本來就寫在 footer。
 
 ### 動作
 
@@ -160,7 +168,10 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 ### 匯出
 
 - **`Ex[P]ort` 直接寫到 `svg/<名字>.svg`**，再用 toast 說寫到哪裡（2026-10-14，user 選 B）。
-  - 失敗時用 Error toast：這是清單上的動作，不是 popup 裡的動作（components/dialog/toast）。
+  - 失敗時開 error popup `EXPORT FAILED`（2026-10-18）：原本用 Error toast，可是 toast 最多三列，原因長時會被截掉，完整的內容
+    要走 error popup 或 log（components/dialog/toast），kamonu 沒有 log。
+  - 成功的 toast 寫完整路徑；路徑長到三列放不下時（`KAMONU__DATA` 很深、終端機又窄），改寫 `Exported to svg/<檔名>`，
+    從資料目錄算起（README 寫了 `svg/` 在哪裡）。
 - **已經有 `<名字>.svg` 時先問**（2026-10-15，user）：開表單 `EXPORT: <名字>`，照 tdp v0.6.7 的多個按鈕（dialog/form 的動作區）。
   - 欄位 `File`：新檔的名字，預設 `<名字>_<n>.svg`，n 是從 1 起第一個還沒用掉的號碼；`Enter` 可以改，打不打 `.svg` 都可以。
     已經有的名字在 input popup 裡就擋下：它是這一欄自己的事，擋在表單上的話，`Overwrite` 也會被這一欄的錯誤擋住。
@@ -197,13 +208,15 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 上面再開的 discard confirm、`SAVE AS` 文字輸入、error popup 都用 lib 的。v0.1.1 以前這些都由 kamonu 自己畫（見「運作方式」）。
 - **按 `Enter` 或 `Space`，那一格依序切換**：底 → 第 1 個字 → … → 最後一個字 → 底（tdp K5 的 checkbox 例外）。
   - 格子下面一列色標，每個字寫成 `[1] ■ F`：按哪個數字、什麼顏色、哪個字。數字照 tdp M5 標成熱鍵（數字放前面）。
-    排不下時（6 個字、icon 佔兩格）字與字之間從兩格空白縮成一格。
+    方塊與字之間一格、字與字之間兩格（components/README 的間距）。popup 照色標放得下的寬度開（6 個字、icon 佔兩格要 58 欄）；
+    終端機太窄、放不下一列時，放不下的字接到下一列（2026-10-18；以前把間距縮成一格、方塊與字黏在一起）。
   - 下面是動作列，`Tab` 在格子與動作列之間切換，跟表單一樣。
 - **放不下時格子捲動**（2026-10-18）：整個 popup 要 27 列（格子 19 列、空一列、色標、分隔線、按鈕，加上下留白與框）。
   - 終端機 28 列時少一列：拿掉色標上面那一列空白。
   - 更矮時（例：80 × 24）照表單的做法：只有格子捲，捲最少的量讓 cursor 那一列看得到；色標、分隔線、按鈕固定在下面
     （components/dialog/form、layout/popup 的「內容放不下時」）。在按鈕上時格子停在原處。
   - 下框右邊該寫捲動位置，lib 的 `PopupBody` 沒有給的地方，還沒寫（紀錄 KM9，`TODO(lib KM9)`）。
+  - 會捲時 popup 照「hint 加上最寬的捲動位置 `19 of 19` 再加 9」開（layout/popup 的寬度：捲的時候框不忽寬忽窄），內寬 55。
 - **數字鍵 `1`–`6` 直接把那一格設成第幾個字**（2026-10-14，user：「連續按 space 太繁瑣」）。
   - **再按一次同一個數字就清空**（2026-10-14，user）：已經是那個字的格子上按它的數字，等於 `Backspace`，畫錯時不用換鍵。
   - 超過字數的數字不作用（`FIL` 按 `4`）。
@@ -239,7 +252,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
     按鈕上寫 `Tab:grid`，不是表單的 `Tab:fields`（user 2026-10-14，經 terminu 的 session）：`Tab` 的 hint 寫要去的那一塊
     （components/dialog/form），這裡要去的是格子；`Tab:fields` 是表單與有按鈕的 input popup 的字，那裡要去的是欄位。
     tdp v0.6.5 的 K2 只管 `Tab` 在欄位區與動作列之間來回，格子 popup 本來就是這樣。
-  - `q` 在這個 popup 上不作用（照表單：`q` 不進離開流程）。`Ctrl-C` 開離開的 confirm；畫的東西沒存時，多一句 Peach `Changes to <名字> are not saved.`。
+  - `q` 在這個 popup 上不作用（照表單：`q` 不進離開流程；這是偏離，見「偏離 tdp」）。`Ctrl-C` 開離開的 confirm；畫的東西沒存時，多一句 Peach `Changes to <名字> are not saved.`。
   - `SAVE AS` 沒有灰字提議（沒有舊值）；說明列是 `Name for the new kamon; <名字> stays as it was`。什麼都沒打就按 `Enter`
     等於取消（lib 的單行輸入）。名字有控制字元時，錯誤列寫 `Name can't have control characters`：錯誤點名的是值的名字，
     標題 `SAVE AS` 說的是在做什麼，所以 kamonu 另外給值的名字（tdp v0.6.11 的 components/input、terminu-go v0.1.10 的
@@ -305,6 +318,9 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 為什麼：每一格當成 checkbox（tdp K5 唯一的例外是 checkbox 的選項，`Space` 勾或取消勾；2026-10-13 跟 user 定的）。後來一個 mark
     可以有好幾個字，一格不只亮暗兩種，`Space` 改成照順序換字，最後一個字之後回到空的 —— 已經不只是勾或不勾。
   - 在按鈕上 `Space` 不作用，照 tdp K5。
+- **tdp K1、K9（`q` 進離開流程）**，在畫格子的 popup：`q` 不作用，跟表單上一樣；`Ctrl-C` 照樣進離開流程。
+  - 為什麼：這個 popup 的長相與按鍵照表單（`Tab`、按鈕、改過先問），tdp K1 的例外只寫了「表單上的 `q`」。同一種樣子的 popup，
+    `q` 一個會走、一個不會，使用者得記兩套；畫到一半手滑按到 `q` 也不會跳出離開的 confirm。
 - **tdp E6、E7（demo gif）**，在 README：沒有 VHS 錄的 demo gif，`.local/demos/` 也沒有腳本（`make gif` 是 family.mk 給的，跑了會找不到 tape）。
   - 為什麼：kamonu 大部分是 user 自己在用，放上 GitHub 但不推廣（user 2026-10-14：「不需要 vhs 錄 gif」）。
   - 其他照 tdp E6：goreleaser、`install.sh`／`uninstall.sh`、Homebrew tap、tdp L4 與 icon 的測試。

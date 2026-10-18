@@ -115,9 +115,57 @@ func (e *editor) empty() bool { return e.km.cells == [rows][cols]uint8{} }
 // clear empties the cell, whatever letter it is.
 func (e *editor) clear() { e.set(0) }
 
-// Size is the inside: the grid with a blank cell on either side; the grid, a
-// blank row, the letters, the separator, the action row.
-func (e *editor) Size(sw, sh int) (int, int) { return 2*cols + 2, rows + 4 }
+// Size is the inside: the grid, or the row of letters when it is wider, with
+// a blank cell on either side; the grid, a blank row, the letters (on more
+// rows when the screen is too narrow for one), the separator, the action
+// row. When the grid will scroll (the frame is at most the screen less two
+// rows, tdp F7, and four of its rows are the frame and the blank rows), it
+// is wide enough for the hint and the scroll position at its widest,
+// "19 of 19" (components/layout/popup).
+func (e *editor) Size(sw, sh int) (int, int) {
+	w := max(2*cols, e.legendWidth()) + 2
+	if sh-6 < rows+e.tailRows(sw, w) {
+		hint := len("Enter|Space:cycle Tab:actions Esc:cancel")
+		w = max(w, hint+len("19 of 19")+9-2)
+	}
+	return w, rows + 1 + e.tailRows(sw, w)
+}
+
+// tailRows are the rows under the grid on a sw-wide screen, the inside w
+// wide or as wide as the lib leaves it: the letters, the separator, the
+// action row.
+func (e *editor) tailRows(sw, w int) int {
+	inside := min(w, min(sw-2, 120)-2)
+	return len(packLegend(make([]string, len(e.km.letters)), e.itemWidth(), inside-2)) + 2
+}
+
+// itemWidth is one letter of the row: "[1] ■ K".
+func (e *editor) itemWidth() int { return len("[1] ") + terminu.IconWidth() + len(" K") }
+
+// legendWidth is the row of letters on one row, two cells between two.
+func (e *editor) legendWidth() int {
+	n := len(e.km.letters)
+	return n*e.itemWidth() + max(n-1, 0)*2
+}
+
+// packLegend puts the letters on rows w cells wide, two cells between two,
+// as many on a row as fit; one row when there are none.
+func packLegend(items []string, itemW, w int) []string {
+	out := []string{""}
+	used := 0
+	for _, it := range items {
+		switch {
+		case used == 0:
+			out[len(out)-1], used = it, itemW
+		case used+2+itemW <= w:
+			out[len(out)-1] += "  " + it
+			used += 2 + itemW
+		default:
+			out, used = append(out, it), itemW
+		}
+	}
+	return out
+}
 
 func (e *editor) Hint() []terminu.KeyHint {
 	if !e.onButtons {
@@ -144,11 +192,11 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 			}
 			b.WriteString(st.Render(square))
 		}
-		grid = append(grid, padRow(b.String(), w))
+		grid = append(grid, padRow(terminu.Center(b.String(), w-2), w))
 	}
 	// The letters, each after the digit that paints it (a hotkey is shown:
-	// tdp M5) and its colour, gold with the rest under p; one space between
-	// them when two do not fit.
+	// tdp M5) and its colour, gold with the rest under p: a cell after the
+	// square, two between two (components/README, spacing).
 	var legend []string
 	for i, l := range e.km.letters {
 		swatch := letterColors[i]
@@ -156,14 +204,14 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 			swatch = goldColor
 		}
 		legend = append(legend, terminu.Fg(terminu.Text).Render("["+strconv.Itoa(i+1)+"] ")+
-			terminu.Fg(swatch).Render(square)+terminu.Fg(terminu.Text).Render(l))
-	}
-	letters := strings.Join(legend, "  ")
-	if terminu.Width(letters) > w-2 {
-		letters = strings.Join(legend, " ")
+			terminu.Fg(swatch).Render(glyphSquare)+terminu.Fg(terminu.Text).Render(" "+l))
 	}
 	// The letters, the separator and the action row stay at the bottom.
-	tail := []string{padRow(letters, w), " " + terminu.Fg(terminu.Overlay0).Render(terminu.Repeat("─", w-2)) + " "}
+	var tail []string
+	for _, row := range packLegend(legend, e.itemWidth(), w-2) {
+		tail = append(tail, padRow(row, w))
+	}
+	tail = append(tail, " "+terminu.Fg(terminu.Overlay0).Render(terminu.Repeat("─", w-2))+" ")
 	var buttons []string
 	for i, label := range buttonLabels {
 		b := " " + label + " "
@@ -178,9 +226,9 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 
 	var body []string
 	switch {
-	case h >= rows+4:
+	case h >= rows+1+len(tail):
 		body = append(append(grid, ""), tail...) // a blank row above the letters
-	case h >= rows+3:
+	case h >= rows+len(tail):
 		body = append(grid, tail...) // one row short: the blank row goes
 	default:
 		// Shorter still (a terminal under 27 rows): the grid scrolls the

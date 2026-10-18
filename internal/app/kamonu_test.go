@@ -436,7 +436,7 @@ func TestEditorShowsTheLetters(t *testing.T) {
 	for _, l := range hs.k.a.Frame() {
 		if strings.Contains(terminu.StripStyles(l), "[1] "+glyphSquare) {
 			for i, c := range letterColors[:3] {
-				if !strings.Contains(l, terminu.Fg(c).Render(glyphSquare+" ")) {
+				if !strings.Contains(l, terminu.Fg(c).Render(glyphSquare)) {
 					t.Fatalf("letter %d is not drawn in its colour", i+1)
 				}
 			}
@@ -734,6 +734,9 @@ func TestNoKeysWhileOpening(t *testing.T) {
 func TestNewKamon(t *testing.T) {
 	hs := newHarness(t, 80, 40, nil)
 	hs.contains("No kamon yet")
+	hs.contains("Press [A] to add one")
+	hs.contains("Nothing to preview")
+	hs.contains("Press [1], then [A] to add one") // a key to press (layout/screen, empty states)
 	hs.keys("A")
 	hs.contains("NEW KAMON")
 	hs.keys("Tab", "Enter")
@@ -850,8 +853,10 @@ func TestExportWhenThere(t *testing.T) {
 	// A name of its own; one there is refused, with ".svg" or without.
 	hs.keys("P")
 	hs.contains("filu_2.svg")
-	hs.keys("Enter", "f", "i", "l", "u", ".", "s", "v", "g", "Enter")
-	hs.contains("filu.svg is already there")
+	hs.keys("Enter")
+	hs.contains("filu_2.svg") // the old value as the form shows it
+	hs.keys("f", "i", "l", "u", ".", "s", "v", "g", "Enter")
+	hs.contains("File is taken: filu.svg is already there") // names the value
 	hs.keys("Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace",
 		"m", "a", "r", "k", "Enter", "Tab", "Enter")
 	svgIs(t, hs, "mark", km)
@@ -892,6 +897,7 @@ func TestExportFailure(t *testing.T) {
 	}
 	defer os.Chmod(hs.k.st.dir, 0o755)
 	hs.keys("P")
+	hs.contains("EXPORT FAILED") // all of it, in an error popup, never cut as a toast would
 	hs.contains("Can't export filu: permission denied")
 }
 
@@ -971,12 +977,29 @@ func TestPreviewScrolls(t *testing.T) {
 	hs.contains("scroll down, up")
 }
 
+// TestLettersPrompt: the prompt says whose letters they are (components/
+// input, the one-line input).
+func TestLettersPrompt(t *testing.T) {
+	hs := newHarness(t, 100, 40, map[string][]byte{"filu": []byte(filYAML)})
+	hs.keys("E", "j", "Enter")
+	hs.contains("The letters in the U frame of filu, in the order of the app's name")
+	hs.keys("Esc", "Esc", "A", "j", "Enter")
+	hs.contains("The letters in the U frame of the new kamon, in the order of the app's name")
+}
+
 func TestBrokenFile(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"broken": []byte(strings.Replace(filYAML, "..3......", "..3.....", 1))})
 	hs.contains("Can't draw broken")
-	hs.keys("Enter")
+	hs.contains("Press [Enter] to see why")
+	hs.keys("Tab") // [2] focused: its colours undimmed
+	if !strings.Contains(strings.Join(hs.k.a.Frame(), "\n"), terminu.Fg(terminu.Red).Render("Can't draw broken")) {
+		t.Fatal("the preview's failure is not in Red (layout/panel, errors)")
+	}
+	hs.keys("Enter") // on [2]: as it says, why
 	hs.contains("DRAW FAILED")
 	hs.contains("Can't read broken")
+	hs.keys("Esc", "Tab", "Enter") // on [1] too
+	hs.contains("DRAW FAILED")
 	hs.keys("Esc", "E")
 	hs.contains("Can't read broken")
 }

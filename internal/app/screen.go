@@ -44,7 +44,9 @@ func newKamonu(st store) *kamonu {
 	k.list = &terminu.List{
 		Columns:   []terminu.Column{{Title: "Name", Flex: true}},
 		EmptyFact: "No kamon yet",
-		EmptyHint: "Press [A] to add one, or [Space] to see what you can do here",
+		// Short enough for [1] at 80 columns, 24 cells inside: a longer hint
+		// is cut to the frame (layout/screen, empty states).
+		EmptyHint: "Press [A] to add one",
 	}
 	k.panel = &terminu.Panel{Label: "Kamon", Body: k.list, Actions: []terminu.Action{
 		{Key: "Enter", Label: "Draw", Desc: "its cells", Scope: terminu.ItemScope, Hint: "draw", Do: k.draw},
@@ -62,6 +64,7 @@ func newKamonu(st store) *kamonu {
 		{Key: "Enter", Label: "Draw", Desc: "the kamon shown here", Scope: terminu.PanelScope, Hint: "draw",
 			Hidden: func() bool { return k.current() == "" }, Do: k.draw},
 	}}
+	k.preview.panel = preview
 	a.AddScreen(&terminu.Screen{
 		Name:   "Kamon",
 		Panels: []*terminu.Panel{k.panel, preview},
@@ -126,10 +129,10 @@ func nameField(name *string, prompt string, check func() string) *terminu.FormFi
 		Check: check}
 }
 
-func lettersField(letters *string) *terminu.FormField {
+func lettersField(letters *string, prompt string) *terminu.FormField {
 	return &terminu.FormField{Label: "Letters", Value: func() string { return *letters }, Empty: "not set",
 		Edit: func() terminu.Input {
-			return terminu.TextInput{Title: "Letters", Glyph: glyphPencil, Prompt: "The letters in the U frame, in the order of the app's name",
+			return terminu.TextInput{Title: "Letters", Glyph: glyphPencil, Prompt: prompt,
 				Verb: "set", Old: *letters,
 				Check: checkLetters, Done: func(v string) tea.Cmd { *letters = strings.ToUpper(v); return nil }}
 		},
@@ -159,7 +162,7 @@ func (k *kamonu) add() tea.Cmd {
 				}
 				return ""
 			}),
-			lettersField(&letters),
+			lettersField(&letters, "The letters in the U frame of the new kamon, in the order of the app's name"),
 			base,
 		},
 		Submit: func() (tea.Cmd, error) {
@@ -197,7 +200,7 @@ func (k *kamonu) edit() tea.Cmd {
 				}
 				return ""
 			}),
-			lettersField(&letters),
+			lettersField(&letters, "The letters in the U frame of "+old+", in the order of the app's name"),
 			base,
 		},
 		Submit: func() (tea.Cmd, error) {
@@ -232,7 +235,7 @@ func (k *kamonu) export() tea.Cmd {
 		}
 	}
 	if err != nil {
-		return k.a.Toast(terminu.Error, "Can't export "+name+": "+why(err))
+		return k.a.Error("Export failed", "Can't export "+name+": "+why(err))
 	}
 	// <name>.svg is there.
 	file := k.st.nextSVG(name)
@@ -247,7 +250,7 @@ func (k *kamonu) export() tea.Cmd {
 		Fields: []*terminu.FormField{{Label: "File", Value: func() string { return file + ".svg" },
 			Edit: func() terminu.Input {
 				return terminu.TextInput{Title: "File", Glyph: glyphPencil, Prompt: "Name of the new svg; " + name + ".svg stays as it is",
-					Verb: "set", Old: file,
+					Verb: "set", Old: file + ".svg",
 					Check: func(v string) error { return k.st.checkSVG(strings.TrimSuffix(v, ".svg")) },
 					Done:  func(v string) tea.Cmd { file = strings.TrimSuffix(v, ".svg"); return nil }}
 			}}},
@@ -265,7 +268,14 @@ func (k *kamonu) export() tea.Cmd {
 
 // exported says in a toast where the svg went.
 func (k *kamonu) exported(file string) tea.Cmd {
-	return k.a.Toast(terminu.Info, "Exported to "+shown(k.st.svgPath(file)))
+	msg := "Exported to " + shown(k.st.svgPath(file))
+	// A toast shows three rows at most and cuts the rest (components/dialog/
+	// toast); a path too long for that is said from the data directory,
+	// where README says svg/ is.
+	if w, _ := k.a.Size(); terminu.Width(msg) > 3*(min(w-2, 120)-4) {
+		msg = "Exported to svg/" + file + ".svg"
+	}
+	return k.a.Toast(terminu.Info, msg)
 }
 
 func (k *kamonu) delete() tea.Cmd {
@@ -284,12 +294,14 @@ func (k *kamonu) delete() tea.Cmd {
 
 // preview is [2]: the kamon under the cursor as the splash draws its mark,
 // every letter gold, with a row of background above and below (tdp S5),
-// centred in the panel. The lib's Pager shows it: when the panel is shorter
-// than the mark, it scrolls and says which rows it shows
-// (components/layout/panel, a panel with no cursor).
+// from the top left of the panel, a cell from the frame
+// (components/layout/panel). The lib's Pager shows it: when the panel is
+// shorter than the mark, it scrolls and says which rows it shows. A kamon
+// that cannot be read is the panel's Failure, its fact in Red.
 type preview struct {
 	k     *kamonu
-	name  string // what m and err are of
+	panel *terminu.Panel // [2], whose Fail says what could not be read
+	name  string         // what m and err are of
 	m     mark
 	err   error
 	read  bool
@@ -299,11 +311,15 @@ type preview struct {
 // forget makes the next draw read the file again.
 func (p *preview) forget() { p.read = false }
 
+// Empty is a preview with nothing to show: no kamon, or one it cannot read.
+func (p *preview) Empty() bool { return p.k.current() == "" || p.err != nil }
+
 func (p *preview) Draw(w, h int, focused bool) []string {
+	p.panel.Fail = nil
 	name := p.k.current()
 	if name == "" {
 		p.pager.SetLines(nil)
-		return terminu.EmptyState(w, h, "Nothing to preview", "")
+		return terminu.EmptyState(w, h, "Nothing to preview", "Press [1], then [A] to add one")
 	}
 	if !p.read || name != p.name {
 		p.name, p.read = name, true
@@ -313,28 +329,24 @@ func (p *preview) Draw(w, h int, focused bool) []string {
 	}
 	if p.err != nil {
 		p.pager.SetLines(nil)
-		return terminu.EmptyState(w, h, "Can't draw "+name, why(p.err))
+		// Enter draws it, and drawing it opens an error popup that says why.
+		p.panel.Fail = &terminu.Failure{Fact: "Can't draw " + name, Hint: "Press [Enter] to see why"}
+		return terminu.EmptyState(w, h, "", "")
 	}
 	square := glyphSquare
 	if terminu.IconWidth() == 1 {
 		square += " " // a square takes two columns (tdp S5, E5)
 	}
-	// The pager keeps a cell from the frame on either side.
-	inner := max(w-2, 0)
-	backRow := terminu.Center(terminu.Fg(backColor).Render(strings.Repeat(square, cols)), inner)
+	backRow := terminu.Fg(backColor).Render(strings.Repeat(square, cols))
 	mark := []string{backRow}
 	for r := range rows {
 		var b strings.Builder
 		for c := range cols {
 			b.WriteString(terminu.Fg(p.m[r][c].color()).Render(square))
 		}
-		mark = append(mark, terminu.Center(b.String(), inner))
+		mark = append(mark, b.String())
 	}
 	mark = append(mark, backRow)
-	// Centred when it fits: blank rows above make up the difference.
-	if pad := (h - len(mark)) / 2; pad > 0 {
-		mark = append(make([]string, pad), mark...)
-	}
 	p.pager.SetLines(mark)
 	return p.pager.Draw(w, h, focused)
 }
