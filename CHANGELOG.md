@@ -2,6 +2,11 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
+## Unreleased
+
+- Built on terminu-go v0.1.13: text in a confirm, a toast and an error popup wraps at spaces, and between wide
+  characters
+
 ## v0.1.2 — tdp v0.6.11
 
 - Draw opens on the lib's popup stack (terminu-go `App.Popup`): the confirms, Save As, error popups and key reference

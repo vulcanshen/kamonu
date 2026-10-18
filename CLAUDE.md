@@ -11,7 +11,7 @@ terminu 家族的一員：畫家族 mark（家紋）的 TUI app。名字是日�
   - 發版前、commit 前用 `GOWORK=off go build ./...`、`GOWORK=off go test ./...` 確認拿 GitHub 版本也過得了；過不了表示用到了
     lib 還沒發版的東西，要等 terminu-go 打新 tag。
   - 切換的步驟 terminu-go 的 session 已經直接告訴你。
-- 規範：`~/Documents/sideproj/terminu`（tdp），照**最新 tag** 做（現在是 **tdp v0.6.11**）。
+- 規範：`~/Documents/sideproj/terminu`（tdp），照**最新 tag** 做（現在是 **tdp v0.7.4**）。
 - **kamonu 是第一個真正用 terminu-go 寫的 app**：terminu-go 的展示場證明了 lib 照規範畫得出來，kamonu 證明真的 app 用得順。
 
 上面這些都已經跟 user 定案，不要重提。
@@ -51,7 +51,7 @@ terminu 家族的一員：畫家族 mark（家紋）的 TUI app。名字是日�
 照 terminu-go 的做法：
 
 - **讀什麼**：
-  - terminu 最新 tag 的 `principle/README-zh_TW.md`、`principle/rules-zh_TW.md`、`components/` 全部。
+  - terminu 最新 tag 的 `principle/README-zh_TW.md`、`principle/rules-zh_TW.md`、`components/`、`project/` 全部。
   - 繁中是原文，英文是翻譯。
 - **不讀什麼**：
   - 五個 app 的程式（kbu、filu、sshu、webu、locku）。
@@ -76,7 +76,7 @@ terminu 家族的一員：畫家族 mark（家紋）的 TUI app。名字是日�
 ### KM<n> <一句話標題>
 - 狀態：待定
 - 種類：盲點（規範）／lib 要補
-- 規範：<檔案> 的 <段落或規則編號>（tdp v0.6.11）
+- 規範：<檔案> 的 <段落或規則編號>（tdp v0.7.4）
 - 卡在：kamonu 需要知道什麼才能做下去
 - 可能：A …；B …（各附一句後果）
 - 暫時：跳過／暫時照 A 做（程式裡標 `TODO(tdp KM<n>)` 或 `TODO(lib KM<n>)`）
