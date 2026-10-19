@@ -87,7 +87,7 @@ Removes the binary, then asks — never assumes — about `~/.kamonu`, where you
 | `Tab\|1–2` | The other panel |
 | `q` | Quit |
 
-On **[2] PREVIEW**, `e` and `Enter` draw the mark it shows. When the terminal is too short for the whole mark, `j|k`,
+On **[2] PREVIEW**, `Enter` shows the mark the way its app will show it, and `e` draws it. When the terminal is too short for the whole mark, `j|k`,
 `u|d` and `gg|G` scroll it.
 
 ### Drawing
@@ -120,7 +120,7 @@ kamonu has no settings file. Everything is kept in `~/.kamonu/data`; set `KAMONU
 | Where | What |
 |---|---|
 | `conf/<name>.yaml` | The mark: its letters, whether it has the U frame, and its cells, drawn as a picture you can read |
-| `svg/<name>.svg` | What **Export** writes. When it is there, Export asks: **Overwrite** it, or **Export as new**, under a name you give (`<name>_1.svg`, the first number not taken, is suggested) |
+| `svg/<name>.svg` | What **Export** writes. When it is there, Export asks: **Overwrite** it, or **Export as new**, under a name you give; `<name>_1.svg`, the first number not taken, is offered, and `Enter` takes it |
 
 ## Limitations
 
@@ -128,6 +128,7 @@ kamonu has no settings file. Everything is kept in `~/.kamonu/data`; set `KAMONU
   colours of the letters are only for drawing; the svg has them all gold.
 - At most 6 letters, each one of A to Z.
 - Renaming or deleting a mark leaves the svg already exported as it is.
+- kamonu needs a terminal of at least 56 × 16; in a smaller one it only says so, until the terminal grows.
 
 ## Links
 

@@ -25,29 +25,20 @@ const (
 // frame on either side.
 const previewWidth = 2*cols + 4
 
+// minWidth × minHeight is kamonu's least size (tdp L1): the drawing's 50
+// columns with a cell of room and the frame on either side, and a column
+// beside the popup on either side (tdp F7); and rows enough for six of its
+// rows over the letters, the separator and the buttons, the popup two rows
+// short of the screen. Smaller, the lib shows only the name and the size
+// it needs.
+const minWidth, minHeight = 2*cols + 6, 16
+
 type kamonu struct {
 	a       *terminu.App
 	st      store
 	list    *terminu.List
 	panel   *terminu.Panel // [1] KAMON
 	preview *preview
-	// delAsk is Delete's confirm, about the kamon under the cursor: the lib
-	// asks it when the action runs (Action.Ask), which keeps the Space menu
-	// under it (tdp T1, F4). The lib reads it right after Hidden, so Hidden
-	// writes it; TODO(lib KM12): a question made when the action runs.
-	delAsk terminu.Ask
-}
-
-// kamonList is [1]'s list. Its moving keys are in the key reference only
-// when there is a kamon to move among (tdp M6); TODO(lib KM13): the lib's
-// List lists them always.
-type kamonList struct{ *terminu.List }
-
-func (l kamonList) MoveKeys() []terminu.KeyRow {
-	if l.Empty() {
-		return nil
-	}
-	return l.List.MoveKeys()
 }
 
 func newKamonu(st store) *kamonu {
@@ -56,23 +47,25 @@ func newKamonu(st store) *kamonu {
 	a.Quit = &terminu.Ask{Title: "Quit", Question: "Quit kamonu?", Verb: "quit"}
 	a.QuitDesc = "leave kamonu"
 	a.Splash = splash()
+	a.MinWidth, a.MinHeight = minWidth, minHeight
 	k.a = a
 
 	k.list = &terminu.List{
-		Columns:   []terminu.Column{{Title: "Name", Flex: true}},
+		Columns:   []terminu.Column{{Title: "Name"}},
 		EmptyFact: "No kamon yet",
-		// Short enough for [1] at 80 columns, 24 cells inside: a longer hint
-		// is cut to the frame (layout/screen, empty states).
 		EmptyHint: "Press [A] to add one",
 	}
-	k.panel = &terminu.Panel{Label: "Kamon", Body: kamonList{k.list}, Actions: []terminu.Action{
+	k.panel = &terminu.Panel{Label: "Kamon", Body: k.list, Actions: []terminu.Action{
 		{Key: "Enter", Label: "Draw", Desc: "its cells", Scope: terminu.ItemScope, Hint: "draw", Do: k.draw},
 		{Key: "e", Label: "Edit", Desc: "name, letters, U frame", Scope: terminu.ItemScope, Do: k.edit},
 		// The key is a capital P: the lib marks it where it falls in the
 		// label, Ex[P]ort, once it matches letters in either case (tdp M5).
 		{Key: "P", Label: "Export", Desc: "write its svg", Scope: terminu.ItemScope, Do: k.export},
-		{Key: "X", Label: "Delete", Desc: "this kamon's file", Scope: terminu.ItemScope, Ask: &k.delAsk,
-			Hidden: func() bool { k.delAsk = k.deleteAsk(k.current()); return k.current() == "" }, Do: k.delete},
+		// Asked when it runs, about the kamon under the cursor; from the Space
+		// menu Esc on the confirm goes back to it, and a kamon deleted clears
+		// it (tdp T1).
+		{Key: "X", Label: "Delete", Desc: "this kamon's file", Scope: terminu.ItemScope, Clear: true,
+			AskFor: func() *terminu.Ask { ask := k.deleteAsk(k.current()); return &ask }, Do: k.delete},
 		{Key: "A", Label: "Add", Desc: "a new kamon", Scope: terminu.PanelScope, Hint: "add", Do: k.add},
 	}}
 	k.panel.Actions = append(k.panel.Actions, k.list.Actions()...)
@@ -80,10 +73,8 @@ func newKamonu(st store) *kamonu {
 	// [2] has one item, the kamon it shows (KM8, KM17): Enter shows the mark
 	// as its app shows it, and [e]dit opens its cells; [1]'s Edit is [e]dit
 	// too, each told by the panel it is on.
-	// TODO(lib KM8): Enter with the lib's App.PlaySplash (terminu-go
-	// v0.2.0); till then it draws, as on [1].
 	preview := &terminu.Panel{Label: "Preview", Body: k.preview, Actions: []terminu.Action{
-		{Key: "Enter", Label: "Draw", Desc: "the kamon shown here", Scope: terminu.ItemScope, Hint: "draw", Do: k.draw},
+		{Key: "Enter", Label: "Show", Desc: "the mark as its app shows it", Scope: terminu.ItemScope, Hint: "show", Do: k.show},
 		{Key: "e", Label: "Edit", Desc: "draw its cells", Scope: terminu.ItemScope, Do: k.draw},
 	}}
 	k.preview.panel = preview
@@ -134,9 +125,25 @@ func (k *kamonu) draw() tea.Cmd {
 	name := k.current()
 	km, err := k.st.load(name)
 	if err != nil {
-		return k.a.Error("Draw failed", "Can't read "+name+": "+why(err))
+		return k.a.ErrorAbout("Draw failed", name, "Can't read "+name+": "+why(err))
 	}
 	return k.openEditor(name, km)
+}
+
+// show plays the kamon under the cursor as its app's splash plays its mark
+// (KM8): the name under it, no version or introduction, which kamonu does
+// not know. Any key closes it.
+func (k *kamonu) show() tea.Cmd {
+	name := k.current()
+	km, err := k.st.load(name)
+	if err != nil {
+		return k.a.ErrorAbout("Show failed", name, "Can't read "+name+": "+why(err))
+	}
+	s, err := terminu.NewSplash(km.svg(), name, "", "")
+	if err != nil {
+		return k.a.ErrorAbout("Show failed", name, "Can't show "+name+": "+err.Error())
+	}
+	return k.a.PlaySplash(s)
 }
 
 // The fields NEW KAMON and EDIT share: the name, the letters, and
@@ -205,7 +212,7 @@ func (k *kamonu) edit() tea.Cmd {
 	old := k.current()
 	km, err := k.st.load(old)
 	if err != nil {
-		return k.a.Error("Edit failed", "Can't read "+old+": "+why(err))
+		return k.a.ErrorAbout("Edit failed", old, "Can't read "+old+": "+why(err))
 	}
 	name, letters := old, strings.Join(km.letters, "")
 	base := baseField(km.frame)
@@ -257,47 +264,43 @@ func (k *kamonu) export() tea.Cmd {
 		}
 	}
 	if err != nil {
-		return k.a.Error("Export failed", "Can't export "+name+": "+why(err))
+		return k.a.ErrorAbout("Export failed", name, "Can't export "+name+": "+why(err))
 	}
 	// <name>.svg is there: a menu asks whether to write over it or to write
-	// a new file, whose name a text input asks for (KM10, decided 2026-10-19:
-	// one value is an input, not a form, components/dialog/form).
-	write := func(f string) tea.Cmd {
-		if err := k.st.export(f, km); err != nil {
-			return k.a.Error("Export failed", "Can't export "+name+": "+why(err))
-		}
-		return k.exported(f)
-	}
+	// a new file, whose name a text input asks for, the next free number
+	// offered (KM10: one value is an input, not a form, components/dialog/
+	// form). Esc on the input goes back to the menu; once written, the whole
+	// stack closes.
 	next := k.st.nextSVG(name)
-	// TODO(lib KM10): the title EXPORT: <name> with the name as it is, and
-	// <name>_<n>.svg offered as the input's suggestion (tdp v0.8.0
-	// components/input) rather than in its prompt; Esc on the input back to
-	// the menu (tdp T1).
-	return k.a.Menu("Export", terminu.MenuSection{Actions: []terminu.Action{
-		{Label: "Overwrite " + name + ".svg", Desc: "write over the svg there", Do: func() tea.Cmd { return write(name) }},
+	return k.a.MenuAbout("Export", name, terminu.MenuSection{Actions: []terminu.Action{
+		{Label: "Overwrite " + name + ".svg", Desc: "write over the svg there", Do: func() tea.Cmd {
+			if err := k.st.export(name, km); err != nil {
+				return k.a.ErrorAbout("Export failed", name, "Can't export "+name+": "+why(err))
+			}
+			return k.exported(name)
+		}},
 		{Label: "Export as new…", Desc: "a file of another name; " + name + ".svg stays", Do: func() tea.Cmd {
 			return k.a.Text(terminu.TextInput{
 				Title: "Export as", Name: "File", Glyph: glyphExport, Verb: "export",
-				Prompt: "Name of the new svg, e.g. " + next + ".svg; " + name + ".svg stays as it is",
-				Check:  func(v string) error { return k.st.checkSVG(strings.TrimSuffix(v, ".svg")) },
-				Done:   func(v string) tea.Cmd { return write(strings.TrimSuffix(v, ".svg")) },
+				Prompt:  "Name of the new svg; " + name + ".svg stays as it is",
+				Suggest: next + ".svg",
+				Check:   func(v string) error { return k.st.checkSVG(strings.TrimSuffix(v, ".svg")) },
+				Commit: func(v string) error {
+					if err := k.st.export(strings.TrimSuffix(v, ".svg"), km); err != nil {
+						return errors.New("Can't export " + name + ": " + why(err))
+					}
+					return nil
+				},
+				Done: func(v string) tea.Cmd { return tea.Batch(k.a.CloseAll(), k.exported(strings.TrimSuffix(v, ".svg"))) },
 			})
 		}},
 	}})
 }
 
-// exported says in a toast where the svg went.
+// exported says in a Success toast where the svg went (components/dialog/
+// toast); a toast folds to whatever lines the path needs.
 func (k *kamonu) exported(file string) tea.Cmd {
-	msg := "Exported to " + shown(k.st.svgPath(file))
-	// A toast shows three rows at most and cuts the rest (components/dialog/
-	// toast); a path too long for that is said from the data directory,
-	// where README says svg/ is.
-	if w, _ := k.a.Size(); terminu.Width(msg) > 3*(min(w-2, 120)-4) {
-		msg = "Exported to svg/" + file + ".svg"
-	}
-	// TODO(lib KM15): a Success toast, green (tdp v0.8.0 components/dialog/
-	// toast); terminu-go v0.1.13 has Info, Warning and Error.
-	return k.a.Toast(terminu.Info, msg)
+	return k.a.Toast(terminu.Success, "Exported to "+shown(k.st.svgPath(file)))
 }
 
 // deleteAsk is the confirm before name is deleted, what goes said first.
@@ -312,7 +315,7 @@ func (k *kamonu) deleteAsk(name string) terminu.Ask {
 func (k *kamonu) delete() tea.Cmd {
 	name := k.current()
 	if err := k.st.remove(name); err != nil {
-		return k.a.Error("Delete failed", "Can't delete "+name+": "+why(err))
+		return k.a.ErrorAbout("Delete failed", name, "Can't delete "+name+": "+why(err))
 	}
 	k.reload("")
 	return nil
@@ -381,11 +384,6 @@ func (p *preview) Key(key string, msg tea.KeyMsg) (bool, tea.Cmd) { return p.pag
 func (p *preview) HasItem() bool                                  { return p.k.current() != "" }
 func (p *preview) Scroll() string                                 { return p.pager.Scroll() }
 
-// MoveKeys are the pager's, only while the mark does not fit (tdp M6: a key
-// with nothing to act on is not listed).
-func (p *preview) MoveKeys() []terminu.KeyRow {
-	if p.pager.Scroll() == "" {
-		return nil
-	}
-	return p.pager.MoveKeys()
-}
+// MoveKeys are the pager's, which lists them only while the mark does not
+// fit (tdp M6).
+func (p *preview) MoveKeys() []terminu.KeyRow { return p.pager.MoveKeys() }

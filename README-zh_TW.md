@@ -82,7 +82,7 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh
 | `Tab\|1–2` | 另一個 panel |
 | `q` | 離開 |
 
-在 **[2] PREVIEW** 上，`e` 與 `Enter` 畫它顯示的那一個 mark。終端機太矮、放不下整個 mark 時，用 `j|k`、`u|d`、`gg|G` 捲動。
+在 **[2] PREVIEW** 上，`Enter` 把那一個 mark 照它在 app 裡的樣子放出來，`e` 打開來畫。終端機太矮、放不下整個 mark 時，用 `j|k`、`u|d`、`gg|G` 捲動。
 
 ### 畫
 
@@ -112,13 +112,14 @@ kamonu 沒有設定檔。所有東西都在 `~/.kamonu/data`；要放在別的�
 | 位置 | 是什麼 |
 |---|---|
 | `conf/<名字>.yaml` | mark 本身：字、要不要 U 框、每一格，格子寫成一張看得懂的圖 |
-| `svg/<名字>.svg` | **匯出**寫出來的檔。已經有了時先問：**Overwrite** 蓋掉它，或 **Export as new** 寫成新的檔，名字自己取（會提示 `<名字>_1.svg`，第一個還沒用掉的號碼） |
+| `svg/<名字>.svg` | **匯出**寫出來的檔。已經有了時先問：**Overwrite** 蓋掉它，或 **Export as new** 寫成新的檔，名字自己取；會先帶入 `<名字>_1.svg`（第一個還沒用掉的號碼），直接按 `Enter` 就用它 |
 
 ## 限制
 
 - mark 一律是家族的 25 × 19 格、家族的顏色：藍色的 U 框、金色的字。字的顏色只是畫的時候分字用，svg 裡一律是金色。
 - 最多 6 個字，每個字是 A 到 Z。
 - 改名或刪除 mark 時，已經匯出的 svg 不會跟著改。
+- 終端機至少要 56 × 16；比這個小時 kamonu 只告訴你需要多大，拉大就回來。
 
 ## 相關連結
 

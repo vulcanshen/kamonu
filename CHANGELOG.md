@@ -4,24 +4,29 @@ Each release names the version of terminu design (tdp) it follows.
 
 ## Unreleased
 
-- Export, when the svg is there already: a menu asks whether to **Overwrite** it or **Export as new**; Export as new asks
-  for the file's name (the next free `<name>_<n>.svg` is given as an example) and refuses one that is there with
-  `File is taken: …`. It was a form with a File field and two buttons
-- The export action is called Export again (it was ExPort)
-- Edit is `e` now (it was `E`)
-- `[2] PREVIEW`: `e` draws the mark it shows, and so does `Enter`; on a terminal too short for the whole mark it scrolls
-  with `j|k`, `u|d` and `gg|G` and says which rows it shows. The mark is drawn from the panel's top left, as other
-  panels show their content; a mark it cannot read says so in red, and `Enter` shows why
-- Draw on a terminal under 27 rows (80 × 24, say): the cells scroll with the cursor, and the letters and the buttons
-  stay in view; they were cut off before
+- Export, when the svg is there already: a menu, `EXPORT: <name>`, asks whether to **Overwrite** it or **Export as
+  new**. Export as new offers the next free `<name>_<n>.svg`, which `Enter` takes as it is, or a name you type; one
+  that is there is refused with `File is taken: …`, and `Esc` goes back to the menu. It was a form with a File field
+  and two buttons
+- Exported: the toast is a green Success, with the whole path
+- The export action is called Export again (it was ExPort); Edit is `e` now (it was `E`)
+- `[2] PREVIEW`: `Enter` shows the mark the way its app will show it, and `e` draws it. On a terminal too short for
+  the whole mark it scrolls with `j|k`, `u|d` and `gg|G` and says which rows it shows. The mark is drawn from the
+  panel's top left, as other panels show their content; a mark it cannot read says so in red, and `Enter` says why
+- Draw on a terminal under 27 rows (80 × 24, say): the cells scroll with the cursor, the bottom of the frame says
+  which row the cursor is on, and the letters and the buttons stay in view; they were cut off before
 - Draw: a cell between each letter's square and the letter, and two between letters; on a screen too narrow for
   them on one row, the rest go on the next
-- Export: a failure opens an error popup with all of it, instead of a toast that could cut it
-- An error popup's title says what failed: `SAVE FAILED`, `DRAW FAILED`
+- kamonu needs a terminal of at least 56 × 16; in a smaller one it shows only its name and the size it needs
+- Save As: `Enter` with nothing typed says `Name can't be empty` again; a name that cannot be written stays in the
+  box, the error over it
+- An error popup's title says what failed and on which mark: `SAVE FAILED: filu`, `DRAW FAILED: filu`; a failed
+  export opens one too, instead of a toast that could cut the message
+- From the Space menu: `Esc` on Delete's confirm goes back to the menu, and so does closing an error popup an action
+  opened
 - Edit: the Letters prompt says whose letters they are
-- Delete from the Space menu: `Esc` on the confirm goes back to the menu
-- With no mark in the list, its key reference lists no moving keys
-- Text in a confirm, a toast and an error popup wraps at spaces, and between wide characters (terminu-go v0.1.13)
+- A key reference lists moving and scrolling keys only when there is something to move or scroll
+- Built on terminu-go v0.2.0: text in a popup and an empty list's hint fold at spaces, and between wide characters
 - `go install github.com/vulcanshen/kamonu/cmd/kamonu@latest`: the program is in `cmd/kamonu` now, and the release
   files are the terminu family's
 

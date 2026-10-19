@@ -11,6 +11,7 @@ package app
 // over it are the lib's (terminu.Popup).
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -41,6 +42,7 @@ type editor struct {
 	dirty     bool // a cell was turned: Esc asks first (components/dialog/form)
 	gold      bool // p: every letter gold, as the splash draws it
 	top       int  // the first row of the grid shown, when it does not all fit
+	scrolls   bool // the grid did not all fit at the last draw
 }
 
 // color is how the editor draws a cell: its letter's colour, or gold for
@@ -167,6 +169,16 @@ func packLegend(items []string, itemW, w int) []string {
 	return out
 }
 
+// Scroll is the scroll position on the bottom frame line while the grid
+// scrolls: the cursor's row of the 19 (components/layout/popup). On the
+// buttons there is no row to count, as on a form's (components/dialog/form).
+func (e *editor) Scroll() string {
+	if !e.scrolls || e.onButtons {
+		return ""
+	}
+	return strconv.Itoa(e.r+1) + " of " + strconv.Itoa(rows)
+}
+
 func (e *editor) Hint() []terminu.KeyHint {
 	if !e.onButtons {
 		return []terminu.KeyHint{{Key: "Enter|Space", Desc: "cycle"}, {Key: "Tab", Desc: "actions"}, {Key: "Esc", Desc: "cancel"}}
@@ -225,6 +237,7 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 	tail = append(tail, terminu.PadLeft(strings.Join(buttons, " "), w-1)+" ")
 
 	var body []string
+	e.scrolls = false
 	switch {
 	case h >= rows+1+len(tail):
 		body = append(append(grid, ""), tail...) // a blank row above the letters
@@ -235,7 +248,7 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 		// least that keeps the cursor's row in view, and the rows under it
 		// stay, as a form's fields scroll over its buttons
 		// (components/dialog/form, layout/popup).
-		// TODO(lib KM9): the bottom frame line cannot say which rows show.
+		e.scrolls = true
 		area := max(h-len(tail), 0)
 		if !e.onButtons && area > 0 {
 			e.top = min(e.top, e.r)
@@ -376,7 +389,7 @@ func (e *editor) Keys() []terminu.KeySection {
 // write opens an error popup over it (components/layout/popup).
 func (k *kamonu) save(e *editor) tea.Cmd {
 	if err := k.st.save(e.kamon, e.km); err != nil {
-		return k.a.Error("Save failed", "Can't save "+e.kamon+": "+why(err))
+		return k.a.ErrorAbout("Save failed", e.kamon, "Can't save "+e.kamon+": "+why(err))
 	}
 	k.reload(e.kamon)
 	return k.a.ClosePopup(e)
@@ -390,10 +403,14 @@ func (k *kamonu) saveAs(e *editor) tea.Cmd {
 	return k.a.Text(terminu.TextInput{
 		Title: "Save as", Name: "Name", Glyph: glyphSave, Prompt: "Name for the new kamon; " + e.kamon + " stays as it was", Verb: "save",
 		Check: k.st.checkName,
-		Done: func(v string) tea.Cmd {
+		// A failed write keeps the name typed, an error popup over it.
+		Commit: func(v string) error {
 			if err := k.st.create(v, e.km); err != nil {
-				return k.a.Error("Save as failed", "Can't save "+v+": "+why(err))
+				return errors.New("Can't save " + v + ": " + why(err))
 			}
+			return nil
+		},
+		Done: func(v string) tea.Cmd {
 			k.reload(v)
 			return k.a.ClosePopup(e)
 		},

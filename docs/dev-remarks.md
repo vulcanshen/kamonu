@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.8.0），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.8.1），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -30,12 +30,14 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 錯誤訊息不帶路徑（`why`）：使用者知道是哪一個 mark，而路徑可能只是暫存檔的名字。
 - **測試守著的**（`kamonu_test.go`）：
   - `harness_test.go` 是不用終端機就能跑整個 app 的工具：送按鍵、跑完動畫、讀畫面。超過 200ms 的計時器（toast 留在畫面上的時間）不等，所以 toast 會留在畫面上讓測試讀。
-  - tdp L4 與 E5：80×40、120×50、60×30、56×28，加上畫格子的 popup 放不下的 40×20（太寬又太高）、120×16（太高）、50×50（太寬）；
-    icon 與 powerline 符號都一格、icon 兩格、兩種都兩格。主畫面和 kamonu 開的每一種 popup（error popup、`DRAW`、它的 key reference、
-    discard 與 clear 的 confirm、`SAVE AS`、離開的 confirm、Space menu、global operation popup、`NEW KAMON` 與它的 `Name`、
-    `EDIT: <名字>`、toast、匯出的 menu 與 `EXPORT AS`、delete），每一列都剛好等於終端機寬。三種寬度依序跑，同一種寬度的七種大小並排跑
-    （寬度是 lib 全程式共用的一個值）。
-  - `[2] PREVIEW`：`Enter` 畫它顯示的那一個，沒有東西時不出現；比 mark 矮時捲動、寫 `N-M of 21`，放得下時不寫、也不列捲動的鍵。
+  - tdp L4 與 E5：80×40、120×50、60×30、56×28，加上最小尺寸 56×16（畫格子的 popup 太寬又太高）、120×16（太高）、56×50（太寬：
+    六個字的 mark，icon 兩格時色標比格子寬）；icon 與 powerline 符號都一格、icon 兩格、兩種都兩格。主畫面和 kamonu 開的每一種 popup
+    （error popup、`DRAW`、它的 key reference、discard 與 clear 的 confirm、`SAVE AS`、離開的 confirm、Space menu、global operation
+    popup、`NEW KAMON` 與它的 `Name`、`EDIT: <名字>`、toast、匯出的 menu 與 `EXPORT AS`、delete），每一列都剛好等於終端機寬。
+    三種寬度依序跑，同一種寬度的七種大小並排跑（寬度是 lib 全程式共用的一個值）。單獨量每一種 popup 的框歸 lib（tdp v0.8.0 的 E8）。
+  - 最小尺寸以下（55×40、80×15、80×5、20×3、1×1）：不當掉、每一列滿寬、畫出名稱與需要的尺寸，按鍵不作用，拉大就回到原本的畫面。
+  - `[2] PREVIEW`：`Enter` 放那個家紋、`e` 畫它，沒有東西時都不出現；比 mark 矮時捲動、寫 `N-M of 21`，放得下時不寫、也不列捲動的鍵。
+  - 畫格子的 popup 放不下時，下框寫 cursor 那一列 `N of 19`，在按鈕上不寫。
   - 畫格子的 popup 自己畫的那一塊：不管 lib 給多窄、多矮，每一列都剛好是給的寬，列數不超過給的高。
   - U 框跟 tdp 的 `principle/icon.svg` 一模一樣（`internal/app/testdata/tdp-icon.svg` 是它的副本，只給測試用）。
   - tdp E6：splash 畫的 `internal/app/icon.svg` 跟 `docs/icon.svg` 一模一樣，lib 的 splash 吃得下；它的 U 框是家族的，註解依序是 U、K、A、M、O、N。
@@ -57,12 +59,21 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `[1] KAMON` 是資料目錄裡 `conf/*.yaml` 的清單，名字不顯示 `.yaml`。
   - `[2] PREVIEW` 畫 cursor 那一筆，上下各多一列底，跟 splash 一樣是 21 列 × 50 欄。
   - 理由：kamonu 只做一件事，挑一個 mark、打開來畫。
+- **最小尺寸 56 × 16**（2026-10-20，tdp v0.8.0 的 L1；lib 的 `App.MinWidth`、`MinHeight`）：比這個小，lib 只在中間畫名稱與
+  `needs a terminal of at least 56×16`，按鍵都不作用（連按兩次 `Ctrl-C` 離開），拉大就回來。
+  - 寬 56：畫格子的 popup 要 54 欄（格子 50 欄、左右各一格留白、框），popup 左右各留一欄（tdp F7）。再窄格子就被截掉，cursor
+    可能跑到看不見的地方。
+  - 高 16：popup 最高是畫面減兩列，扣掉框、上下留白、色標、分隔線、按鈕，格子還看得到六列，跟著 cursor 捲。
+  - 其他畫面都比它小：表單、menu、key reference 放不下時照常捲；預覽放不下時捲；splash 在 50 × 30 以下只畫字。
 - **`[1]` 的 label 是 `KAMON`**（不是 `ICONS`）：user 定的，清單裡的東西就是家紋。
 - **`[2]` 至少 54 欄**（mark 50 欄、左右各一格留白、框兩格）。80 欄時 `[1]` 剩 26 欄；更窄時一次只畫一個 panel。
 - **預覽照 splash 的樣子，字全是金色**（2026-10-14，user）。理由：kamonu 裡只有這裡看得到成品的樣子；想看分字，按 `Enter` 打開畫格子的 popup。
 - **`[2] PREVIEW` 只有一個項目，就是它畫的那一個 mark**（user 2026-10-19，紀錄 KM8、KM17）：
-  - `Enter` 把那個家紋照它在 app 裡呈現的樣子放出來（家族 app 按 `V` 的那個效果）。lib 還不能放 app 指定的 mark（terminu-go
-    第三批 #40，v0.2.0 的 `App.PlaySplash`），所以暫時跟 `[1]` 一樣是 Draw，hint `Enter:draw`（`TODO(lib KM8)`）。
+  - `Enter` 是 Show：把那個家紋照它在 app 裡呈現的樣子放出來（家族 app 按 `V` 的那個效果），用 lib 的 `App.PlaySplash`
+    （terminu-go v0.2.0）播 `terminu.NewSplash(km.svg(), <名字>, "", "")`，hint `Enter:show`，任何鍵關掉。讀不了的 kamon 開
+    error popup `SHOW FAILED: <名字>`。v0.2.0 以前 lib 放不了 app 指定的 mark，`Enter` 暫時是 Draw。
+  - **暫定：mark 下面只寫名字**（2026-10-20，kamonu 自己定，回報 terminu）：app 的 splash 下面寫名稱、版本、介紹，kamonu 不知道
+    那個 app 的版本與介紹，所以版本與介紹空著，作者、信箱、提示照 lib 畫。
   - item operation 是 `[e]dit`：打開畫格子的 popup。`[1]` 的 Edit（改名字、字、U 框）也是 `[e]dit`，兩個同名，靠所在的 panel 分
     （user 2026-10-19，紀錄 KM17）。中間改定過 `[d]raw`，撤回：`d` 是 tdp K12 保留的半頁鍵，`[2]` 放不下時也用它捲。
   - 沒有東西可以預覽時沒有項目，兩個鍵都不出現，下框也沒有 hint（tdp v0.8.0 的 layout/panel：沒有按得動的鍵就不寫 hint，紀錄 KM14）。
@@ -103,8 +114,8 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 不用 `x`：規範 menu 的範例裡刪除是 `[X] Delete`，用過家族 app 的人會把 `x`／`X` 當成刪除。
   - user 選大寫 `P`，因為瀏覽器的列印是 `Cmd-P`。
   - label 是 `Export`。tdp v0.8.0 的 M5：熱鍵的字母出現在 label 裡就原地包，不分大小寫，括號裡照實際的鍵 —— `Ex[P]ort`
-    （紀錄 KM16）。terminu-go v0.1.13 比對時大小寫算數，畫成 `[P] Export`，等 lib 改了就是 `Ex[P]ort`。以前為了讓舊的 lib 原地包，
-    label 寫成 `ExPort`，key reference 裡就看到 `ExPort` 這個字。
+    （紀錄 KM16，terminu-go v0.2.0）。以前的 lib 比對時大小寫算數，為了讓它原地包，label 寫成 `ExPort`，key reference 裡就看到
+    `ExPort` 這個字。
 - **`[X] Delete`**：
   - 先 confirm（`Delete <name>?`），上面一句 Peach 說 `conf/` 裡的 yaml 會被刪掉。
   - 用大寫 `X`（2026-10-14，user 選「跟規範」）：規範 menu 的範例（components/dialog/menu）就是 `[X] Delete`。原本是 `[D]elete`。
@@ -174,22 +185,20 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ### 匯出
 
-- **`Ex[P]ort` 直接寫到 `svg/<名字>.svg`**，再用 toast 說寫到哪裡（2026-10-14，user 選 B）。成功的 toast 該用 tdp v0.8.0 的
-  Success（綠色，紀錄 KM15），terminu-go v0.1.13 還沒有，暫時用 Info（`TODO(lib KM15)`）。
-  - 失敗時開 error popup `EXPORT FAILED`（2026-10-18）：原本用 Error toast，可是 toast 最多三列，原因長時會被截掉，完整的內容
-    要走 error popup 或 log（components/dialog/toast），kamonu 沒有 log。
-  - 成功的 toast 寫完整路徑；路徑長到三列放不下時（`KAMONU__DATA` 很深、終端機又窄），改寫 `Exported to svg/<檔名>`，
-    從資料目錄算起（README 寫了 `svg/` 在哪裡）。
+- **`Ex[P]ort` 直接寫到 `svg/<名字>.svg`**，再用 toast 說寫到哪裡（2026-10-14，user 選 B）。toast 是 Success（綠色，tdp v0.8.0
+  的 components/dialog/toast，紀錄 KM15），寫完整路徑，長了就折行（v0.2.0 的 toast 不再限三列）。
+  - 失敗時開 error popup `EXPORT FAILED: <名字>`（2026-10-18）：原本用 Error toast，可是那時 toast 最多三列，原因長時會被截掉，
+    完整的內容要走 error popup 或 log，kamonu 沒有 log。
 - **已經有 `<名字>.svg` 時先問：menu 加輸入框**（user 2026-10-19，紀錄 KM10）：
   - menu `EXPORT` 兩列：`Overwrite <名字>.svg` 直接蓋掉；`Export as new…` 開輸入框 `EXPORT AS`，輸入新檔的名字（值叫 `File`，
     打不打 `.svg` 都可以），已經有的名字在輸入框裡就擋下（`File is taken: …`）。
   - 為什麼不是表單：只有一個值（新檔名），照 components/dialog/form 該用 input popup；蓋掉用不到這個值，是另一種做法，所以先選做法。
   - 2026-10-15 到 2026-10-18 是表單 `EXPORT: <名字>`：一欄 `File` 加 `Overwrite`、`Export` 兩顆按鈕。
-  - 等 lib 的（`TODO(lib KM10)`）：
-    - 輸入框該用 tdp v0.8.0 的建議值帶入 `<名字>_<n>.svg`（n 是從 1 起第一個還沒用掉的號碼，不碰按 `Enter` 就用它）。lib 還沒有，
-      暫時寫在說明列（`e.g. <名字>_1.svg`），要自己打。
-    - menu 的標題該是 `EXPORT: <名字>`、名字照原樣；terminu-go v0.1.13 的 `Menu` 整串轉大寫，暫時只寫 `EXPORT`。
-    - 輸入框上按 `Esc` 該回到 menu（tdp v0.8.0 的 T1：取消一律回到 menu）；lib 從 menu 執行時先關掉 menu，暫時回到清單。
+  - menu 的標題是 `EXPORT: <名字>`，名字照原樣（lib 的 `MenuAbout`）。
+  - 輸入框用建議值帶入 `<名字>_<n>.svg`（n 是從 1 起第一個還沒用掉的號碼；tdp v0.8.0 的 components/input），不碰按 `Enter`
+    就用它。
+  - 輸入框上按 `Esc` 回到 menu（tdp v0.8.0 的 T1：取消一律回到 menu）；寫好了整疊關掉，跳 Success toast。寫檔失敗時輸入框留著、
+    打的名字還在，上面開 error popup（lib 的 `TextInput.Commit`）。
 - **格式照 tdp S5**：
   - 底 `#000000`。
   - `frame: true` 時寫 `<!-- U -->` 加上 U 框。
@@ -226,7 +235,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 終端機 28 列時少一列：拿掉色標上面那一列空白。
   - 更矮時（例：80 × 24）照表單的做法：只有格子捲，捲最少的量讓 cursor 那一列看得到；色標、分隔線、按鈕固定在下面
     （components/dialog/form、layout/popup 的「內容放不下時」）。在按鈕上時格子停在原處。
-  - 下框右邊該寫捲動位置，lib 的 `PopupBody` 沒有給的地方，還沒寫（紀錄 KM9，`TODO(lib KM9)`）。
+  - 下框右邊寫捲動位置：cursor 在第幾列，`<列> of 19`（lib 的 `PopupBody.Scroll`，紀錄 KM9）；在按鈕上不寫，跟表單一樣。
   - 會捲時 popup 照「hint 加上最寬的捲動位置 `19 of 19` 再加 9」開（layout/popup 的寬度：捲的時候框不忽寬忽窄），內寬 55。
 - **數字鍵 `1`–`6` 直接把那一格設成第幾個字**（2026-10-14，user：「連續按 space 太繁瑣」）。
   - **再按一次同一個數字就清空**（2026-10-14，user）：已經是那個字的格子上按它的數字，等於 `Backspace`，畫錯時不用換鍵。
@@ -265,7 +274,8 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
     tdp v0.6.5 的 K2 只管 `Tab` 在欄位區與動作列之間來回，格子 popup 本來就是這樣。
   - `q` 在這個 popup 上不作用（照表單：`q` 不進離開流程；這是偏離，見「偏離 tdp」）。`Ctrl-C` 開離開的 confirm；畫的東西沒存時，多一句 Peach `Changes to <名字> are not saved.`。
   - `SAVE AS` 沒有灰字提議（沒有舊值）；說明列是 `Name for the new kamon; <名字> stays as it was`。什麼都沒打就按 `Enter`
-    等於取消（lib 的單行輸入）。名字有控制字元時，錯誤列寫 `Name can't have control characters`：錯誤點名的是值的名字，
+    會擋下來寫 `Name can't be empty`（tdp v0.8.0 的 K3：打開時是空的、又不能空的值）；v0.1.2 到 v0.2.0 以前是直接關掉。寫檔
+    失敗時輸入框留著、上面開 error popup（`TextInput.Commit`）。名字有控制字元時，錯誤列寫 `Name can't have control characters`：錯誤點名的是值的名字，
     標題 `SAVE AS` 說的是在做什麼，所以 kamonu 另外給值的名字（tdp v0.6.11 的 components/input、terminu-go v0.1.10 的
     `TextInput.Name`；紀錄 KM7）。
 
@@ -339,11 +349,11 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 ## 設計文件導讀
 
 - 規範的盲點與 lib 要補的地方記在 terminu 的 `.local/family-fix/kamonu/README.md`（編號 KM）。
-- 還沒符合 tdp 的地方逐條在 [`kamonu-terminu-fix.md`](kamonu-terminu-fix.md)（tdp E7），全部修完就刪掉。
+- 還沒符合 tdp 的地方逐條寫在 `kamonu-terminu-fix.md`（tdp E7），全部修完就刪掉；terminu-go v0.2.0 之後修完，現在沒有這個檔。
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.1.13）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.2.0）。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
     lib 一改馬上看得到。`go.work`、`go.work.sum` 不進版控。
   - commit 與發版前，關掉 go.work 跑一次（`make check-lib`：`GOWORK=off go build ./...`、`GOWORK=off go test ./...`）。過不了，

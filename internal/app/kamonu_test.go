@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
 )
 
@@ -519,6 +520,7 @@ func TestDrawScrolls(t *testing.T) {
 	hs.keys("Enter")
 	hs.contains("[3] " + glyphSquare + " L")
 	hs.contains("Save As")
+	hs.contains("1 of 19") // the cursor's row, on the bottom frame line (KM9)
 	frameSquare := terminu.Fg(frameColor).Render(glyphSquare + " ")
 	before := strings.Count(strings.Join(hs.k.a.Frame(), "\n"), frameSquare)
 	for range rows {
@@ -528,9 +530,12 @@ func TestDrawScrolls(t *testing.T) {
 	if after <= before {
 		t.Fatalf("the grid did not scroll down to the U frame's bottom: %d frame cells, then %d", before, after)
 	}
+	hs.lacks("1 of 19")
 	hs.contains("[3] " + glyphSquare + " L")
 	hs.contains("Save As")
 	hs.fullWidth()
+	hs.keys("Tab") // on the buttons there is no row to count
+	hs.lacks(" of 19")
 }
 
 // TestEditorClearAll: x empties every cell, after a confirm; with nothing to
@@ -846,15 +851,26 @@ func svgIs(t *testing.T, hs *harness, file string, km kamon) {
 func TestExportWhenThere(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
 	km := fil(t)
-	hs.keys("P", "P")
+	hs.keys("P", "Esc", "P") // Esc: the toast of the first export (tdp K4)
 	hs.contains("EXPORT")
 	hs.contains("Overwrite filu.svg")
 	hs.contains("Export as new…")
-	// Export as new: a name of its own; one there is refused, with ".svg"
-	// or without; the next number is offered in the prompt.
+	hs.contains("EXPORT: filu") // the name as it is (MenuAbout)
+	// Export as new: the next number suggested, taken with Enter alone
+	// (components/input/README); Esc goes back to the menu (tdp T1).
 	hs.keys("j", "Enter")
 	hs.contains("EXPORT AS")
-	hs.contains("e.g. filu_1.svg")
+	hs.contains("filu_1.svg")
+	hs.keys("Esc")
+	hs.contains("Overwrite filu.svg")
+	hs.keys("Enter", "Enter") // the input again, the suggestion taken as it is
+	hs.lacks("EXPORT AS")
+	hs.lacks("Overwrite filu.svg") // written: the whole stack closes
+	hs.contains("SUCCESS")         // a Success toast (KM15)
+	svgIs(t, hs, "filu_1", km)
+	// A name of its own; one there is refused, with ".svg" or without.
+	hs.keys("Esc", "P", "j", "Enter")
+	hs.contains("filu_2.svg")
 	hs.keys("f", "i", "l", "u", ".", "s", "v", "g", "Enter")
 	hs.contains("File is taken: filu.svg is already there") // names the value
 	hs.keys("Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace",
@@ -871,7 +887,7 @@ func TestExportWhenThere(t *testing.T) {
 	// Esc writes nothing.
 	hs.keys("Esc", "P", "Esc")
 	hs.lacks("Overwrite filu.svg")
-	if hs.k.st.svgExists("filu_1") {
+	if hs.k.st.svgExists("filu_2") {
 		t.Fatal("Esc wrote an svg")
 	}
 }
@@ -906,8 +922,12 @@ func TestExportWhenThereFails(t *testing.T) {
 	hs.contains("EXPORT FAILED")
 	hs.contains("Can't export filu: permission denied")
 	// Esc twice: the toast of the first export, then the error popup (tdp K4).
-	hs.keys("Esc", "Esc", "P", "j", "Enter", "m", "a", "r", "k", "Enter") // Export as new
-	hs.contains("EXPORT FAILED")
+	// The error popup closes back to the menu (components/layout/popup).
+	hs.keys("Esc", "Esc")
+	hs.contains("Overwrite filu.svg")
+	hs.keys("j", "Enter", "m", "a", "r", "k", "Enter") // Export as new
+	hs.contains("FAILED")
+	hs.contains("mark") // the name typed stays in the input under it (Commit)
 	hs.contains("Can't export filu: permission denied")
 }
 
@@ -959,19 +979,24 @@ func TestPreviewIsGold(t *testing.T) {
 func TestPreviewEnter(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
 	hs.keys("Tab")
-	hs.contains("Enter:draw")
+	hs.contains("Enter:show")
 	hs.keys("Space")
 	hs.contains("ITEM OPERATION") // one item, the kamon shown (KM8)
-	hs.contains("[Enter] Draw")
-	hs.contains("draw its cells") // [e]dit (KM17)
+	hs.contains("[Enter] Show")
+	hs.contains("[e]dit") // KM17
+	// Enter plays the mark as its app's splash does, its name under it.
 	hs.keys("Esc", "Enter")
-	hs.contains("DRAW: filu")
-	hs.keys("Esc", "e") // on [2], Edit draws
+	hs.contains("Press any key to close")
+	hs.contains("filu")
+	hs.lacks("[1] KAMON")
+	hs.keys("j") // any key closes it
+	hs.contains("[1] KAMON")
+	hs.keys("e") // on [2], Edit draws
 	hs.contains("DRAW: filu")
 
 	hs = newHarness(t, 80, 40, nil)
 	hs.keys("Tab")
-	hs.lacks("Enter:draw")
+	hs.lacks("Enter:show")
 	hs.keys("Enter")
 	hs.lacks("DRAW")
 }
@@ -1018,7 +1043,7 @@ func TestBrokenFile(t *testing.T) {
 		t.Fatal("the preview's failure is not in Red (layout/panel, errors)")
 	}
 	hs.keys("Enter") // on [2]: as it says, why
-	hs.contains("DRAW FAILED")
+	hs.contains("SHOW FAILED: broken")
 	hs.contains("Can't read broken")
 	hs.keys("Esc", "Tab", "Enter") // on [1] too
 	hs.contains("DRAW FAILED")
@@ -1064,11 +1089,16 @@ func TestFullWidth(t *testing.T) {
 		{"Esc", "P"},                 // exported: a toast
 		{"Esc", "P"},                 // the svg there: the menu
 		{"j", "Enter"},               // EXPORT AS
-		{"Esc", "X"},                 // delete
+		{"Esc", "Esc", "X"},          // back to the menu, out of it: delete
 		{"Esc", "q"},                 // quit
+		{"Esc", "j", "Enter"},        // DRAW: zz, six letters wider than the grid
 	}
-	sizes := [][2]int{{80, 40}, {120, 50}, {60, 30}, {56, 28}, {40, 20}, {120, 16}, {50, 50}}
+	// The least size (56 × 16) and above it: the drawing wider and taller
+	// than the screen (56 × 16), taller (120 × 16), wider (56 × 50, zz's
+	// letters with icons two cells wide).
+	sizes := [][2]int{{80, 40}, {120, 50}, {60, 30}, {56, 28}, {56, 16}, {120, 16}, {56, 50}}
 	km := standIn(t)
+	six := kamon{frame: true, letters: []string{"K", "A", "M", "O", "N", "U"}}
 	for _, widths := range [][2]int{{1, 1}, {2, 1}, {2, 2}} {
 		t.Run(fmt.Sprintf("icon %d, powerline %d", widths[0], widths[1]), func(t *testing.T) {
 			// The widths are the lib's, one for the whole program: set once
@@ -1076,7 +1106,7 @@ func TestFullWidth(t *testing.T) {
 			// read while the sizes run side by side.
 			var hss []*harness
 			for _, size := range sizes {
-				hss = append(hss, newHarness(t, size[0], size[1], map[string][]byte{"terminu": km.yaml(), "broken": []byte("cells: [")}))
+				hss = append(hss, newHarness(t, size[0], size[1], map[string][]byte{"terminu": km.yaml(), "broken": []byte("cells: ["), "zz": six.yaml()}))
 			}
 			terminu.SetIconWidth(widths[0], widths[1])
 			for i, size := range sizes {
@@ -1094,6 +1124,26 @@ func TestFullWidth(t *testing.T) {
 		})
 	}
 	terminu.SetIconWidth(1, 1)
+}
+
+// TestTooSmall: under kamonu's least size the lib draws only its name and
+// the size it needs, every line as wide as the screen, down to 1 × 1, and
+// the screen comes back as the terminal grows (tdp L1, E5).
+func TestTooSmall(t *testing.T) {
+	for _, size := range [][2]int{{55, 40}, {80, 15}, {80, 5}, {20, 3}, {1, 1}} {
+		hs := newHarness(t, size[0], size[1], map[string][]byte{"filu": []byte(filYAML)})
+		hs.fullWidth()
+		hs.contains("k") // kamonu, or as much of it as fits
+		if size[0] >= 40 && size[1] >= 2 {
+			hs.contains("needs a terminal of at least 56×16")
+		}
+		hs.keys("Enter", "A", "q")
+		hs.fullWidth()
+		hs.send(tea.WindowSizeMsg{Width: 80, Height: 40})
+		hs.contains("[1] KAMON")
+		hs.lacks("DRAW")
+		hs.lacks("NEW KAMON")
+	}
 }
 
 // TestEditorBodyWidth is tdp E5 for the inside kamonu draws itself: every
