@@ -51,7 +51,8 @@ func newKamonu(st store) *kamonu {
 	k.a = a
 
 	k.list = &terminu.List{
-		Columns:   []terminu.Column{{Title: "Name"}},
+		// A long name is cut with … where [1] is narrow (layout/panel).
+		Columns:   []terminu.Column{{Title: "Name", Shrink: true}},
 		EmptyFact: "No kamon yet",
 		EmptyHint: "Press [A] to add one",
 	}

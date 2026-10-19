@@ -1126,6 +1126,17 @@ func TestFullWidth(t *testing.T) {
 	terminu.SetIconWidth(1, 1)
 }
 
+// TestLongName: a name longer than [1] is cut with … at its end, not at the
+// frame (layout/panel, a column of long values).
+func TestLongName(t *testing.T) {
+	long := "a-very-long-name-for-a-mark-of-the-family"
+	hs := newHarness(t, 80, 40, map[string][]byte{long: blank()})
+	hs.contains("a-very-long-name")
+	hs.contains("…")
+	hs.lacks(long)
+	hs.fullWidth()
+}
+
 // TestTooSmall: under kamonu's least size the lib draws only its name and
 // the size it needs, every line as wide as the screen, down to 1 × 1, and
 // the screen comes back as the terminal grows (tdp L1, E5).
