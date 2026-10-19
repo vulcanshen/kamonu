@@ -816,10 +816,15 @@ func TestEditPutsTheFrameIn(t *testing.T) {
 func TestExport(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
 	hs.keys("Space")
-	hs.contains("Ex[P]ort")
+	// The label is Export, its key a capital P (tdp M5; KM16): "[P] Export"
+	// on a lib that matches the key's case only, Ex[P]ort on one that does not.
+	if !strings.Contains(hs.text(), "[P] Export") && !strings.Contains(hs.text(), "Ex[P]ort") {
+		t.Fatalf("no Export row with its key:\n%s", hs.text())
+	}
+	hs.lacks("ExPort")
 	hs.contains("[X] Delete")
 	hs.keys("Esc", "P")
-	hs.lacks("EXPORT: filu") // none there yet: nothing to ask
+	hs.lacks("Overwrite filu.svg") // none there yet: nothing to ask
 	hs.contains("Exported to")
 	svgIs(t, hs, "filu", fil(t))
 }
@@ -836,58 +841,46 @@ func svgIs(t *testing.T, hs *harness, file string, km kamon) {
 	}
 }
 
+// TestExportWhenThere: with <name>.svg there, a menu asks: Overwrite it,
+// or Export as new, which asks for the name (KM10, decided 2026-10-19).
 func TestExportWhenThere(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
 	km := fil(t)
 	hs.keys("P", "P")
-	hs.contains("EXPORT: filu")
-	hs.contains("filu_1.svg")
+	hs.contains("EXPORT")
 	hs.contains("Overwrite filu.svg")
-	hs.contains("Enter:edit Tab:actions Esc:cancel")
-	// Tab goes to Export, the main submit: a new file, the next number.
-	hs.keys("Tab")
-	hs.contains("Enter:export Tab:fields Esc:cancel")
-	hs.keys("Enter")
-	hs.lacks("EXPORT: filu")
-	svgIs(t, hs, "filu_1", km)
-	// A name of its own; one there is refused, with ".svg" or without.
-	hs.keys("P")
-	hs.contains("filu_2.svg")
-	hs.keys("Enter")
-	hs.contains("filu_2.svg") // the old value as the form shows it
+	hs.contains("Export as new…")
+	// Export as new: a name of its own; one there is refused, with ".svg"
+	// or without; the next number is offered in the prompt.
+	hs.keys("j", "Enter")
+	hs.contains("EXPORT AS")
+	hs.contains("e.g. filu_1.svg")
 	hs.keys("f", "i", "l", "u", ".", "s", "v", "g", "Enter")
 	hs.contains("File is taken: filu.svg is already there") // names the value
 	hs.keys("Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace", "Backspace",
-		"m", "a", "r", "k", "Enter", "Tab", "Enter")
+		"m", "a", "r", "k", "Enter")
+	hs.lacks("EXPORT AS")
 	svgIs(t, hs, "mark", km)
-	if hs.k.st.svgExists("filu_2") {
-		t.Fatal("Export wrote the number it offered, not the name given")
-	}
-	// Overwrite, left of Export.
+	// Overwrite, the first row.
 	if err := os.WriteFile(hs.k.st.svgPath("filu"), []byte("old"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	hs.keys("P", "Tab", "h")
-	hs.contains("Enter:overwrite filu.svg")
-	hs.keys("Enter")
-	hs.lacks("EXPORT: filu")
+	hs.keys("Esc", "P", "Enter") // Esc: the toast first (tdp K4)
+	hs.lacks("Overwrite filu.svg")
 	svgIs(t, hs, "filu", km)
-	// Esc writes nothing (the first Esc puts the toast away: tdp K4).
+	// Esc writes nothing.
 	hs.keys("Esc", "P", "Esc")
-	hs.lacks("EXPORT: filu")
-	if hs.k.st.svgExists("filu_2") {
+	hs.lacks("Overwrite filu.svg")
+	if hs.k.st.svgExists("filu_1") {
 		t.Fatal("Esc wrote an svg")
 	}
 }
 
-// The name on Overwrite is the file's, in the hint too (tdp v0.6.9, KM6).
+// The name on Overwrite is the file's, in its own case (KM6).
 func TestExportOverwriteKeepsTheCase(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"KBU": blank()})
 	hs.keys("P", "Esc", "P") // Esc: the toast first (tdp K4)
-	hs.contains("EXPORT: KBU")
 	hs.contains("Overwrite KBU.svg")
-	hs.keys("Tab", "h")
-	hs.contains("Enter:overwrite KBU.svg")
 }
 
 func TestExportFailure(t *testing.T) {
@@ -909,10 +902,13 @@ func TestExportWhenThereFails(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.Chmod(dir, 0o755)
-	hs.keys("P", "Tab", "Enter")
+	hs.keys("P", "Enter") // Overwrite
+	hs.contains("EXPORT FAILED")
 	hs.contains("Can't export filu: permission denied")
-	hs.keys("Esc")
-	hs.contains("EXPORT: filu") // the form stays: Enter tries again
+	// Esc twice: the toast of the first export, then the error popup (tdp K4).
+	hs.keys("Esc", "Esc", "P", "j", "Enter", "m", "a", "r", "k", "Enter") // Export as new
+	hs.contains("EXPORT FAILED")
+	hs.contains("Can't export filu: permission denied")
 }
 
 func TestDelete(t *testing.T) {
@@ -965,8 +961,12 @@ func TestPreviewEnter(t *testing.T) {
 	hs.keys("Tab")
 	hs.contains("Enter:draw")
 	hs.keys("Space")
+	hs.contains("ITEM OPERATION") // one item, the kamon shown (KM8)
 	hs.contains("[Enter] Draw")
+	hs.contains("draw its cells") // [e]dit
 	hs.keys("Esc", "Enter")
+	hs.contains("DRAW: filu")
+	hs.keys("Esc", "e")
 	hs.contains("DRAW: filu")
 
 	hs = newHarness(t, 80, 40, nil)
@@ -1062,7 +1062,8 @@ func TestFullWidth(t *testing.T) {
 		{"Enter"},                    // its Name
 		{"Esc", "Esc", "E"},          // EDIT: terminu
 		{"Esc", "P"},                 // exported: a toast
-		{"Esc", "P"},                 // EXPORT: terminu, the svg there
+		{"Esc", "P"},                 // the svg there: the menu
+		{"j", "Enter"},               // EXPORT AS
 		{"Esc", "X"},                 // delete
 		{"Esc", "q"},                 // quit
 	}

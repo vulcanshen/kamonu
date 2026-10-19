@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.7.4），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.8.0），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -33,7 +33,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - tdp L4 與 E5：80×40、120×50、60×30、56×28，加上畫格子的 popup 放不下的 40×20（太寬又太高）、120×16（太高）、50×50（太寬）；
     icon 與 powerline 符號都一格、icon 兩格、兩種都兩格。主畫面和 kamonu 開的每一種 popup（error popup、`DRAW`、它的 key reference、
     discard 與 clear 的 confirm、`SAVE AS`、離開的 confirm、Space menu、global operation popup、`NEW KAMON` 與它的 `Name`、
-    `EDIT: <名字>`、toast、`EXPORT: <名字>`、delete），每一列都剛好等於終端機寬。三種寬度依序跑，同一種寬度的七種大小並排跑
+    `EDIT: <名字>`、toast、匯出的 menu 與 `EXPORT AS`、delete），每一列都剛好等於終端機寬。三種寬度依序跑，同一種寬度的七種大小並排跑
     （寬度是 lib 全程式共用的一個值）。
   - `[2] PREVIEW`：`Enter` 畫它顯示的那一個，沒有東西時不出現；比 mark 矮時捲動、寫 `N-M of 21`，放得下時不寫、也不列捲動的鍵。
   - 畫格子的 popup 自己畫的那一塊：不管 lib 給多窄、多矮，每一列都剛好是給的寬，列數不超過給的高。
@@ -46,8 +46,8 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - Save 與 Save As：名字的檢查、控制字元、原檔不動、cursor 停在新檔。
   - 存檔失敗開 error popup，`Enter` 關掉後回到按鈕；打開的動畫播完前不收鍵；`Ctrl-C` 兩次離開。
   - 匯出寫出跟 yaml 一致的 svg，失敗時用 toast 說原因；壞掉的 yaml 在預覽、Draw、Edit 都說讀不了。
-  - 已經有 svg 時開 `EXPORT: <名字>`：`Tab`、`Enter` 寫成下一個號碼；自己取的名字照用，已經有的擋下（加不加 `.svg` 都一樣）；
-    `Overwrite` 蓋掉原檔；`Esc` 什麼都不寫；寫檔失敗開 error popup，關掉後表單還在。
+  - 已經有 svg 時開 menu：`Overwrite <名字>.svg` 蓋掉原檔；`Export as new…` 開輸入框，說明列舉出下一個號碼，自己取的名字照用，
+    已經有的擋下（加不加 `.svg` 都一樣）；`Esc` 什麼都不寫；寫檔失敗開 error popup。
 
 ## 設計決定
 
@@ -60,9 +60,12 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **`[1]` 的 label 是 `KAMON`**（不是 `ICONS`）：user 定的，清單裡的東西就是家紋。
 - **`[2]` 至少 54 欄**（mark 50 欄、左右各一格留白、框兩格）。80 欄時 `[1]` 剩 26 欄；更窄時一次只畫一個 panel。
 - **預覽照 splash 的樣子，字全是金色**（2026-10-14，user）。理由：kamonu 裡只有這裡看得到成品的樣子；想看分字，按 `Enter` 打開畫格子的 popup。
-- **暫定：`[2] PREVIEW` 上的 `Enter` 是 Draw**（2026-10-18，重構時 kamonu 自己定，回報 terminu 等 user 確認）：tdp K3 要內容區的
-  panel 由 app 定一個對整個 panel 最直觀的動作；對著一張 mark 的圖，最直接的就是打開來畫。它是 `[2]` 的 panel operation，
-  hint `Enter:draw`；沒有東西可以預覽時不出現（tdp M6）。之前 `[2]` 上的 `Enter` 不作用。
+- **`[2] PREVIEW` 只有一個項目，就是它畫的那一個 mark**（user 2026-10-19，紀錄 KM8）：
+  - `Enter` 把那個家紋照它在 app 裡呈現的樣子放出來（家族 app 按 `V` 的那個效果）。lib 還不能放 app 指定的 mark（terminu-go
+    第三批 #40），所以暫時跟 `[1]` 一樣是 Draw，hint `Enter:draw`（`TODO(lib KM8)`）。
+  - item operation 是 `[e]dit`：打開畫格子的 popup。
+  - 沒有東西可以預覽時沒有項目，兩個鍵都不出現，下框也沒有 hint（tdp v0.8.0 的 layout/panel：沒有按得動的鍵就不寫 hint，紀錄 KM14）。
+  - 2026-10-18 重構時暫定過 `Enter` 是 `[2]` 的 panel operation、只做 Draw。
 - **預覽放不下時捲動**（2026-10-18，components/layout/panel 的「沒有 cursor 的 panel」）：mark 21 列，`[2]` 比它矮時（終端機不到
   24 列）用 lib 的 `Pager` 捲，下框右邊寫 `N-M of 21`，`j|k`、`u|d`、`gg|G` 只在這時候有、也只在這時候列進 key reference。
   寬度不夠（窄寬時 `[2]` 不到 52 欄）從右邊截掉。
@@ -73,7 +76,8 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - yaml 讀不了：事實 `Can't draw <名字>` 用 Red（`[2]` 的 `Failure`），提示 `Press [Enter] to see why` —— `Enter` 打開的
     error popup 寫著原因。以前兩句都是 Overlay0，第二句是原因本身。
 - **`[1]` 的空狀態提示是 `Press [A] to add one`**（2026-10-18）：原本還有 `, or [Space] to see what you can do here`，80 欄時
-  `[1]` 內寬 24，被 lib 截到貼著框（紀錄 KM11）；縮短後放得下。`Space` 本來就寫在 footer。
+  `[1]` 內寬 24，被 lib 截到貼著框（紀錄 KM11）；縮短後放得下。`Space` 本來就寫在 footer。tdp v0.8.0 定了空狀態放不下時折行
+  （S12），lib 做了之後不必再為了寬度縮短；現在的句子也夠用，照留。
 
 ### 動作
 
@@ -83,7 +87,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 |---|---|---|
 | `Enter` | Draw：打開畫格子的 popup | item |
 | `E` | Edit：`EDIT: <名字>` 表單，改名字、字、U 框 | item |
-| `P` | Export：寫出 svg（label 是 `Ex[P]ort`） | item |
+| `P` | Export：寫出 svg | item |
 | `X` | Delete：先 confirm（lib 的 `Action.Ask`：從 Space menu 開時 menu 留在底下，`Esc` 回到 menu，tdp T1、F4） | item |
 | `A` | Add：`NEW KAMON` 表單 | panel |
 
@@ -97,7 +101,9 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **匯出用大寫 `P`**：
   - 不用 `x`：規範 menu 的範例裡刪除是 `[X] Delete`，用過家族 app 的人會把 `x`／`X` 當成刪除。
   - user 選大寫 `P`，因為瀏覽器的列印是 `Cmd-P`。
-  - lib 標熱鍵時大小寫算數，所以 label 寫成 `ExPort`，畫出來是 `Ex[P]ort`（tdp M5 的「字母在 label 中間，原地包」）。
+  - label 是 `Export`。tdp v0.8.0 的 M5：熱鍵的字母出現在 label 裡就原地包，不分大小寫，括號裡照實際的鍵 —— `Ex[P]ort`
+    （紀錄 KM16）。terminu-go v0.1.13 比對時大小寫算數，畫成 `[P] Export`，等 lib 改了就是 `Ex[P]ort`。以前為了讓舊的 lib 原地包，
+    label 寫成 `ExPort`，key reference 裡就看到 `ExPort` 這個字。
 - **`[X] Delete`**：
   - 先 confirm（`Delete <name>?`），上面一句 Peach 說 `conf/` 裡的 yaml 會被刪掉。
   - 用大寫 `X`（2026-10-14，user 選「跟規範」）：規範 menu 的範例（components/dialog/menu）就是 `[X] Delete`。原本是 `[D]elete`。
@@ -167,18 +173,22 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ### 匯出
 
-- **`Ex[P]ort` 直接寫到 `svg/<名字>.svg`**，再用 toast 說寫到哪裡（2026-10-14，user 選 B）。
+- **`Ex[P]ort` 直接寫到 `svg/<名字>.svg`**，再用 toast 說寫到哪裡（2026-10-14，user 選 B）。成功的 toast 該用 tdp v0.8.0 的
+  Success（綠色，紀錄 KM15），terminu-go v0.1.13 還沒有，暫時用 Info（`TODO(lib KM15)`）。
   - 失敗時開 error popup `EXPORT FAILED`（2026-10-18）：原本用 Error toast，可是 toast 最多三列，原因長時會被截掉，完整的內容
     要走 error popup 或 log（components/dialog/toast），kamonu 沒有 log。
   - 成功的 toast 寫完整路徑；路徑長到三列放不下時（`KAMONU__DATA` 很深、終端機又窄），改寫 `Exported to svg/<檔名>`，
     從資料目錄算起（README 寫了 `svg/` 在哪裡）。
-- **已經有 `<名字>.svg` 時先問**（2026-10-15，user）：開表單 `EXPORT: <名字>`，照 tdp v0.6.7 的多個按鈕（dialog/form 的動作區）。
-  - 欄位 `File`：新檔的名字，預設 `<名字>_<n>.svg`，n 是從 1 起第一個還沒用掉的號碼；`Enter` 可以改，打不打 `.svg` 都可以。
-    已經有的名字在 input popup 裡就擋下：它是這一欄自己的事，擋在表單上的話，`Overwrite` 也會被這一欄的錯誤擋住。
-  - 按鈕：`Overwrite <名字>.svg` 與主要的送出 `Export`（右下角）。`Overwrite` 寫上原檔名（user）：旁邊的欄位寫的是另一個名字，
-    不看按鈕不知道它蓋哪個檔。hint 裡的檔名照原樣（`Enter:overwrite KBU.svg`，tdp v0.6.9，紀錄 KM6；lib 的 `FormButton.Subject`）。
-  - `Tab` 第一次停在 `Export`，所以 `Tab`、`Enter` 是寫新檔；要蓋掉是 `Tab`、`h`、`Enter`。按錯時新檔刪掉就好，蓋掉的舊 svg 回不來。
-  - 寫檔失敗開 error popup，蓋在表單上（dialog/form 的「送出的動作失敗」）。
+- **已經有 `<名字>.svg` 時先問：menu 加輸入框**（user 2026-10-19，紀錄 KM10）：
+  - menu `EXPORT` 兩列：`Overwrite <名字>.svg` 直接蓋掉；`Export as new…` 開輸入框 `EXPORT AS`，輸入新檔的名字（值叫 `File`，
+    打不打 `.svg` 都可以），已經有的名字在輸入框裡就擋下（`File is taken: …`）。
+  - 為什麼不是表單：只有一個值（新檔名），照 components/dialog/form 該用 input popup；蓋掉用不到這個值，是另一種做法，所以先選做法。
+  - 2026-10-15 到 2026-10-18 是表單 `EXPORT: <名字>`：一欄 `File` 加 `Overwrite`、`Export` 兩顆按鈕。
+  - 等 lib 的（`TODO(lib KM10)`）：
+    - 輸入框該用 tdp v0.8.0 的建議值帶入 `<名字>_<n>.svg`（n 是從 1 起第一個還沒用掉的號碼，不碰按 `Enter` 就用它）。lib 還沒有，
+      暫時寫在說明列（`e.g. <名字>_1.svg`），要自己打。
+    - menu 的標題該是 `EXPORT: <名字>`、名字照原樣；terminu-go v0.1.13 的 `Menu` 整串轉大寫，暫時只寫 `EXPORT`。
+    - 輸入框上按 `Esc` 該回到 menu（tdp v0.8.0 的 T1：取消一律回到 menu）；lib 從 menu 執行時先關掉 menu，暫時回到清單。
 - **格式照 tdp S5**：
   - 底 `#000000`。
   - `frame: true` 時寫 `<!-- U -->` 加上 U 框。

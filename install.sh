@@ -87,7 +87,8 @@ esac
 echo ""
 echo "NOTE: kamonu draws the cells with Nerd Font glyphs. Use a Nerd Font"
 echo "      terminal profile (https://www.nerdfonts.com) or the cells will"
-echo "      render as boxes."
+echo "      render as boxes. It also needs a truecolor (24-bit) terminal;"
+echo "      with 256 colours the letters' colours can't be told apart."
 echo ""
 echo "Run 'kamonu' and press A to add your first mark."
 # --- end of the app's own ---

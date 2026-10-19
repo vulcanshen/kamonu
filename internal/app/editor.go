@@ -1,9 +1,9 @@
 package app
 
 // The editor: a kamon's 25 × 19 cells in a popup, each cell turned by Enter
-// or Space to the next letter and back to none (the checkbox's Space, tdp
-// K5), made a letter by its digit, emptied by Backspace, and all emptied by
-// x after a confirm; a row under them says which digit and colour is which
+// or Space to the next letter and back to none (the checkbox's Space,
+// tdp K5), made a letter by its digit, emptied by Backspace, and all emptied
+// by x after a confirm; a row under them says which digit and colour is which
 // letter, and p shows every letter gold as the splash will. Under that the
 // action row, Save As and Save, and Tab between the two (as on a form). It is
 // kamonu's own popup, outside tdp F1's seven kinds: docs/dev-remarks.md,

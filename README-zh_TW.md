@@ -74,7 +74,7 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh
 |---|---|
 | `Enter` | 畫 cursor 那一個 mark |
 | `E` | 改它的名字、字、要不要 U 框 |
-| `P` | 匯出它的 svg；已經有了時先問要蓋掉，還是寫成新的檔 |
+| `P` | 匯出它的 svg；已經有了時用 menu 問：**Overwrite** 蓋掉，或 **Export as new** 寫成自己取名的新檔 |
 | `X` | 刪除（先問） |
 | `A` | 新增 mark：名字、字、要不要從 U 框開始 |
 | `Space` | 這裡能做的事 |
@@ -82,7 +82,7 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh
 | `Tab\|1–2` | 另一個 panel |
 | `q` | 離開 |
 
-在 **[2] PREVIEW** 上，`Enter` 畫它顯示的那一個 mark。終端機太矮、放不下整個 mark 時，用 `j|k`、`u|d`、`gg|G` 捲動。
+在 **[2] PREVIEW** 上，`e` 與 `Enter` 畫它顯示的那一個 mark。終端機太矮、放不下整個 mark 時，用 `j|k`、`u|d`、`gg|G` 捲動。
 
 ### 畫
 
@@ -112,7 +112,7 @@ kamonu 沒有設定檔。所有東西都在 `~/.kamonu/data`；要放在別的�
 | 位置 | 是什麼 |
 |---|---|
 | `conf/<名字>.yaml` | mark 本身：字、要不要 U 框、每一格，格子寫成一張看得懂的圖 |
-| `svg/<名字>.svg` | **匯出**寫出來的檔。已經有了時先問：**Overwrite** 蓋掉它，或 **Export** 寫成新的檔，`<名字>_1.svg`（第一個還沒用掉的號碼）或自己取的名字 |
+| `svg/<名字>.svg` | **匯出**寫出來的檔。已經有了時先問：**Overwrite** 蓋掉它，或 **Export as new** 寫成新的檔，名字自己取（會提示 `<名字>_1.svg`，第一個還沒用掉的號碼） |
 
 ## 限制
 
