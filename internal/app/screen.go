@@ -78,12 +78,13 @@ func newKamonu(st store) *kamonu {
 	k.panel.Actions = append(k.panel.Actions, k.list.Actions()...)
 	k.preview = &preview{k: k}
 	// [2] has one item, the kamon it shows (KM8, KM17): Enter shows the mark
-	// as its app shows it, and Draw opens its cells.
-	// TODO(lib KM8): the lib cannot show a mark of the app's choosing yet;
-	// till then Enter draws, and Draw needs no row of its own. Its hotkey
-	// waits too: d, as decided, is half a page down (tdp K12).
+	// as its app shows it, and [e]dit opens its cells; [1]'s Edit is [e]dit
+	// too, each told by the panel it is on.
+	// TODO(lib KM8): Enter with the lib's App.PlaySplash (terminu-go
+	// v0.2.0); till then it draws, as on [1].
 	preview := &terminu.Panel{Label: "Preview", Body: k.preview, Actions: []terminu.Action{
 		{Key: "Enter", Label: "Draw", Desc: "the kamon shown here", Scope: terminu.ItemScope, Hint: "draw", Do: k.draw},
+		{Key: "e", Label: "Edit", Desc: "draw its cells", Scope: terminu.ItemScope, Do: k.draw},
 	}}
 	k.preview.panel = preview
 	a.AddScreen(&terminu.Screen{

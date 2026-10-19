@@ -87,7 +87,7 @@ Removes the binary, then asks — never assumes — about `~/.kamonu`, where you
 | `Tab\|1–2` | The other panel |
 | `q` | Quit |
 
-On **[2] PREVIEW**, `Enter` draws the mark it shows. When the terminal is too short for the whole mark, `j|k`,
+On **[2] PREVIEW**, `e` and `Enter` draw the mark it shows. When the terminal is too short for the whole mark, `j|k`,
 `u|d` and `gg|G` scroll it.
 
 ### Drawing

@@ -963,8 +963,10 @@ func TestPreviewEnter(t *testing.T) {
 	hs.keys("Space")
 	hs.contains("ITEM OPERATION") // one item, the kamon shown (KM8)
 	hs.contains("[Enter] Draw")
-	hs.lacks("Edit") // [1]'s Edit is not [2]'s (KM17)
+	hs.contains("draw its cells") // [e]dit (KM17)
 	hs.keys("Esc", "Enter")
+	hs.contains("DRAW: filu")
+	hs.keys("Esc", "e") // on [2], Edit draws
 	hs.contains("DRAW: filu")
 
 	hs = newHarness(t, 80, 40, nil)

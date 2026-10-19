@@ -62,10 +62,9 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **預覽照 splash 的樣子，字全是金色**（2026-10-14，user）。理由：kamonu 裡只有這裡看得到成品的樣子；想看分字，按 `Enter` 打開畫格子的 popup。
 - **`[2] PREVIEW` 只有一個項目，就是它畫的那一個 mark**（user 2026-10-19，紀錄 KM8、KM17）：
   - `Enter` 把那個家紋照它在 app 裡呈現的樣子放出來（家族 app 按 `V` 的那個效果）。lib 還不能放 app 指定的 mark（terminu-go
-    第三批 #40），所以暫時跟 `[1]` 一樣是 Draw，hint `Enter:draw`（`TODO(lib KM8)`）。
-  - item operation 是 Draw：打開畫格子的 popup。定的熱鍵是 `d`（`[d]raw`），可是 `d` 是 tdp K12 的半頁往下，`[2]` 放不下時也用它捲，
-    已回報 terminu。在 `Enter` 還是 Draw 的這段時間，Draw 不另外列一列。
-  - 2026-10-19 先定過 `[e]dit`；跟 `[1]` 的 Edit（改名字、字、U 框）同名不同事，改叫 Draw（KM17）。
+    第三批 #40，v0.2.0 的 `App.PlaySplash`），所以暫時跟 `[1]` 一樣是 Draw，hint `Enter:draw`（`TODO(lib KM8)`）。
+  - item operation 是 `[e]dit`：打開畫格子的 popup。`[1]` 的 Edit（改名字、字、U 框）也是 `[e]dit`，兩個同名，靠所在的 panel 分
+    （user 2026-10-19，紀錄 KM17）。中間改定過 `[d]raw`，撤回：`d` 是 tdp K12 保留的半頁鍵，`[2]` 放不下時也用它捲。
   - 沒有東西可以預覽時沒有項目，兩個鍵都不出現，下框也沒有 hint（tdp v0.8.0 的 layout/panel：沒有按得動的鍵就不寫 hint，紀錄 KM14）。
   - 2026-10-18 重構時暫定過 `Enter` 是 `[2]` 的 panel operation、只做 Draw。
 - **預覽放不下時捲動**（2026-10-18，components/layout/panel 的「沒有 cursor 的 panel」）：mark 21 列，`[2]` 比它矮時（終端機不到

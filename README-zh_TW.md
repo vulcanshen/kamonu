@@ -82,7 +82,7 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh
 | `Tab\|1–2` | 另一個 panel |
 | `q` | 離開 |
 
-在 **[2] PREVIEW** 上，`Enter` 畫它顯示的那一個 mark。終端機太矮、放不下整個 mark 時，用 `j|k`、`u|d`、`gg|G` 捲動。
+在 **[2] PREVIEW** 上，`e` 與 `Enter` 畫它顯示的那一個 mark。終端機太矮、放不下整個 mark 時，用 `j|k`、`u|d`、`gg|G` 捲動。
 
 ### 畫
 

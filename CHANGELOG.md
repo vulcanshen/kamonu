@@ -9,7 +9,7 @@ Each release names the version of terminu design (tdp) it follows.
   `File is taken: …`. It was a form with a File field and two buttons
 - The export action is called Export again (it was ExPort)
 - Edit is `e` now (it was `E`)
-- `[2] PREVIEW`: `Enter` draws the mark it shows; on a terminal too short for the whole mark it scrolls
+- `[2] PREVIEW`: `e` draws the mark it shows, and so does `Enter`; on a terminal too short for the whole mark it scrolls
   with `j|k`, `u|d` and `gg|G` and says which rows it shows. The mark is drawn from the panel's top left, as other
   panels show their content; a mark it cannot read says so in red, and `Enter` shows why
 - Draw on a terminal under 27 rows (80 × 24, say): the cells scroll with the cursor, and the letters and the buttons
