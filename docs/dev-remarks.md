@@ -69,11 +69,11 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **`[2]` 至少 54 欄**（mark 50 欄、左右各一格留白、框兩格）。80 欄時 `[1]` 剩 26 欄；更窄時一次只畫一個 panel。
 - **預覽照 splash 的樣子，字全是金色**（2026-10-14，user）。理由：kamonu 裡只有這裡看得到成品的樣子；想看分字，按 `Enter` 打開畫格子的 popup。
 - **`[2] PREVIEW` 只有一個項目，就是它畫的那一個 mark**（user 2026-10-19，紀錄 KM8、KM17）：
-  - `Enter` 是 Show：把那個家紋照它在 app 裡呈現的樣子放出來（家族 app 按 `V` 的那個效果），用 lib 的 `App.PlaySplash`
-    （terminu-go v0.2.0）播 `terminu.NewSplash(km.svg(), <名字>, "", "")`，hint `Enter:show`，任何鍵關掉。讀不了的 kamon 開
-    error popup `SHOW FAILED: <名字>`。v0.2.0 以前 lib 放不了 app 指定的 mark，`Enter` 暫時是 Draw。
-  - **暫定：mark 下面只寫名字**（2026-10-20，kamonu 自己定，回報 terminu）：app 的 splash 下面寫名稱、版本、介紹，kamonu 不知道
-    那個 app 的版本與介紹，所以版本與介紹空著，作者、信箱、提示照 lib 畫。
+  - `Enter` 是 Show（名字 user 2026-10-20 確認）：把那個家紋照它在 app 裡呈現的樣子放出來（家族 app 按 `V` 的那個效果），用 lib
+    的 `App.PlaySplash`（terminu-go v0.2.0）播 `terminu.NewSplash(km.svg(), <名字>, "", "")`，hint `Enter:show`，任何鍵關掉。
+    讀不了的 kamon 開 error popup `SHOW FAILED: <名字>`。v0.2.0 以前 lib 放不了 app 指定的 mark，`Enter` 暫時是 Draw。
+  - **mark 下面只寫名字**（user 2026-10-20 確認）：app 的 splash 下面寫名稱、版本、介紹；kamonu 是家徽產生器，不管 app 本身，
+    所以版本與介紹空著，作者、信箱、提示照 lib 畫。
   - item operation 是 `[e]dit`：打開畫格子的 popup。`[1]` 的 Edit（改名字、字、U 框）也是 `[e]dit`，兩個同名，靠所在的 panel 分
     （user 2026-10-19，紀錄 KM17）。中間改定過 `[d]raw`，撤回：`d` 是 tdp K12 保留的半頁鍵，`[2]` 放不下時也用它捲。
   - 沒有東西可以預覽時沒有項目，兩個鍵都不出現，下框也沒有 hint（tdp v0.8.0 的 layout/panel：沒有按得動的鍵就不寫 hint，紀錄 KM14）。
