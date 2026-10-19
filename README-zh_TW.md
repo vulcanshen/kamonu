@@ -73,7 +73,7 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh
 | 鍵 | 作用 |
 |---|---|
 | `Enter` | 畫 cursor 那一個 mark |
-| `E` | 改它的名字、字、要不要 U 框 |
+| `e` | 改它的名字、字、要不要 U 框 |
 | `P` | 匯出它的 svg；已經有了時用 menu 問：**Overwrite** 蓋掉，或 **Export as new** 寫成自己取名的新檔 |
 | `X` | 刪除（先問） |
 | `A` | 新增 mark：名字、字、要不要從 U 框開始 |
@@ -82,7 +82,7 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh
 | `Tab\|1–2` | 另一個 panel |
 | `q` | 離開 |
 
-在 **[2] PREVIEW** 上，`e` 與 `Enter` 畫它顯示的那一個 mark。終端機太矮、放不下整個 mark 時，用 `j|k`、`u|d`、`gg|G` 捲動。
+在 **[2] PREVIEW** 上，`Enter` 畫它顯示的那一個 mark。終端機太矮、放不下整個 mark 時，用 `j|k`、`u|d`、`gg|G` 捲動。
 
 ### 畫
 

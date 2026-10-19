@@ -775,7 +775,7 @@ func TestNewKamonWithoutTheFrame(t *testing.T) {
 
 func TestEditKamon(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML), "webu": blank()})
-	hs.keys("E")
+	hs.keys("e")
 	hs.contains("EDIT: filu")
 	hs.contains("FIL")
 	// A name that is taken.
@@ -803,7 +803,7 @@ func TestEditPutsTheFrameIn(t *testing.T) {
 	km := kamon{letters: []string{"K"}}
 	km.cells[0][2], km.cells[0][5] = 1, 1
 	hs := newHarness(t, 80, 40, map[string][]byte{"k": km.yaml()})
-	hs.keys("E", "j", "j", "Space", "Tab", "Enter")
+	hs.keys("e", "j", "j", "Space", "Tab", "Enter")
 	got, err := hs.k.st.load("k")
 	if err != nil {
 		t.Fatal(err)
@@ -963,10 +963,8 @@ func TestPreviewEnter(t *testing.T) {
 	hs.keys("Space")
 	hs.contains("ITEM OPERATION") // one item, the kamon shown (KM8)
 	hs.contains("[Enter] Draw")
-	hs.contains("draw its cells") // [e]dit
+	hs.lacks("Edit") // [1]'s Edit is not [2]'s (KM17)
 	hs.keys("Esc", "Enter")
-	hs.contains("DRAW: filu")
-	hs.keys("Esc", "e")
 	hs.contains("DRAW: filu")
 
 	hs = newHarness(t, 80, 40, nil)
@@ -1003,7 +1001,7 @@ func TestPreviewScrolls(t *testing.T) {
 // input, the one-line input).
 func TestLettersPrompt(t *testing.T) {
 	hs := newHarness(t, 100, 40, map[string][]byte{"filu": []byte(filYAML)})
-	hs.keys("E", "j", "Enter")
+	hs.keys("e", "j", "Enter")
 	hs.contains("The letters in the U frame of filu, in the order of the app's name")
 	hs.keys("Esc", "Esc", "A", "j", "Enter")
 	hs.contains("The letters in the U frame of the new kamon, in the order of the app's name")
@@ -1022,7 +1020,7 @@ func TestBrokenFile(t *testing.T) {
 	hs.contains("Can't read broken")
 	hs.keys("Esc", "Tab", "Enter") // on [1] too
 	hs.contains("DRAW FAILED")
-	hs.keys("Esc", "E")
+	hs.keys("Esc", "e")
 	hs.contains("Can't read broken")
 }
 
@@ -1060,7 +1058,7 @@ func TestFullWidth(t *testing.T) {
 		{"Esc", "Esc", "?"},          // the panel's key reference
 		{"Esc", "A"},                 // NEW KAMON
 		{"Enter"},                    // its Name
-		{"Esc", "Esc", "E"},          // EDIT: terminu
+		{"Esc", "Esc", "e"},          // EDIT: terminu
 		{"Esc", "P"},                 // exported: a toast
 		{"Esc", "P"},                 // the svg there: the menu
 		{"j", "Enter"},               // EXPORT AS

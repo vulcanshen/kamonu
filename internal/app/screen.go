@@ -67,7 +67,7 @@ func newKamonu(st store) *kamonu {
 	}
 	k.panel = &terminu.Panel{Label: "Kamon", Body: kamonList{k.list}, Actions: []terminu.Action{
 		{Key: "Enter", Label: "Draw", Desc: "its cells", Scope: terminu.ItemScope, Hint: "draw", Do: k.draw},
-		{Key: "E", Label: "Edit", Desc: "name, letters, U frame", Scope: terminu.ItemScope, Do: k.edit},
+		{Key: "e", Label: "Edit", Desc: "name, letters, U frame", Scope: terminu.ItemScope, Do: k.edit},
 		// The key is a capital P: the lib marks it where it falls in the
 		// label, Ex[P]ort, once it matches letters in either case (tdp M5).
 		{Key: "P", Label: "Export", Desc: "write its svg", Scope: terminu.ItemScope, Do: k.export},
@@ -77,13 +77,13 @@ func newKamonu(st store) *kamonu {
 	}}
 	k.panel.Actions = append(k.panel.Actions, k.list.Actions()...)
 	k.preview = &preview{k: k}
-	// [2] has one item, the kamon it shows (KM8, decided 2026-10-19):
-	// [e]dit draws its cells, and Enter shows the mark as its app shows it.
+	// [2] has one item, the kamon it shows (KM8, KM17): Enter shows the mark
+	// as its app shows it, and Draw opens its cells.
 	// TODO(lib KM8): the lib cannot show a mark of the app's choosing yet;
-	// till then Enter draws, as on [1].
+	// till then Enter draws, and Draw needs no row of its own. Its hotkey
+	// waits too: d, as decided, is half a page down (tdp K12).
 	preview := &terminu.Panel{Label: "Preview", Body: k.preview, Actions: []terminu.Action{
 		{Key: "Enter", Label: "Draw", Desc: "the kamon shown here", Scope: terminu.ItemScope, Hint: "draw", Do: k.draw},
-		{Key: "e", Label: "Edit", Desc: "draw its cells", Scope: terminu.ItemScope, Do: k.draw},
 	}}
 	k.preview.panel = preview
 	a.AddScreen(&terminu.Screen{

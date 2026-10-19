@@ -78,7 +78,7 @@ Removes the binary, then asks — never assumes — about `~/.kamonu`, where you
 | Key | What it does |
 |---|---|
 | `Enter` | Draw the mark under the cursor |
-| `E` | Edit its name, its letters and whether it has the U frame |
+| `e` | Edit its name, its letters and whether it has the U frame |
 | `P` | Export its svg; when there is one already, a menu asks: **Overwrite** it, or **Export as new** under a name you give |
 | `X` | Delete the mark (asks first) |
 | `A` | Add a new mark: its name, its letters, and whether it starts with the U frame |
@@ -87,7 +87,7 @@ Removes the binary, then asks — never assumes — about `~/.kamonu`, where you
 | `Tab\|1–2` | The other panel |
 | `q` | Quit |
 
-On **[2] PREVIEW**, `e` and `Enter` draw the mark it shows. When the terminal is too short for the whole mark, `j|k`,
+On **[2] PREVIEW**, `Enter` draws the mark it shows. When the terminal is too short for the whole mark, `j|k`,
 `u|d` and `gg|G` scroll it.
 
 ### Drawing

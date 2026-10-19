@@ -60,10 +60,12 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **`[1]` 的 label 是 `KAMON`**（不是 `ICONS`）：user 定的，清單裡的東西就是家紋。
 - **`[2]` 至少 54 欄**（mark 50 欄、左右各一格留白、框兩格）。80 欄時 `[1]` 剩 26 欄；更窄時一次只畫一個 panel。
 - **預覽照 splash 的樣子，字全是金色**（2026-10-14，user）。理由：kamonu 裡只有這裡看得到成品的樣子；想看分字，按 `Enter` 打開畫格子的 popup。
-- **`[2] PREVIEW` 只有一個項目，就是它畫的那一個 mark**（user 2026-10-19，紀錄 KM8）：
+- **`[2] PREVIEW` 只有一個項目，就是它畫的那一個 mark**（user 2026-10-19，紀錄 KM8、KM17）：
   - `Enter` 把那個家紋照它在 app 裡呈現的樣子放出來（家族 app 按 `V` 的那個效果）。lib 還不能放 app 指定的 mark（terminu-go
     第三批 #40），所以暫時跟 `[1]` 一樣是 Draw，hint `Enter:draw`（`TODO(lib KM8)`）。
-  - item operation 是 `[e]dit`：打開畫格子的 popup。
+  - item operation 是 Draw：打開畫格子的 popup。定的熱鍵是 `d`（`[d]raw`），可是 `d` 是 tdp K12 的半頁往下，`[2]` 放不下時也用它捲，
+    已回報 terminu。在 `Enter` 還是 Draw 的這段時間，Draw 不另外列一列。
+  - 2026-10-19 先定過 `[e]dit`；跟 `[1]` 的 Edit（改名字、字、U 框）同名不同事，改叫 Draw（KM17）。
   - 沒有東西可以預覽時沒有項目，兩個鍵都不出現，下框也沒有 hint（tdp v0.8.0 的 layout/panel：沒有按得動的鍵就不寫 hint，紀錄 KM14）。
   - 2026-10-18 重構時暫定過 `Enter` 是 `[2]` 的 panel operation、只做 Draw。
 - **預覽放不下時捲動**（2026-10-18，components/layout/panel 的「沒有 cursor 的 panel」）：mark 21 列，`[2]` 比它矮時（終端機不到
@@ -86,18 +88,18 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 | 鍵 | 動作 | 範圍 |
 |---|---|---|
 | `Enter` | Draw：打開畫格子的 popup | item |
-| `E` | Edit：`EDIT: <名字>` 表單，改名字、字、U 框 | item |
+| `e` | Edit：`EDIT: <名字>` 表單，改名字、字、U 框（`[e]dit`，user 2026-10-19，紀錄 KM17；以前是 `E`） | item |
 | `P` | Export：寫出 svg | item |
 | `X` | Delete：先 confirm（lib 的 `Action.Ask`：從 Space menu 開時 menu 留在底下，`Esc` 回到 menu，tdp T1、F4） | item |
 | `A` | Add：`NEW KAMON` 表單 | panel |
 
-- **`Enter` 直接畫格子，`[E]dit` 改資料**：
+- **`Enter` 直接畫格子，`[e]dit` 改資料**：
   - 畫格子是最常做的事，按一下就到。
   - 忘了鍵的話，`Space` menu 裡全列著。
   - tdp K3 的 `Enter` 是對這一筆最直觀的動作；先選再做是 Space menu 的事。
-  - 規範 menu 範例（components/dialog/menu）也是這個排法：`[Enter] Connect`、`[E]dit`。
-- **`Enter` 原本叫 Edit**：有了改資料的 `[E]dit` 之後改名叫 Draw，免得兩個動作都叫 Edit。
-- **原本的 `[r]ename` 併進 `[E]dit`**：改名就是改 Name 那一欄。
+  - 規範 menu 範例（components/dialog/menu）也是這個排法：`[Enter] Connect`、`[e]dit`。
+- **`Enter` 原本叫 Edit**：有了改資料的 Edit 之後改名叫 Draw，免得兩個動作都叫 Edit。
+- **原本的 `[r]ename` 併進 Edit**：改名就是改 Name 那一欄。
 - **匯出用大寫 `P`**：
   - 不用 `x`：規範 menu 的範例裡刪除是 `[X] Delete`，用過家族 app 的人會把 `x`／`X` 當成刪除。
   - user 選大寫 `P`，因為瀏覽器的列印是 `Cmd-P`。
@@ -291,7 +293,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 已否決，不要重提
 
-- 同一個動作同時綁 `Enter` 與 `E`：menu 裡會出現兩列一樣的動作。
+- 同一個動作同時綁 `Enter` 與 `e`：menu 裡會出現兩列一樣的動作。
 - **full size 與自訂大小**（2026-10-14）：曾想讓新增時選 locku 鎖定畫面的大小或任意大小。否決，kamonu 只畫家族的 mark（25 × 19）。
   附帶查到的：locku 的鎖定畫面沒有固定的格數，是 `終端機寬 ÷ 2` × `終端機高 − 1`。
 - 存檔時才輸入檔名、才建檔：改成新增時就填名字、當場建檔。
