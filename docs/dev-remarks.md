@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.8.2），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.8.3），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -65,7 +65,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
     可能跑到看不見的地方。
   - 高 16：popup 最高是畫面減兩列，扣掉框、上下留白、色標、分隔線、按鈕，格子還看得到六列，跟著 cursor 捲。
   - 其他畫面都比它小：表單、menu、key reference 放不下時照常捲；預覽放不下時捲；splash 在 50 × 30 以下只畫字。
-- **名字太長時從尾端截、加 `…`**（2026-10-20，tdp v0.8.2 的 layout/panel）：`[1]` 只有一欄 Name，標成長欄（`Column.Shrink`），比 `[1]` 寬的名字照欄的截法截；沒標的話 lib 只在框邊切掉。
+- **名字太長時從尾端截、加 `…`**（2026-10-20，tdp v0.8.2 的 layout/panel）：`[1]` 只有一欄 Name，標成長欄（`Column.Shrink`），比 `[1]` 寬的名字照欄的截法截。
 - **`[1]` 的 label 是 `KAMON`**（不是 `ICONS`）：user 定的，清單裡的東西就是家紋。
 - **`[2]` 至少 54 欄**（mark 50 欄、左右各一格留白、框兩格）。80 欄時 `[1]` 剩 26 欄；更窄時一次只畫一個 panel。
 - **預覽照 splash 的樣子，字全是金色**（2026-10-14，user）。理由：kamonu 裡只有這裡看得到成品的樣子；想看分字，按 `Enter` 打開畫格子的 popup。
@@ -354,7 +354,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.2.1）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.2.2）。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
     lib 一改馬上看得到。`go.work`、`go.work.sum` 不進版控。
   - commit 與發版前，關掉 go.work 跑一次（`make check-lib`：`GOWORK=off go build ./...`、`GOWORK=off go test ./...`）。過不了，
