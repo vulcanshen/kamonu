@@ -304,12 +304,12 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `svg/<名字>.svg`：匯出的成品。
 - yaml 算資料不算設定：tdp E3 的設定目錄（`~/.config/kamonu`）放的是決定 app 怎麼運作的設定檔，yaml 是使用者畫出來的東西。
   tdp v0.9.0 的「刪掉會怎樣」：mark 與匯出的 svg 刪了就找不回來，都是資料；kamonu 沒有設定、狀態、快取，位置也沒換過，不用搬。
-- **讀不了時**（2026-10-20，tdp v0.9.0 的 E3；lib 的 `App.MoveAside`）：啟動時（`App.Start`）先讀 `conf/` 與每一個 mark，第一個讀不了的
+- **讀不了時**（2026-10-20，tdp v0.9.0 的 E3；lib 的 `App.MoveAside`，mark 用 v0.4.2 的 `App.MoveAsideRecord`）：啟動時（`App.Start`）先讀 `conf/` 與每一個 mark，第一個讀不了的
   開 `MOVE ASIDE`（路徑與原因，`Enter:move Esc:quit`）。`Enter` 把它改名成 `<名字>.yaml.bak`（已經有就 `.bak.1`……），記進 App Log，
   再檢查下一個；`Esc` 離開，路徑與原因印到 stderr。一次問一個，每一個都說得出是哪個檔。
   - 改名後不另外建一個新的：mark 是一張一張的檔，放到旁邊就從清單上消失；空的 mark 沒有字，建不出來。tdp v0.9.1 照這樣定了
-    （E3：資料一筆一個檔時，問句寫 `Move it to <檔名>.bak and go on without it?`，紀錄 KM18）。terminu-go v0.4.0 的問句還寫
-    「and start a new one?」，lib 補上前列在 `kamonu-terminu-fix.md`。
+    （E3：資料一筆一個檔時，問句寫 `Move it to <檔名>.bak and go on without it?`，紀錄 KM18）。`conf/` 目錄本身讀不了時照舊用
+    `MoveAside`（問句寫 `and start a new one?`）：放到旁邊後清單是空的，新增時再建。
   - 開著時才壞掉的 mark（例：在外面手改了）照舊：預覽寫 `Can't draw`，Draw、Edit 開 error popup。
 - **App Log**（2026-10-20，tdp v0.9.0；lib 給的，在 panel 上按 `!`，footer 常駐 `!:log`）：toast、error popup、放到旁邊的檔由 lib 記；
   kamonu 自己記做完的事：`created <名字>`、`saved <名字>`、`saved <名字> as <新名字>`、`renamed <舊> to <新>`、
@@ -364,12 +364,12 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 ## 設計文件導讀
 
 - 規範的盲點與 lib 要補的地方記在 terminu 的 `.local/family-fix/kamonu/README.md`（編號 KM）。
-- 還沒符合 tdp 的地方逐條寫在 `kamonu-terminu-fix.md`（tdp E7），全部修完就刪掉。terminu-go v0.2.0 時修完刪過一次；tdp v0.9.1
-  的 E3（KM18）等 lib，又有了。
+- 還沒符合 tdp 的地方逐條寫在 `kamonu-terminu-fix.md`（tdp E7），全部修完就刪掉；現在沒有這個檔。terminu-go v0.2.0 時修完刪過
+  一次；tdp v0.9.1 的 E3（KM18）等 lib 時又有過，v0.4.2 修完刪掉。
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.4.0）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.4.2）。
   - 2026-10-20 的一輪（tdp v0.9.0）lib 還沒打 tag 時，改動用 `go.work` 做、先留在工作區，等 v0.4.0 打了 tag、`go.mod` 改好、整個
     `make check`（含 `check-lib`）過了才 commit：照這裡的規定，不 commit 只有本機 lib 才編得過的程式。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，

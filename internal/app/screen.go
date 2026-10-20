@@ -97,7 +97,8 @@ func newKamonu(st store) *kamonu {
 // when it cannot be read): the directory of kamon, then each kamon. The
 // first one it cannot read opens MOVE ASIDE: Enter puts it aside as
 // <name>.yaml.bak and checks again, Esc leaves kamonu with the path and the
-// reason on stderr. One at a time, so each says which file it is.
+// reason on stderr. One at a time, so each says which file it is. A kamon is
+// one file of many: it goes aside with nothing new in its place.
 func (k *kamonu) start() tea.Cmd {
 	names, err := k.st.names()
 	if err != nil {
@@ -105,10 +106,7 @@ func (k *kamonu) start() tea.Cmd {
 	}
 	for _, n := range names {
 		if _, err := k.st.load(n); err != nil {
-			// TODO(lib KM18): a kamon is one file of many, so tdp v0.9.1 (E3)
-			// asks "and go on without it?"; the lib still says "and start a
-			// new one?".
-			return k.a.MoveAside(k.st.path(n), err, k.restart)
+			return k.a.MoveAsideRecord(k.st.path(n), err, k.restart)
 		}
 	}
 	return nil

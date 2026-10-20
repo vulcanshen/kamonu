@@ -27,8 +27,8 @@ func TestTDP(t *testing.T) {
 }
 
 // TestMoveAside: a kamon kamonu cannot read stops it at the start (tdp E3,
-// when it cannot be read): Enter puts it aside as <name>.yaml.bak and goes
-// on to the next one; Esc leaves.
+// when it cannot be read): Enter puts it aside as <name>.yaml.bak, makes
+// nothing new and goes on to the next one; Esc leaves.
 func TestMoveAside(t *testing.T) {
 	st := store{dir: filepath.Join(t.TempDir(), "data")}
 	if err := os.MkdirAll(st.conf(), 0o755); err != nil {
@@ -40,12 +40,15 @@ func TestMoveAside(t *testing.T) {
 		}
 	}
 	d := tdptest.Start(t, newKamonu(st).a, 80, 40)
-	if !d.Has("MOVE ASIDE") || !d.Has("aa.yaml can't be read") || !d.Has("Move it to aa.yaml.bak") {
+	if !d.Has("MOVE ASIDE") || !d.Has("aa.yaml can't be read") || !d.Has("Move it to aa.yaml.bak and go on without it?") {
 		t.Fatalf("no MOVE ASIDE for aa:\n%s", d.Screen())
 	}
 	d.Press("Enter")
 	if _, err := os.Stat(st.path("aa") + ".bak"); err != nil {
 		t.Fatal("aa.yaml was not put aside")
+	}
+	if _, err := os.Stat(st.path("aa")); err == nil {
+		t.Fatal("a new aa.yaml was made in its place")
 	}
 	if !d.Has("bb.yaml can't be read") {
 		t.Fatalf("no MOVE ASIDE for bb, the next one:\n%s", d.Screen())
