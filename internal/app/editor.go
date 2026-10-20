@@ -391,6 +391,7 @@ func (k *kamonu) save(e *editor) tea.Cmd {
 	if err := k.st.save(e.kamon, e.km); err != nil {
 		return k.a.ErrorAbout("Save failed", e.kamon, "Can't save "+e.kamon+": "+why(err))
 	}
+	k.a.Log(terminu.Info, "saved "+e.kamon)
 	k.reload(e.kamon)
 	return k.a.ClosePopup(e)
 }
@@ -411,6 +412,7 @@ func (k *kamonu) saveAs(e *editor) tea.Cmd {
 			return nil
 		},
 		Done: func(v string) tea.Cmd {
+			k.a.Log(terminu.Info, "saved "+e.kamon+" as "+v)
 			k.reload(v)
 			return k.a.ClosePopup(e)
 		},

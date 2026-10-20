@@ -89,7 +89,32 @@ func newKamonu(st store) *kamonu {
 		NarrowBelow: 80,
 	})
 	k.reload("")
+	a.Start = k.start
 	return k
+}
+
+// start checks that kamonu can read its own data before it is used (tdp E3,
+// when it cannot be read): the directory of kamon, then each kamon. The
+// first one it cannot read opens MOVE ASIDE: Enter puts it aside as
+// <name>.yaml.bak and checks again, Esc leaves kamonu with the path and the
+// reason on stderr. One at a time, so each says which file it is.
+func (k *kamonu) start() tea.Cmd {
+	names, err := k.st.names()
+	if err != nil {
+		return k.a.MoveAside(k.st.conf(), err, k.restart)
+	}
+	for _, n := range names {
+		if _, err := k.st.load(n); err != nil {
+			return k.a.MoveAside(k.st.path(n), err, k.restart)
+		}
+	}
+	return nil
+}
+
+// restart is start after a file was put aside: the list without it.
+func (k *kamonu) restart() tea.Cmd {
+	k.reload("")
+	return k.start()
 }
 
 // current is the kamon under the cursor; "" when there is none.
@@ -200,6 +225,7 @@ func (k *kamonu) add() tea.Cmd {
 			if err := k.st.create(name, km); err != nil {
 				return nil, errors.New("Can't create " + name + ": " + why(err))
 			}
+			k.a.Log(terminu.Info, "created "+name)
 			k.reload(name)
 			return k.openEditor(name, km), nil
 		},
@@ -244,7 +270,9 @@ func (k *kamonu) edit() tea.Cmd {
 					k.reload(old)
 					return nil, errors.New("Can't rename " + old + ": " + why(err))
 				}
+				k.a.Log(terminu.Info, "renamed "+old+" to "+name)
 			}
+			k.a.Log(terminu.Info, "saved "+name+": letters "+letters+", U frame "+onOff(km.frame))
 			k.reload(name)
 			return nil, nil
 		},
@@ -318,8 +346,17 @@ func (k *kamonu) delete() tea.Cmd {
 	if err := k.st.remove(name); err != nil {
 		return k.a.ErrorAbout("Delete failed", name, "Can't delete "+name+": "+why(err))
 	}
+	k.a.Log(terminu.Info, "deleted "+name)
 	k.reload("")
 	return nil
+}
+
+// onOff is a yes or no for the App Log.
+func onOff(on bool) string {
+	if on {
+		return "on"
+	}
+	return "off"
 }
 
 // preview is [2]: the kamon under the cursor as the splash draws its mark,

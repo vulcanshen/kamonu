@@ -83,6 +83,7 @@ Removes the binary, then asks — never assumes — about `~/.kamonu`, where you
 | `X` | Delete the mark (asks first) |
 | `A` | Add a new mark: its name, its letters, and whether it starts with the U frame |
 | `Space` | Everything you can do here |
+| `!` | The App Log: what kamonu did, and every message it showed |
 | `?` | The keys of this panel |
 | `Tab\|1–2` | The other panel |
 | `q` | Quit |
@@ -121,6 +122,8 @@ kamonu has no settings file. Everything is kept in `~/.kamonu/data`; set `KAMONU
 |---|---|
 | `conf/<name>.yaml` | The mark: its letters, whether it has the U frame, and its cells, drawn as a picture you can read |
 | `svg/<name>.svg` | What **Export** writes. When it is there, Export asks: **Overwrite** it, or **Export as new**, under a name you give; `<name>_1.svg`, the first number not taken, is offered, and `Enter` takes it |
+
+If kamonu cannot read a mark when it starts, it asks to move it aside to `<name>.yaml.bak` and go on without it; `Esc` quits instead and says which file and why.
 
 ## Limitations
 

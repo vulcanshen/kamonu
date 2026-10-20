@@ -4,6 +4,10 @@ Each release names the version of terminu design (tdp) it follows.
 
 ## Unreleased
 
+- The App Log: `!` opens what kamonu did and every message it showed; the footer says `!:log`, or how many errors
+  there are
+- A mark kamonu cannot read when it starts: it asks to move it aside to `<name>.yaml.bak` and goes on without it;
+  `Esc` quits and says which file and why
 - Export, when the svg is there already: a menu, `EXPORT: <name>`, asks whether to **Overwrite** it or **Export as
   new**. Export as new offers the next free `<name>_<n>.svg`, which `Enter` takes as it is, or a name you type; one
   that is there is refused with `File is taken: …`, and `Esc` goes back to the menu. It was a form with a File field
@@ -27,7 +31,7 @@ Each release names the version of terminu design (tdp) it follows.
 - Edit: the Letters prompt says whose letters they are
 - A key reference lists moving and scrolling keys only when there is something to move or scroll
 - A name too long for the list is cut with `…`
-- Built on terminu-go v0.2.2: text in a popup and an empty list's hint fold at spaces, and between wide characters
+- Built on terminu-go v0.4.0: text in a popup and an empty list's hint fold at spaces, and between wide characters
 - `go install github.com/vulcanshen/kamonu/cmd/kamonu@latest`: the program is in `cmd/kamonu` now, and the release
   files are the terminu family's
 

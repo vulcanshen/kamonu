@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.8.3），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.9.0），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -28,7 +28,10 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `Save`、`Edit` 與匯出都先寫到同一個目錄的暫存檔再 rename，寫到一半失敗時原檔還在。
   - 新增（`Create`、`Save As`）用 `O_EXCL`，不會蓋掉同名的檔。
   - 錯誤訊息不帶路徑（`why`）：使用者知道是哪一個 mark，而路徑可能只是暫存檔的名字。
-- **測試守著的**（`kamonu_test.go`）：
+- **測試守著的**（`kamonu_test.go`、`tdp_test.go`）：
+  - `tdp_test.go` 用 lib 的 tdptest（terminu-go v0.4.0）：`TestTDP` 照第一次啟動、`TestTDPWithMarks` 放了兩個 mark，在 tdptest
+    的每一種尺寸與 icon 寬度走過每個 panel 的 Space menu、global operation popup、App Log、key reference，再縮到最小尺寸以下又拉回來；
+    每個 frame 驗 tdp L4 與有沒有控制字元送到終端機。`TestMoveAside`：啟動時讀不了的 mark 一個一個問，`Enter` 放到 `.bak`，`Esc` 離開。
   - `harness_test.go` 是不用終端機就能跑整個 app 的工具：送按鍵、跑完動畫、讀畫面。超過 200ms 的計時器（toast 留在畫面上的時間）不等，所以 toast 會留在畫面上讓測試讀。
   - tdp L4 與 E5：80×40、120×50、60×30、56×28，加上最小尺寸 56×16（畫格子的 popup 太寬又太高）、120×16（太高）、56×50（太寬：
     六個字的 mark，icon 兩格時色標比格子寬）；icon 與 powerline 符號都一格、icon 兩格、兩種都兩格。主畫面和 kamonu 開的每一種 popup
@@ -300,6 +303,16 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `conf/<名字>.yaml`：mark 本身。
   - `svg/<名字>.svg`：匯出的成品。
 - yaml 算資料不算設定：tdp E3 的設定目錄（`~/.config/kamonu`）放的是決定 app 怎麼運作的設定檔，yaml 是使用者畫出來的東西。
+  tdp v0.9.0 的「刪掉會怎樣」：mark 與匯出的 svg 刪了就找不回來，都是資料；kamonu 沒有設定、狀態、快取，位置也沒換過，不用搬。
+- **讀不了時**（2026-10-20，tdp v0.9.0 的 E3；lib 的 `App.MoveAside`）：啟動時（`App.Start`）先讀 `conf/` 與每一個 mark，第一個讀不了的
+  開 `MOVE ASIDE`（路徑與原因，`Enter:move Esc:quit`）。`Enter` 把它改名成 `<名字>.yaml.bak`（已經有就 `.bak.1`……），記進 App Log，
+  再檢查下一個；`Esc` 離開，路徑與原因印到 stderr。一次問一個，每一個都說得出是哪個檔。
+  - 改名後不另外建一個新的：mark 是一張一張的檔，放到旁邊就從清單上消失；空的 mark 沒有字，建不出來。lib 的問句寫
+    「and start a new one?」，對 kamonu 不準（紀錄 KM18）。
+  - 開著時才壞掉的 mark（例：在外面手改了）照舊：預覽寫 `Can't draw`，Draw、Edit 開 error popup。
+- **App Log**（2026-10-20，tdp v0.9.0；lib 給的，在 panel 上按 `!`，footer 常駐 `!:log`）：toast、error popup、放到旁邊的檔由 lib 記；
+  kamonu 自己記做完的事：`created <名字>`、`saved <名字>`、`saved <名字> as <新名字>`、`renamed <舊> to <新>`、
+  `saved <名字>: letters …, U frame on|off`、`deleted <名字>`。
 
 ## 已否決，不要重提
 
@@ -354,7 +367,9 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.2.2）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.4.0）。
+  - 2026-10-20 的一輪（tdp v0.9.0）lib 還沒打 tag 時，改動用 `go.work` 做、先留在工作區，等 v0.4.0 打了 tag、`go.mod` 改好、整個
+    `make check`（含 `check-lib`）過了才 commit：照這裡的規定，不 commit 只有本機 lib 才編得過的程式。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
     lib 一改馬上看得到。`go.work`、`go.work.sum` 不進版控。
   - commit 與發版前，關掉 go.work 跑一次（`make check-lib`：`GOWORK=off go build ./...`、`GOWORK=off go test ./...`）。過不了，

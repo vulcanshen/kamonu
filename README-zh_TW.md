@@ -78,6 +78,7 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh
 | `X` | 刪除（先問） |
 | `A` | 新增 mark：名字、字、要不要從 U 框開始 |
 | `Space` | 這裡能做的事 |
+| `!` | App Log：kamonu 做過的事、跳過的每一則訊息 |
 | `?` | 這個 panel 的按鍵 |
 | `Tab\|1–2` | 另一個 panel |
 | `q` | 離開 |
@@ -113,6 +114,8 @@ kamonu 沒有設定檔。所有東西都在 `~/.kamonu/data`；要放在別的�
 |---|---|
 | `conf/<名字>.yaml` | mark 本身：字、要不要 U 框、每一格，格子寫成一張看得懂的圖 |
 | `svg/<名字>.svg` | **匯出**寫出來的檔。已經有了時先問：**Overwrite** 蓋掉它，或 **Export as new** 寫成新的檔，名字自己取；會先帶入 `<名字>_1.svg`（第一個還沒用掉的號碼），直接按 `Enter` 就用它 |
+
+啟動時有 mark 讀不了，kamonu 會問要不要把它移到旁邊（`<名字>.yaml.bak`），不帶它繼續；按 `Esc` 就離開，並寫出是哪個檔、為什麼。
 
 ## 限制
 
