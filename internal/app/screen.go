@@ -105,6 +105,9 @@ func (k *kamonu) start() tea.Cmd {
 	}
 	for _, n := range names {
 		if _, err := k.st.load(n); err != nil {
+			// TODO(lib KM18): a kamon is one file of many, so tdp v0.9.1 (E3)
+			// asks "and go on without it?"; the lib still says "and start a
+			// new one?".
 			return k.a.MoveAside(k.st.path(n), err, k.restart)
 		}
 	}
