@@ -86,7 +86,7 @@ func TestMoveAsideConf(t *testing.T) {
 		t.Fatal(err)
 	}
 	d := tdptest.Start(t, newKamonu(st).a, 80, 40)
-	if !d.Has("MOVE ASIDE") || !d.Has("Move it to conf.bak and start a new one?") {
+	if !d.Has("MOVE ASIDE") || !d.Has("Move it to conf.bak and start fresh?") {
 		t.Fatalf("no MOVE ASIDE for conf:\n%s", d.Screen())
 	}
 	d.Press("Enter")
