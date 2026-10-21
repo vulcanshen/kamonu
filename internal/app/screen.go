@@ -226,7 +226,7 @@ func (k *kamonu) add() tea.Cmd {
 			if err := k.st.create(name, km); err != nil {
 				return nil, errors.New("Can't create " + name + ": " + why(err))
 			}
-			k.a.Log(terminu.Info, "created "+name)
+			k.a.Log(terminu.Info, "Created "+name)
 			k.reload(name)
 			return k.openEditor(name, km), nil
 		},
@@ -271,9 +271,9 @@ func (k *kamonu) edit() tea.Cmd {
 					k.reload(old)
 					return nil, errors.New("Can't rename " + old + ": " + why(err))
 				}
-				k.a.Log(terminu.Info, "renamed "+old+" to "+name)
+				k.a.Log(terminu.Info, "Renamed "+old+" to "+name)
 			}
-			k.a.Log(terminu.Info, "saved "+name+": letters "+letters+", U frame "+onOff(km.frame))
+			k.a.Log(terminu.Info, "Saved "+name+": letters "+letters+", U frame "+onOff(km.frame))
 			k.reload(name)
 			return nil, nil
 		},
@@ -347,7 +347,7 @@ func (k *kamonu) delete() tea.Cmd {
 	if err := k.st.remove(name); err != nil {
 		return k.a.ErrorAbout("Delete failed", name, "Can't delete "+name+": "+why(err))
 	}
-	k.a.Log(terminu.Info, "deleted "+name)
+	k.a.Log(terminu.Info, "Deleted "+name)
 	k.reload("")
 	return nil
 }

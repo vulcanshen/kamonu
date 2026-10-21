@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.9.1），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.9.2），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -32,6 +32,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `tdp_test.go` 用 lib 的 tdptest（terminu-go v0.4.0）：`TestTDP` 照第一次啟動、`TestTDPWithMarks` 放了兩個 mark，在 tdptest
     的每一種尺寸與 icon 寬度走過每個 panel 的 Space menu、global operation popup、App Log、key reference，再縮到最小尺寸以下又拉回來；
     每個 frame 驗 tdp L4 與有沒有控制字元送到終端機。`TestMoveAside`：啟動時讀不了的 mark 一個一個問，`Enter` 放到 `.bak`，`Esc` 離開。
+    `TestMoveAsideConf`：`conf/` 本身讀不了時，`Enter` 之後跟第一次打開的畫面一樣，也沒有先建出 `conf/`。
   - `harness_test.go` 是不用終端機就能跑整個 app 的工具：送按鍵、跑完動畫、讀畫面。超過 200ms 的計時器（toast 留在畫面上的時間）不等，所以 toast 會留在畫面上讓測試讀。
   - tdp L4 與 E5：80×40、120×50、60×30、56×28，加上最小尺寸 56×16（畫格子的 popup 太寬又太高）、120×16（太高）、56×50（太寬：
     六個字的 mark，icon 兩格時色標比格子寬）；icon 與 powerline 符號都一格、icon 兩格、兩種都兩格。主畫面和 kamonu 開的每一種 popup
@@ -309,11 +310,12 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   再檢查下一個；`Esc` 離開，路徑與原因印到 stderr。一次問一個，每一個都說得出是哪個檔。
   - 改名後不另外建一個新的：mark 是一張一張的檔，放到旁邊就從清單上消失；空的 mark 沒有字，建不出來。tdp v0.9.1 照這樣定了
     （E3：資料一筆一個檔時，問句寫 `Move it to <檔名>.bak and go on without it?`，紀錄 KM18）。`conf/` 目錄本身讀不了時照舊用
-    `MoveAside`（問句寫 `and start a new one?`）：放到旁邊後清單是空的，新增時再建。
+    `MoveAside`（問句寫 `and start a new one?`）：放到旁邊後像第一次打開一樣（tdp v0.9.2 的 E3），清單是空的，第一次新增時才建
+    `conf/`。kamonu 第一次打開本來就不建任何檔。
   - 開著時才壞掉的 mark（例：在外面手改了）照舊：預覽寫 `Can't draw`，Draw、Edit 開 error popup。
 - **App Log**（2026-10-20，tdp v0.9.0；lib 給的，在 panel 上按 `!`，footer 常駐 `!:log`）：toast、error popup、放到旁邊的檔由 lib 記；
-  kamonu 自己記做完的事：`created <名字>`、`saved <名字>`、`saved <名字> as <新名字>`、`renamed <舊> to <新>`、
-  `saved <名字>: letters …, U frame on|off`、`deleted <名字>`。
+  kamonu 自己記做完的事：`Created <名字>`、`Saved <名字>`、`Saved <名字> as <新名字>`、`Renamed <舊> to <新>`、
+  `Saved <名字>: letters …, U frame on|off`、`Deleted <名字>`。跟 toast 一樣大寫開頭（tdp v0.9.2，dialog/note 的 App Log）。
 
 ## 已否決，不要重提
 

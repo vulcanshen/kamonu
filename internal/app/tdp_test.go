@@ -3,6 +3,7 @@ package app
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	terminu "github.com/vulcanshen/terminu-go"
@@ -68,6 +69,35 @@ func TestMoveAside(t *testing.T) {
 	}
 	if _, err := os.Stat(st.path("cc")); err != nil {
 		t.Fatal("Esc moved cc.yaml")
+	}
+}
+
+// TestMoveAsideConf: when the directory of kamon itself cannot be read,
+// Enter puts it aside and kamonu starts as on its first start (tdp E3): the
+// same screen, nothing made until the first kamon is added.
+func TestMoveAsideConf(t *testing.T) {
+	first := tdptest.Start(t, newKamonu(store{dir: filepath.Join(t.TempDir(), "data")}).a, 80, 40)
+
+	st := store{dir: filepath.Join(t.TempDir(), "data")}
+	if err := os.MkdirAll(st.dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(st.conf(), []byte("not a directory"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	d := tdptest.Start(t, newKamonu(st).a, 80, 40)
+	if !d.Has("MOVE ASIDE") || !d.Has("Move it to conf.bak and start a new one?") {
+		t.Fatalf("no MOVE ASIDE for conf:\n%s", d.Screen())
+	}
+	d.Press("Enter")
+	if _, err := os.Stat(st.conf() + ".bak"); err != nil {
+		t.Fatal("conf was not put aside")
+	}
+	if _, err := os.Stat(st.conf()); err == nil {
+		t.Fatal("conf was made again before the first kamon")
+	}
+	if !slices.Equal(d.Screen(), first.Screen()) {
+		t.Fatalf("not as on the first start:\n%s\nfirst start:\n%s", d.Screen(), first.Screen())
 	}
 }
 
