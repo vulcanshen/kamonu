@@ -222,6 +222,14 @@ type kamonFile struct {
 	Cells   string   `yaml:"cells"`
 }
 
+// linesError is yaml's unmarshal errors, a line each: it reads as the first,
+// the line that says why, for the screen; the whole goes to the App Log
+// (components, control characters; kamonu.read).
+type linesError struct{ yaml *yaml.TypeError }
+
+func (e *linesError) Error() string { return e.yaml.Errors[0] }
+func (e *linesError) Unwrap() error { return e.yaml }
+
 // parseKamon reads a kamon's yaml. Whatever is wrong is an error: a cell
 // that is not 25 to a row, an unknown letter, a letter on the U frame.
 func parseKamon(b []byte) (kamon, error) {
@@ -231,6 +239,10 @@ func parseKamon(b []byte) (kamon, error) {
 	if err := d.Decode(&f); err != nil {
 		if err == io.EOF {
 			return kamon{}, errors.New("the file is empty")
+		}
+		var te *yaml.TypeError
+		if errors.As(err, &te) && len(te.Errors) > 0 {
+			return kamon{}, &linesError{te}
 		}
 		return kamon{}, err
 	}

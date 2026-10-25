@@ -72,6 +72,28 @@ func TestMoveAside(t *testing.T) {
 	}
 }
 
+// TestUnreadableLines: yaml's unmarshal errors come a line each, so MOVE
+// ASIDE says the first, the line that says why, and the App Log has them all
+// (components, control characters: no \n by its name on the screen).
+func TestUnreadableLines(t *testing.T) {
+	st := store{dir: filepath.Join(t.TempDir(), "data")}
+	if err := os.MkdirAll(st.conf(), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(st.path("zz"), []byte("frame: maybe\ncolour: gold\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	d := tdptest.Start(t, newKamonu(st).a, 100, 40)
+	if !d.Has("MOVE ASIDE") || !d.Has("line 1: cannot unmarshal") || d.Has("colour") {
+		t.Fatalf("MOVE ASIDE does not say only the first reason:\n%s", d.Screen())
+	}
+	d.Press("Enter")
+	d.Press("!")
+	if !d.Has("line 1: cannot unmarshal") || !d.Has("line 2: field colour not found") {
+		t.Fatalf("the App Log does not have every reason:\n%s", d.Screen())
+	}
+}
+
 // TestMoveAsideConf: when the directory of kamon itself cannot be read,
 // Enter puts it aside and kamonu starts as on its first start (tdp E3): the
 // same screen, nothing made until the first kamon is added.

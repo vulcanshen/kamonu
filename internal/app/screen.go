@@ -105,11 +105,23 @@ func (k *kamonu) start() tea.Cmd {
 		return k.a.MoveAside(k.st.conf(), err, k.restart)
 	}
 	for _, n := range names {
-		if _, err := k.st.load(n); err != nil {
+		if _, err := k.read(n); err != nil {
 			return k.a.MoveAsideRecord(k.st.path(n), err, k.restart)
 		}
 	}
 	return nil
+}
+
+// read is store.load where kamonu says why it cannot read a kamon: an error
+// of several lines (linesError) goes whole to the App Log, the screen having
+// its first.
+func (k *kamonu) read(name string) (kamon, error) {
+	km, err := k.st.load(name)
+	var le *linesError
+	if errors.As(err, &le) {
+		k.a.Log(terminu.Error, "Can't read "+name+": "+le.yaml.Error())
+	}
+	return km, err
 }
 
 // restart is start after a file was put aside: the list without it.
@@ -150,7 +162,7 @@ func (k *kamonu) reload(sel string) {
 // draw opens the editor on the kamon under the cursor.
 func (k *kamonu) draw() tea.Cmd {
 	name := k.current()
-	km, err := k.st.load(name)
+	km, err := k.read(name)
 	if err != nil {
 		return k.a.ErrorAbout("Draw failed", name, "Can't read "+name+": "+why(err))
 	}
@@ -162,7 +174,7 @@ func (k *kamonu) draw() tea.Cmd {
 // not know. Any key closes it.
 func (k *kamonu) show() tea.Cmd {
 	name := k.current()
-	km, err := k.st.load(name)
+	km, err := k.read(name)
 	if err != nil {
 		return k.a.ErrorAbout("Show failed", name, "Can't read "+name+": "+why(err))
 	}
@@ -238,7 +250,7 @@ func (k *kamonu) add() tea.Cmd {
 // kamon.setFrame): what that makes of them is the user's to draw again.
 func (k *kamonu) edit() tea.Cmd {
 	old := k.current()
-	km, err := k.st.load(old)
+	km, err := k.read(old)
 	if err != nil {
 		return k.a.ErrorAbout("Edit failed", old, "Can't read "+old+": "+why(err))
 	}
@@ -286,7 +298,7 @@ func (k *kamonu) edit() tea.Cmd {
 // new one, at first the next <name>_<n>.svg.
 func (k *kamonu) export() tea.Cmd {
 	name := k.current()
-	km, err := k.st.load(name)
+	km, err := k.read(name)
 	if err == nil && !k.st.svgExists(name) {
 		err = k.st.export(name, km)
 		if err == nil {
