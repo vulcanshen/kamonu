@@ -689,7 +689,7 @@ func TestSaveFailureOpensAnError(t *testing.T) {
 	}
 	defer os.Chmod(hs.k.st.conf(), 0o755)
 	hs.keys("Enter")
-	hs.contains("SAVE FAILED") // what failed (tdp note)
+	hs.contains("SAVE FAILED: blank") // what failed, on which kamon (tdp note.6)
 	hs.contains("Can't save blank")
 	hs.contains("Enter|Esc:close")
 	hs.keys("Enter") // closes the error popup, back on the button
@@ -1040,7 +1040,7 @@ func TestBrokenFile(t *testing.T) {
 	hs.contains("Press [Enter] to see why")
 	hs.keys("Tab") // [2] focused: its colours undimmed
 	if !strings.Contains(strings.Join(hs.k.a.Frame(), "\n"), terminu.Fg(terminu.Red).Render("Can't draw broken")) {
-		t.Fatal("the preview's failure is not in Red (tdp panel.5)")
+		t.Fatal("the preview's failure is not in Red (tdp panel.15)")
 	}
 	hs.keys("Enter") // on [2]: as it says, why
 	hs.contains("SHOW FAILED: broken")

@@ -62,10 +62,11 @@ func newEditor(k *kamonu, name string, km kamon) *editor {
 func (k *kamonu) openEditor(name string, km kamon) tea.Cmd {
 	e := newEditor(k, name, km)
 	return k.a.Popup(terminu.Popup{Title: "Draw", Glyph: glyphDraw, Subject: name, Body: e, Actions: &terminu.PopupActions{
-		Button:  "Save",
-		Content: "grid", // Tab:grid on the buttons (docs/dev-remarks.md)
-		Buttons: [][]*terminu.FormButton{{{Label: "Save As", Open: func() tea.Cmd { return k.saveAs(e) }}}},
-		Submit:  func() (tea.Cmd, error) { return k.save(e) },
+		Button:       "Save",
+		ErrorSubject: name,   // SAVE FAILED: <name>, as the other error popups (tdp popup.1)
+		Content:      "grid", // Tab:grid on the buttons (docs/dev-remarks.md)
+		Buttons:      [][]*terminu.FormButton{{{Label: "Save As", Open: func() tea.Cmd { return k.saveAs(e) }}}},
+		Submit:       func() (tea.Cmd, error) { return k.save(e) },
 	}})
 }
 
@@ -333,8 +334,8 @@ func (e *editor) Keys() []terminu.KeySection {
 }
 
 // save is Save: it writes the kamon back to its file, and the lib closes the
-// editor. A failed write is the lib's error popup over it, SAVE FAILED, the
-// message naming the kamon, the focus on Save to try again (tdp form).
+// editor. A failed write is the lib's error popup over it, SAVE FAILED: <name>,
+// the focus on Save to try again (tdp form).
 func (k *kamonu) save(e *editor) (tea.Cmd, error) {
 	if err := k.st.save(e.kamon, e.km); err != nil {
 		return nil, errors.New("Can't save " + e.kamon + ": " + why(err))
