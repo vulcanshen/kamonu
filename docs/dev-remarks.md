@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.9.16），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.10.1），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -376,7 +376,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.4.22）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.5.1）。
   - 2026-10-20 的一輪（tdp v0.9.0）lib 還沒打 tag 時，改動用 `go.work` 做、先留在工作區，等 v0.4.0 打了 tag、`go.mod` 改好、整個
     `make check`（含 `check-lib`）過了才 commit：照這裡的規定，不 commit 只有本機 lib 才編得過的程式。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，

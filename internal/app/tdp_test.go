@@ -74,7 +74,7 @@ func TestMoveAside(t *testing.T) {
 
 // TestUnreadableLines: yaml's unmarshal errors come a line each, so MOVE
 // ASIDE says the first, the line that says why, and the App Log has them all
-// (components, control characters: no \n by its name on the screen).
+// (tdp components.5: no \n by its name on the screen).
 func TestUnreadableLines(t *testing.T) {
 	st := store{dir: filepath.Join(t.TempDir(), "data")}
 	if err := os.MkdirAll(st.conf(), 0o755); err != nil {

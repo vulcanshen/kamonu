@@ -463,16 +463,15 @@ func TestEditorDigits(t *testing.T) {
 	if e.dirty {
 		t.Fatal("a digit past the letters changed the drawing")
 	}
-	e.onButtons = true
-	e.Key("1", keyMsg("1"))
-	if e.km.cells[0][0] != 0 {
-		t.Fatal("a digit on the buttons painted the cell")
-	}
 
-	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
-	hs.keys("Enter", "?")
+	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML), "blank": blank()})
+	hs.keys("j", "Enter", "?")
 	hs.contains("1–3")
 	hs.contains("make the cell that letter; again to empty it")
+	hs.keys("Esc", "Esc", "k", "Enter", "Tab", "1", "Enter") // on the buttons a digit paints nothing
+	if km, _ := hs.k.st.load("blank"); count(km, 1) != 0 {
+		t.Fatal("a digit on the buttons painted the cell")
+	}
 }
 
 // TestEditorGold: p shows the letters gold, as the splash will, and again
@@ -623,7 +622,7 @@ func TestEscAsksWhenChanged(t *testing.T) {
 }
 
 // The buttons move as a form's action area: hjkl the one before or after,
-// round, gg and G the first and the last (tdp v0.6.7, components/dialog/form).
+// round, gg and G the first and the last (tdp form.9).
 func TestEditorButtons(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"blank": blank()})
 	hs.keys("Enter", "Tab")
@@ -690,7 +689,8 @@ func TestSaveFailureOpensAnError(t *testing.T) {
 	}
 	defer os.Chmod(hs.k.st.conf(), 0o755)
 	hs.keys("Enter")
-	hs.contains("SAVE FAILED") // what failed (components/dialog/note, error popup)
+	hs.contains("SAVE FAILED") // what failed (tdp note)
+	hs.contains("Can't save blank")
 	hs.contains("Enter|Esc:close")
 	hs.keys("Enter") // closes the error popup, back on the button
 	hs.contains("DRAW: blank")
@@ -741,12 +741,12 @@ func TestNewKamon(t *testing.T) {
 	hs.contains("No kamon yet")
 	hs.contains("Press [A] to add one")
 	hs.contains("Nothing to preview")
-	hs.contains("Press [1], then [A] to add one") // a key to press (layout/screen, empty states)
+	hs.contains("Press [1], then [A] to add one") // a key to press (tdp screen.8)
 	hs.keys("A")
 	hs.contains("NEW KAMON")
 	hs.keys("Tab", "Enter")
 	hs.contains("Name can't be empty")
-	// The failed submit put the focus on Name (components/dialog/form).
+	// The failed submit put the focus on Name (tdp form.16).
 	hs.keys("Enter", "k", "a", "m", "o", "n", "u", "Enter", "Tab", "Enter")
 	hs.contains("Letters can't be empty")
 	// ... and now on Letters.
@@ -857,7 +857,7 @@ func TestExportWhenThere(t *testing.T) {
 	hs.contains("Export as new…")
 	hs.contains("EXPORT: filu") // the name as it is (MenuAbout)
 	// Export as new: the next number suggested, taken with Enter alone
-	// (components/input/README); Esc goes back to the menu (tdp T1).
+	// (tdp input.6); Esc goes back to the menu (tdp T1).
 	hs.keys("j", "Enter")
 	hs.contains("EXPORT AS")
 	hs.contains("filu_1.svg")
@@ -922,7 +922,7 @@ func TestExportWhenThereFails(t *testing.T) {
 	hs.contains("EXPORT FAILED")
 	hs.contains("Can't export filu: permission denied")
 	// Esc twice: the toast of the first export, then the error popup (tdp K4).
-	// The error popup closes back to the menu (components/layout/popup).
+	// The error popup closes back to the menu (tdp popup.5).
 	hs.keys("Esc", "Esc")
 	hs.contains("Overwrite filu.svg")
 	hs.keys("j", "Enter", "m", "a", "r", "k", "Enter") // Export as new
@@ -1024,8 +1024,8 @@ func TestPreviewScrolls(t *testing.T) {
 	hs.contains("scroll down, up")
 }
 
-// TestLettersPrompt: the prompt says whose letters they are (components/
-// input, the one-line input).
+// TestLettersPrompt: the prompt says whose letters they are, as a
+// one-line input's does (tdp input.2).
 func TestLettersPrompt(t *testing.T) {
 	hs := newHarness(t, 100, 40, map[string][]byte{"filu": []byte(filYAML)})
 	hs.keys("e", "j", "Enter")
@@ -1040,7 +1040,7 @@ func TestBrokenFile(t *testing.T) {
 	hs.contains("Press [Enter] to see why")
 	hs.keys("Tab") // [2] focused: its colours undimmed
 	if !strings.Contains(strings.Join(hs.k.a.Frame(), "\n"), terminu.Fg(terminu.Red).Render("Can't draw broken")) {
-		t.Fatal("the preview's failure is not in Red (layout/panel, errors)")
+		t.Fatal("the preview's failure is not in Red (tdp panel.5)")
 	}
 	hs.keys("Enter") // on [2]: as it says, why
 	hs.contains("SHOW FAILED: broken")
@@ -1127,7 +1127,7 @@ func TestFullWidth(t *testing.T) {
 }
 
 // TestLongName: a name longer than [1] is cut with … at its end, not at the
-// frame (layout/panel, a column of long values).
+// frame (tdp panel.5).
 func TestLongName(t *testing.T) {
 	long := "a-very-long-name-for-a-mark-of-the-family"
 	hs := newHarness(t, 80, 40, map[string][]byte{long: blank()})
@@ -1164,9 +1164,9 @@ func TestEditorBodyWidth(t *testing.T) {
 	km := standIn(t)
 	for _, icon := range []int{1, 2} {
 		terminu.SetIconWidth(icon, 1)
-		for _, onButtons := range []bool{false, true} {
+		for _, onGrid := range []bool{true, false} {
 			e := newEditor(nil, "terminu", km)
-			e.onButtons = onButtons
+			e.Focus(onGrid)
 			for w := 1; w <= 2*cols+2; w++ {
 				for _, h := range []int{0, 1, 5, rows + 3, rows + 4, rows + 10} {
 					body := e.Draw(w, h, terminu.Lavender)

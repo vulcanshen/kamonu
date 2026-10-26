@@ -150,7 +150,7 @@ func (s store) checkSVG(v string) error {
 	case strings.HasPrefix(v, "."):
 		return errors.New("File can't start with .")
 	case s.svgExists(v):
-		return errors.New("File is taken: " + v + ".svg is already there") // names the value (tdp components/input)
+		return errors.New("File is taken: " + v + ".svg is already there") // names the value (tdp input.1)
 	}
 	return nil
 }

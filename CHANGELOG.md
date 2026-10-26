@@ -25,14 +25,15 @@ Each release names the version of terminu design (tdp) it follows.
 - kamonu needs a terminal of at least 56 × 16; in a smaller one it shows only its name and the size it needs
 - Save As: `Enter` with nothing typed says `Name can't be empty` again; a name that cannot be written stays in the
   box, the error over it
-- An error popup's title says what failed and on which mark: `SAVE FAILED: filu`, `DRAW FAILED: filu`; a failed
-  export opens one too, instead of a toast that could cut the message
+- An error popup's title says what failed, and on which mark where its message does not: `DRAW FAILED: filu`, and
+  `SAVE FAILED` over `Can't save filu: …`; a failed export opens one too, instead of a toast that could cut the message
+- Draw: Save As, Save, `Tab` to them and `Esc` are the family's, as on any form; it looks and works as before
 - From the Space menu: `Esc` on Delete's confirm goes back to the menu, and so does closing an error popup an action
   opened
 - Edit: the Letters prompt says whose letters they are
 - A key reference lists moving and scrolling keys only when there is something to move or scroll
 - A name too long for the list is cut with `…`
-- Built on terminu-go v0.4.22: text in a popup and an empty list's hint fold at spaces, and between wide characters
+- Built on terminu-go v0.5.1: text in a popup and an empty list's hint fold at spaces, and between wide characters
 - `go install github.com/vulcanshen/kamonu/cmd/kamonu@latest`: the program is in `cmd/kamonu` now, and the release
   files are the terminu family's
 

@@ -4,11 +4,11 @@ package app
 // or Space to the next letter and back to none (the checkbox's Space,
 // tdp K5), made a letter by its digit, emptied by Backspace, and all emptied
 // by x after a confirm; a row under them says which digit and colour is which
-// letter, and p shows every letter gold as the splash will. Under that the
-// action row, Save As and Save, and Tab between the two (as on a form). It is
-// kamonu's own popup, outside tdp F1's seven kinds: docs/dev-remarks.md,
-// 偏離 tdp. kamonu draws the inside; the frame, the animation and the popups
-// over it are the lib's (terminu.Popup).
+// letter, and p shows every letter gold as the splash will. It is kamonu's
+// own popup with values to submit (tdp popup.8): kamonu draws the inside; the
+// frame, the action area under it (Save As and Save), Tab between the two,
+// Esc and the popups over it are the lib's, as a form's (terminu.Popup with
+// Actions).
 
 import (
 	"errors"
@@ -24,25 +24,16 @@ const (
 	glyphSquare = "\U0000F0C8" // nf-fa-square: a cell of a mark (tdp S5)
 )
 
-// The buttons, left to right.
-const (
-	saveAs = iota
-	save
-)
-
-var buttonLabels = [...]string{saveAs: "Save As", save: "Save"}
-
 type editor struct {
-	k         *kamonu
-	kamon     string // the kamon's name
-	km        kamon
-	r, c      int // the cursor on the grid
-	onButtons bool
-	button    int
-	dirty     bool // a cell was turned: Esc asks first (components/dialog/form)
-	gold      bool // p: every letter gold, as the splash draws it
-	top       int  // the first row of the grid shown, when it does not all fit
-	scrolls   bool // the grid did not all fit at the last draw
+	k       *kamonu
+	kamon   string // the kamon's name
+	km      kamon
+	r, c    int  // the cursor on the grid
+	onGrid  bool // the focus is on the grid, not on a button
+	dirty   bool // a cell was turned: Esc asks first (tdp F3)
+	gold    bool // p: every letter gold, as the splash draws it
+	top     int  // the first row of the grid shown, when it does not all fit
+	scrolls bool // the grid did not all fit at the last draw
 }
 
 // color is how the editor draws a cell: its letter's colour, or gold for
@@ -56,7 +47,7 @@ func (e *editor) color(r, c int) terminu.Color {
 
 // newEditor opens on the first cell the cursor can stop on.
 func newEditor(k *kamonu, name string, km kamon) *editor {
-	e := &editor{k: k, kamon: name, km: km, button: save}
+	e := &editor{k: k, kamon: name, km: km, onGrid: true}
 	for i := range rows * cols {
 		if !km.onFrame(i/cols, i%cols) {
 			e.r, e.c = i/cols, i%cols
@@ -66,10 +57,23 @@ func newEditor(k *kamonu, name string, km kamon) *editor {
 	return e
 }
 
-// openEditor opens the editor on the kamon name: "DRAW: <name>".
+// openEditor opens the editor on the kamon name: "DRAW: <name>", Save As and
+// Save under the cells, Save at the bottom right.
 func (k *kamonu) openEditor(name string, km kamon) tea.Cmd {
-	return k.a.Popup(terminu.Popup{Title: "Draw", Glyph: glyphDraw, Subject: name, Body: newEditor(k, name, km)})
+	e := newEditor(k, name, km)
+	return k.a.Popup(terminu.Popup{Title: "Draw", Glyph: glyphDraw, Subject: name, Body: e, Actions: &terminu.PopupActions{
+		Button:  "Save",
+		Content: "grid", // Tab:grid on the buttons (docs/dev-remarks.md)
+		Buttons: [][]*terminu.FormButton{{{Label: "Save As", Open: func() tea.Cmd { return k.saveAs(e) }}}},
+		Submit:  func() (tea.Cmd, error) { return k.save(e) },
+	}})
 }
+
+// Changed reports a cell turned: Esc asks before it is lost (tdp F3).
+func (e *editor) Changed() bool { return e.dirty }
+
+// Focus is whether the focus is on the grid; the lib says before each Draw.
+func (e *editor) Focus(on bool) { e.onGrid = on }
 
 // move steps the cursor dr rows and dc columns, past the U frame's cells
 // (they cannot change: tdp S5) to the next one it can stop on; when there is
@@ -119,26 +123,25 @@ func (e *editor) clear() { e.set(0) }
 
 // Size is the inside: the grid, or the row of letters when it is wider, with
 // a blank cell on either side; the grid, a blank row, the letters (on more
-// rows when the screen is too narrow for one), the separator, the action
-// row. When the grid will scroll (the frame is at most the screen less two
-// rows, tdp F7, and four of its rows are the frame and the blank rows), it
-// is wide enough for the hint and the scroll position at its widest,
-// "19 of 19" (components/layout/popup).
+// rows when the screen is too narrow for one). When the grid will scroll (the
+// frame is at most the screen less two rows, tdp F7, and eight of its rows
+// are the frame, the blank rows, the separator and the buttons), it is wide
+// enough for the hint and the scroll position at its widest, "19 of 19"
+// (tdp popup.6).
 func (e *editor) Size(sw, sh int) (int, int) {
 	w := max(2*cols, e.legendWidth()) + 2
-	if sh-6 < rows+e.tailRows(sw, w) {
+	if sh-8 < rows+e.tailRows(sw, w) {
 		hint := len("Enter|Space:cycle Tab:actions Esc:cancel")
 		w = max(w, hint+len("19 of 19")+9-2)
 	}
 	return w, rows + 1 + e.tailRows(sw, w)
 }
 
-// tailRows are the rows under the grid on a sw-wide screen, the inside w
-// wide or as wide as the lib leaves it: the letters, the separator, the
-// action row.
+// tailRows are the rows of letters under the grid on a sw-wide screen, the
+// inside w wide or as wide as the lib leaves it.
 func (e *editor) tailRows(sw, w int) int {
 	inside := min(w, min(sw-2, 120)-2)
-	return len(packLegend(make([]string, len(e.km.letters)), e.itemWidth(), inside-2)) + 2
+	return len(packLegend(make([]string, len(e.km.letters)), e.itemWidth(), inside-2))
 }
 
 // itemWidth is one letter of the row: "[1] ■ K".
@@ -170,20 +173,19 @@ func packLegend(items []string, itemW, w int) []string {
 }
 
 // Scroll is the scroll position on the bottom frame line while the grid
-// scrolls: the cursor's row of the 19 (components/layout/popup). On the
-// buttons there is no row to count, as on a form's (components/dialog/form).
+// scrolls: the cursor's row of the 19 (tdp popup.6). On the buttons the lib
+// leaves it out, as on a form's (tdp form).
 func (e *editor) Scroll() string {
-	if !e.scrolls || e.onButtons {
+	if !e.scrolls {
 		return ""
 	}
 	return strconv.Itoa(e.r+1) + " of " + strconv.Itoa(rows)
 }
 
+// Hint is the grid's own keys; the lib adds Tab:actions Esc:cancel, and
+// writes the hint on the buttons.
 func (e *editor) Hint() []terminu.KeyHint {
-	if !e.onButtons {
-		return []terminu.KeyHint{{Key: "Enter|Space", Desc: "cycle"}, {Key: "Tab", Desc: "actions"}, {Key: "Esc", Desc: "cancel"}}
-	}
-	return []terminu.KeyHint{{Key: "Enter", Desc: strings.ToLower(buttonLabels[e.button])}, {Key: "Tab", Desc: "grid"}, {Key: "Esc", Desc: "cancel"}}
+	return []terminu.KeyHint{{Key: "Enter|Space", Desc: "cycle"}}
 }
 
 func (e *editor) Draw(w, h int, layer terminu.Color) []string {
@@ -196,10 +198,10 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 		var b strings.Builder
 		for c := range cols {
 			st := terminu.Fg(e.color(r, c))
-			if !e.onButtons && r == e.r && c == e.c {
+			if e.onGrid && r == e.r && c == e.c {
 				// The cursor is the layer colour behind the square, which
 				// keeps its own colour: a cell's colour is its value (tdp
-				// components/color, the cursor block).
+				// color.2, the cursor block).
 				st.Bg = layer
 			}
 			b.WriteString(st.Render(square))
@@ -208,7 +210,7 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 	}
 	// The letters, each after the digit that paints it (a hotkey is shown:
 	// tdp M5) and its colour, gold with the rest under p: a cell after the
-	// square, two between two (components/README, spacing).
+	// square, two between two (tdp components.2).
 	var legend []string
 	for i, l := range e.km.letters {
 		swatch := letterColors[i]
@@ -218,23 +220,11 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 		legend = append(legend, terminu.Fg(terminu.Text).Render("["+strconv.Itoa(i+1)+"] ")+
 			terminu.Fg(swatch).Render(glyphSquare)+terminu.Fg(terminu.Text).Render(" "+l))
 	}
-	// The letters, the separator and the action row stay at the bottom.
+	// The letters stay at the bottom.
 	var tail []string
 	for _, row := range packLegend(legend, e.itemWidth(), w-2) {
 		tail = append(tail, padRow(row, w))
 	}
-	tail = append(tail, " "+terminu.Fg(terminu.Overlay0).Render(terminu.Repeat("─", w-2))+" ")
-	var buttons []string
-	for i, label := range buttonLabels {
-		b := " " + label + " "
-		if e.onButtons && e.button == i {
-			b = terminu.On(layer).Render(b)
-		} else {
-			b = terminu.Style{Fg: terminu.Text, Bg: terminu.Surface1}.Render(b)
-		}
-		buttons = append(buttons, b)
-	}
-	tail = append(tail, terminu.PadLeft(strings.Join(buttons, " "), w-1)+" ")
 
 	var body []string
 	e.scrolls = false
@@ -246,11 +236,11 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 	default:
 		// Shorter still (a terminal under 27 rows): the grid scrolls the
 		// least that keeps the cursor's row in view, and the rows under it
-		// stay, as a form's fields scroll over its buttons
-		// (components/dialog/form, layout/popup).
+		// stay, as a form's fields scroll over its buttons (tdp form,
+		// popup.6).
 		e.scrolls = true
 		area := max(h-len(tail), 0)
-		if !e.onButtons && area > 0 {
+		if e.onGrid && area > 0 {
 			e.top = min(e.top, e.r)
 			e.top = max(e.top, e.r-area+1)
 		}
@@ -267,20 +257,10 @@ func (e *editor) Draw(w, h int, layer terminu.Color) []string {
 // padRow is a row of the inside, one cell from the frame on either side.
 func padRow(s string, w int) string { return " " + terminu.Fit(s, w-2) + " " }
 
+// Key is a key on the grid: Tab, Esc and q, and every key on the buttons,
+// are the lib's.
 func (e *editor) Key(key string, _ tea.KeyMsg) (bool, tea.Cmd) {
 	switch key {
-	case "Tab", "Shift-Tab":
-		e.onButtons = !e.onButtons
-		return true, nil
-	case "Esc":
-		if !e.dirty {
-			return false, nil // the lib closes it
-		}
-		a := e.k.a
-		return true, a.Confirm(terminu.Ask{Title: "Discard", Question: "Discard changes to " + e.kamon + "?", Verb: "discard"},
-			func() tea.Cmd { return a.ClosePopup(e) })
-	case "q":
-		return true, nil // no quit flow from a form (components/dialog/form)
 	case "p":
 		e.gold = !e.gold
 		return true, nil
@@ -295,38 +275,10 @@ func (e *editor) Key(key string, _ tea.KeyMsg) (bool, tea.Cmd) {
 				return nil
 			})
 	case "Space":
-		if !e.onButtons {
-			e.cycle()
-		}
+		e.cycle()
 		return true, nil
 	case "Backspace":
-		if !e.onButtons {
-			e.clear()
-		}
-		return true, nil
-	}
-	if e.onButtons {
-		// The buttons are a row of their own: the next and the one before,
-		// round, and the first and the last (components/dialog/form, the
-		// action area; tdp K12).
-		n := len(buttonLabels)
-		switch key {
-		case "l", "→", "j", "↓":
-			e.button = (e.button + 1) % n
-		case "h", "←", "k", "↑":
-			e.button = (e.button + n - 1) % n
-		case "gg":
-			e.button = 0
-		case "G":
-			e.button = n - 1
-		case "Enter":
-			if e.button == save {
-				return true, e.k.save(e)
-			}
-			return true, e.k.saveAs(e)
-		default:
-			return false, nil
-		}
+		e.clear()
 		return true, nil
 	}
 	switch key {
@@ -373,33 +325,30 @@ func (e *editor) Keys() []terminu.KeySection {
 			{Key: "Backspace", Desc: "empty the cell"},
 			{Key: "p", Desc: "every letter gold, as the svg has them, or back"},
 			{Key: "x", Desc: "empty every cell (asks first)"},
-			{Key: "Enter", Desc: "on a button: press it"},
-			{Key: "Tab|Shift-Tab", Desc: "between the grid and the buttons, back to the cell left"},
-			{Key: "Esc", Desc: "cancel (asks first when something changed)"},
 		}},
 		{Title: "move", Rows: []terminu.KeyRow{
 			{Key: "h|j|k|l", Desc: "left, down, up, right, past the U frame"},
-			{Key: "h|j|k|l", Desc: "on the buttons: the one before or after, round"},
-			{Key: "gg|G", Desc: "on the buttons: the first or the last"},
 		}},
 	}
 }
 
-// save writes the kamon back to its file and closes the editor; a failed
-// write opens an error popup over it (components/layout/popup).
-func (k *kamonu) save(e *editor) tea.Cmd {
+// save is Save: it writes the kamon back to its file, and the lib closes the
+// editor. A failed write is the lib's error popup over it, SAVE FAILED, the
+// message naming the kamon, the focus on Save to try again (tdp form).
+func (k *kamonu) save(e *editor) (tea.Cmd, error) {
 	if err := k.st.save(e.kamon, e.km); err != nil {
-		return k.a.ErrorAbout("Save failed", e.kamon, "Can't save "+e.kamon+": "+why(err))
+		return nil, errors.New("Can't save " + e.kamon + ": " + why(err))
 	}
 	k.a.Log(terminu.Info, "Saved "+e.kamon)
 	k.reload(e.kamon)
-	return k.a.ClosePopup(e)
+	return nil, nil
 }
 
-// saveAs asks for a new name and writes the drawing there, the letters and
-// the U frame with it; the kamon it came from stays as it was. The title says
+// saveAs is Save As: it asks for a new name over the editor and writes the
+// drawing there, the letters and the U frame with it; the kamon it came from
+// stays as it was, and once it is written both close. The title says
 // what is done, so an error names the value besides: "Name can't have
-// control characters" (tdp v0.6.11 components/input).
+// control characters" (tdp input.1).
 func (k *kamonu) saveAs(e *editor) tea.Cmd {
 	return k.a.Text(terminu.TextInput{
 		Title: "Save as", Name: "Name", Glyph: glyphSave, Prompt: "Name for the new kamon; " + e.kamon + " stays as it was", Verb: "save",

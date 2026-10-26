@@ -224,7 +224,7 @@ type kamonFile struct {
 
 // linesError is yaml's unmarshal errors, a line each: it reads as the first,
 // the line that says why, for the screen; the whole goes to the App Log
-// (components, control characters; kamonu.read).
+// (tdp components.5; kamonu.read).
 type linesError struct{ yaml *yaml.TypeError }
 
 func (e *linesError) Error() string { return e.yaml.Errors[0] }

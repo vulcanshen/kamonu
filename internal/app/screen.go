@@ -11,8 +11,8 @@ import (
 	terminu "github.com/vulcanshen/terminu-go"
 )
 
-// Title glyphs of kamonu's inputs and forms (the app's choice:
-// components/layout/popup).
+// Title glyphs of kamonu's inputs and forms (the app may decide
+// for itself: tdp popup.1).
 const (
 	glyphAdd    = "\U000F0415" // nf-md-plus_box: NEW KAMON
 	glyphCog    = "\U000F0493" // nf-md-cog: EDIT
@@ -51,7 +51,7 @@ func newKamonu(st store) *kamonu {
 	k.a = a
 
 	k.list = &terminu.List{
-		// A long name is cut with … where [1] is narrow (layout/panel).
+		// A long name is cut with … where [1] is narrow (tdp panel.5).
 		Columns:   []terminu.Column{{Title: "Name", Shrink: true}},
 		EmptyFact: "No kamon yet",
 		EmptyHint: "Press [A] to add one",
@@ -257,7 +257,7 @@ func (k *kamonu) edit() tea.Cmd {
 	name, letters := old, strings.Join(km.letters, "")
 	base := baseField(km.frame)
 	return k.a.Form(&terminu.Form{
-		// The name after ": " in its own case (tdp v0.6.1, layout/popup).
+		// The name after ": " in its own case (tdp popup.1).
 		Title: "Edit", Subject: old, Glyph: glyphCog, Name: old, Button: "Save",
 		Fields: []*terminu.FormField{
 			nameField(&name, "New name for "+old, func() string {
@@ -310,8 +310,8 @@ func (k *kamonu) export() tea.Cmd {
 	}
 	// <name>.svg is there: a menu asks whether to write over it or to write
 	// a new file, whose name a text input asks for, the next free number
-	// offered (KM10: one value is an input, not a form, components/dialog/
-	// form). Esc on the input goes back to the menu; once written, the whole
+	// offered (KM10: one value is an input, not a form, tdp form.1).
+	// Esc on the input goes back to the menu; once written, the whole
 	// stack closes.
 	next := k.st.nextSVG(name)
 	return k.a.MenuAbout("Export", name, terminu.MenuSection{Actions: []terminu.Action{
@@ -339,8 +339,8 @@ func (k *kamonu) export() tea.Cmd {
 	}})
 }
 
-// exported says in a Success toast where the svg went (components/dialog/
-// toast); a toast folds to whatever lines the path needs.
+// exported says in a Success toast where the svg went (tdp toast.2);
+// a toast folds to whatever lines the path needs.
 func (k *kamonu) exported(file string) tea.Cmd {
 	return k.a.Toast(terminu.Success, "Exported to "+shown(k.st.svgPath(file)))
 }
@@ -375,7 +375,7 @@ func onOff(on bool) string {
 // preview is [2]: the kamon under the cursor as the splash draws its mark,
 // every letter gold, with a row of background above and below (tdp S5),
 // from the top left of the panel, a cell from the frame
-// (components/layout/panel). The lib's Pager shows it: when the panel is
+// (tdp panel.13). The lib's Pager shows it: when the panel is
 // shorter than the mark, it scrolls and says which rows it shows. A kamon
 // that cannot be read is the panel's Failure, its fact in Red.
 type preview struct {
