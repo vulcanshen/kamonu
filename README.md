@@ -144,16 +144,14 @@ If kamonu cannot read a mark when it starts, it asks to move it aside to `<name>
 ## The terminu family
 
 kamonu follows [terminu design](https://github.com/vulcanshen/terminu), the design the terminu family of terminal apps
-share. The others:
+share.
 
-| App | What it is |
-|---|---|
-| [kbu](https://github.com/vulcanshen/kbu) | A Kubernetes TUI dashboard |
-| [filu](https://github.com/vulcanshen/filu) | A terminal file manager you don't have to learn |
-| [sshu](https://github.com/vulcanshen/sshu) | A terminal front end for ssh and sftp |
-| [webu](https://github.com/vulcanshen/webu) | A terminal browser that reads a web page as a document |
-| [locku](https://github.com/vulcanshen/locku) | A screensaver with a PIN lock, for the terminal |
-| [ccdrawu](https://github.com/vulcanshen/ccdrawu) | A sidebar for Claude Code: usage, context, cost and git beside the transcript |
+- [terminu design](https://github.com/vulcanshen/terminu) (tdp): terminal UIs you can use without reading the docs; the
+  apps of the family are listed there
+- [terminu-go](https://github.com/vulcanshen/terminu-go): a Go library that draws and drives a terminal UI the way
+  terminu design says; kamonu is built on it
+- [terminu-harness](https://github.com/vulcanshen/terminu-harness): a Claude Code plugin that makes TUI apps with
+  terminu design and terminu-go
 
 ## License
 

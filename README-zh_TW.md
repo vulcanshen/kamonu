@@ -133,16 +133,11 @@ kamonu 沒有設定檔。所有東西都在 `~/.kamonu/data`；要放在別的�
 
 ## terminu 家族
 
-kamonu 遵循 [terminu design](https://github.com/vulcanshen/terminu)，terminu 家族的終端機 app 共用的設計。家族的其他成員：
+kamonu 遵循 [terminu design](https://github.com/vulcanshen/terminu)，terminu 家族的終端機 app 共用的設計。
 
-| App | 是什麼 |
-|---|---|
-| [kbu](https://github.com/vulcanshen/kbu) | Kubernetes TUI dashboard |
-| [filu](https://github.com/vulcanshen/filu) | 不用學的 terminal 檔案管理員 |
-| [sshu](https://github.com/vulcanshen/sshu) | ssh 與 sftp 的 terminal 前端 |
-| [webu](https://github.com/vulcanshen/webu) | 把網頁當文件讀的 terminal 瀏覽器 |
-| [locku](https://github.com/vulcanshen/locku) | 帶 PIN 鎖的 terminal 螢幕保護程式 |
-| [ccdrawu](https://github.com/vulcanshen/ccdrawu) | Claude Code 的側邊欄：用量、context、花費與 git 放在對話旁邊 |
+- [terminu design](https://github.com/vulcanshen/terminu)（tdp）：不看文件就能用的 terminal UI；家族的 app 都列在那裡
+- [terminu-go](https://github.com/vulcanshen/terminu-go)：照 terminu design 畫出並驅動終端機介面的 Go 函式庫，kamonu 建在它上面
+- [terminu-harness](https://github.com/vulcanshen/terminu-harness)：照 terminu design 用 terminu-go 做 TUI app 的 Claude Code plugin
 
 ## License
 
