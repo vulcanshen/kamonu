@@ -379,9 +379,6 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **tdp K1、K9（`q` 進離開流程）**，在畫格子的 popup：`q` 不作用，跟表單上一樣；`Ctrl-C` 照樣進離開流程。
   - 為什麼：這個 popup 的長相與按鍵照表單（`Tab`、按鈕、改過先問），tdp K1 的例外只寫了「表單上的 `q`」。同一種樣子的 popup，
     `q` 一個會走、一個不會，使用者得記兩套；畫到一半手滑按到 `q` 也不會跳出離開的 confirm。
-- **tdp E6、E7（demo gif）**，在 README：沒有 VHS 錄的 demo gif，`.local/demos/` 也沒有腳本（`make gif` 是 family.mk 給的，跑了會找不到 tape）。
-  - 為什麼：kamonu 大部分是 user 自己在用，放上 GitHub 但不推廣（user 2026-10-14：「不需要 vhs 錄 gif」）。
-  - 其他照 tdp E6：goreleaser、`install.sh`／`uninstall.sh`、Homebrew tap、tdp L4 與 icon 的測試。
 
 ## 設計文件導讀
 
@@ -413,6 +410,12 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **從原始碼裝**：`go install github.com/vulcanshen/kamonu/cmd/kamonu@latest`（v0.1.2 以前 main 在根目錄，是
   `github.com/vulcanshen/kamonu@latest`）；或 clone 下來 `make build`。
 - 不想動到自己的 `~/.kamonu`，就用 `KAMONU__DATA=<別的目錄> ./kamonu`。
+- **demo gif**（tdp E6、E7）：README 第 3 段的 `docs/demo.gif` 用 VHS 錄，`make gif` 跑 `.local/demos/demo.tape`（`.local/` 不進版控）。
+  - 內容：清單與預覽；新增 `hiu`（字是 HI）；在 DRAW 用數字鍵畫 H 與 I，`p` 看全金色；Save；再到 `[2] PREVIEW` 按 `Enter` 放出來。
+  - 不用真的資料：tape 每次把 `.local/demos/data` 複製到 `.local/demos/take`，`KAMONU__DATA` 指向它。`data/conf` 的
+    `kamonu.yaml` 由 `docs/icon.svg` 轉來，`terminu.yaml` 由 tdp 的 `principle/icon.svg` 轉來，都是公開的 mark。
+  - 以前沒有 gif（user 2026-10-14：「不需要 vhs 錄 gif」，kamonu 大部分是 user 自己在用），記成偏離 tdp E6、E7；user 2026-10-27
+    改了主意，發 v1.0.0 時補上。
 
 ## 發布
 
@@ -449,4 +452,4 @@ formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、
   `Enter` 等於取消。
   v1.0.0（2026-10-27，tdp v1.0.0，terminu-go v1.0.0）：跟家族一起發的穩定版，tdp 與 terminu-go 都是 v1.0.0（user 2026-10-27）。
   v0.1.2 以後的改動：App Log、`[2] PREVIEW` 的 Show、匯出已有 svg 時的 menu、60 欄並排、主畫面 `q` 直接離開，程式搬到
-  `cmd/kamonu`。
+  `cmd/kamonu`；README 補上 demo gif。

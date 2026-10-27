@@ -11,6 +11,8 @@ app's letters in gold inside it, on a grid of 25 × 19 cells. With kamonu you sa
 each one in a colour of its own with the keyboard, and export the svg the family uses, ready to become an app's
 `docs/icon.svg`: every letter gold, and marked one by one in the order of the app's name.
 
+![kamonu: add a mark, draw its letters, save it and show it](docs/demo.gif)
+
 ## Features
 
 - A list of your marks beside a preview of the one under the cursor, as the family draws its marks: gold letters in

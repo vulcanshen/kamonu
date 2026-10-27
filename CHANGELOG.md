@@ -40,6 +40,7 @@ Each release names the version of terminu design (tdp) it follows.
 - A key reference lists moving and scrolling keys only when there is something to move or scroll
 - A name too long for the list is cut with `…`
 - Built on terminu-go v1.0.0, the family's stable version: text in a popup and an empty list's hint fold at spaces, and between wide characters
+- The READMEs open with a demo gif: a mark added, drawn letter by letter, saved and shown
 - `go install github.com/vulcanshen/kamonu/cmd/kamonu@latest`: the program is in `cmd/kamonu` now, and the release
   files are the terminu family's
 
