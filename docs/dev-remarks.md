@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.11.2），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.11.3），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -331,7 +331,8 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   `Saved <名字>: letters …, U frame on|off`、`Deleted <名字>`。跟 toast 一樣大寫開頭（tdp v0.9.2，dialog/note 的 App Log）。
   - 只看不改的也記（tdp v0.11.0 的 note.7）：`[2]` 的 Show 記 `Showed <名字>`。Export 的結果是 toast，由 lib 記。
   - 不記的（tdp v0.11.2 的 note.7）：在 confirm、表單、input popup 上按 `Esc` 取消的（Draw、Edit、Add、Delete、Export as 都是），lib 本來就不跑
-    `Do`、`Submit`、`Done`；kamonu 只有一個畫面，沒有切換畫面；也沒有自己的篩選。
+    `Do`、`Submit`、`Done`；kamonu 只有一個畫面，沒有切換畫面；也沒有自己的篩選。進明細是換 focus、不記（tdp v0.11.3 的
+    note.7）：kamonu 沒有明細，`[1]` 的 `Enter` 是 Draw。
 
 ## 已否決，不要重提
 
@@ -387,7 +388,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.6.2）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.6.3）。
   - 2026-10-20 的一輪（tdp v0.9.0）lib 還沒打 tag 時，改動用 `go.work` 做、先留在工作區，等 v0.4.0 打了 tag、`go.mod` 改好、整個
     `make check`（含 `check-lib`）過了才 commit：照這裡的規定，不 commit 只有本機 lib 才編得過的程式。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
