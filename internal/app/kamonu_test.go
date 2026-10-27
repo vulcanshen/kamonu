@@ -991,7 +991,9 @@ func TestPreviewEnter(t *testing.T) {
 	hs.lacks("[1] KAMON")
 	hs.keys("j") // any key closes it
 	hs.contains("[1] KAMON")
-	hs.keys("e") // on [2], Edit draws
+	hs.keys("!") // it only looks, and the App Log has it (tdp note.7)
+	hs.contains("Showed filu")
+	hs.keys("Esc", "e") // on [2], Edit draws
 	hs.contains("DRAW: filu")
 
 	hs = newHarness(t, 80, 40, nil)
@@ -999,6 +1001,31 @@ func TestPreviewEnter(t *testing.T) {
 	hs.lacks("Enter:show")
 	hs.keys("Enter")
 	hs.lacks("DRAW")
+}
+
+// TestSideBySide: at 60 columns both panels are side by side (tdp L1,
+// screen.5), [1] 20 wide with whole names and the mark cut on the right
+// with …; at 74 the whole mark fits, and under 60 only the focused panel is
+// drawn.
+func TestSideBySide(t *testing.T) {
+	marks := map[string][]byte{"ccdrawu": []byte(filYAML), "filu": []byte(filYAML)}
+	hs := newHarness(t, 60, 32, marks)
+	hs.contains("[1] KAMON")
+	hs.contains("[2] PREVIEW")
+	hs.contains("ccdrawu ")
+	hs.contains("…")
+	row := hs.frame()[1] // [1]'s frame heavy, focused; [2]'s light
+	if i := strings.Index(row, "│"); i < 0 || terminu.Width(row[:i]) != listWidth {
+		t.Fatalf("[2] does not start after [1]'s %d columns:\n%s", listWidth, hs.text())
+	}
+	hs.fullWidth()
+
+	hs = newHarness(t, 74, 32, marks)
+	hs.lacks("…")
+
+	hs = newHarness(t, 59, 32, marks)
+	hs.contains("[1] KAMON")
+	hs.lacks("[2] PREVIEW")
 }
 
 // TestPreviewScrolls: on a panel shorter than the mark, [2] PREVIEW

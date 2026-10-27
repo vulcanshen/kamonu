@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.10.3），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.11.2），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -43,6 +43,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
     popup、`NEW KAMON` 與它的 `Name`、`EDIT: <名字>`、toast、匯出的 menu 與 `EXPORT AS`、delete），每一列都剛好等於終端機寬。
     三種寬度依序跑，同一種寬度的七種大小並排跑（寬度是 lib 全程式共用的一個值）。單獨量每一種 popup 的框歸 lib（tdp v0.8.0 的 E8）。
   - 最小尺寸以下（55×40、80×15、80×5、20×3、1×1）：不當掉、每一列滿寬、畫出名稱與需要的尺寸，按鍵不作用，拉大就回到原本的畫面。
+  - `TestSideBySide`：60×32 時兩個 panel 並排，`[1]` 20 欄、名字完整，mark 截在右邊；74 欄時整個 mark 都在；59 欄時只畫一個 panel。
   - `[2] PREVIEW`：`Enter` 放那個家紋、`e` 畫它，沒有東西時都不出現；比 mark 矮時捲動、寫 `N-M of 21`，放得下時不寫、也不列捲動的鍵。
   - 畫格子的 popup 放不下時，下框寫 cursor 那一列 `N of 19`，在按鈕上不寫。
   - 畫格子的 popup 自己畫的那一塊：不管 lib 給多窄、多矮，每一列都剛好是給的寬，列數不超過給的高。
@@ -67,14 +68,21 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `[2] PREVIEW` 畫 cursor 那一筆，上下各多一列底，跟 splash 一樣是 21 列 × 50 欄。
   - 理由：kamonu 只做一件事，挑一個 mark、打開來畫。
 - **最小尺寸 56 × 16**（2026-10-20，tdp v0.8.0 的 L1；lib 的 `App.MinWidth`、`MinHeight`）：比這個小，lib 只在中間畫名稱與
-  `needs a terminal of at least 56×16`，按鍵都不作用（連按兩次 `Ctrl-C` 離開），拉大就回來。
+  `needs a terminal of at least 56×16`，下面一列 `Press [Ctrl-C] twice to quit`（tdp v0.11.0 的 screen.7），按鍵都不作用（連按兩次
+  `Ctrl-C` 離開），拉大就回來。標準尺寸 60×32 以下、56×16 以上照窄寬的規則縮。
   - 寬 56：畫格子的 popup 要 54 欄（格子 50 欄、左右各一格留白、框），popup 左右各留一欄（tdp F7）。再窄格子就被截掉，cursor
     可能跑到看不見的地方。
   - 高 16：popup 最高是畫面減兩列，扣掉框、上下留白、色標、分隔線、按鈕，格子還看得到六列，跟著 cursor 捲。
   - 其他畫面都比它小：表單、menu、key reference 放不下時照常捲；預覽放不下時捲；splash 在 50 × 30 以下只畫字。
 - **名字太長時從尾端截、加 `…`**（2026-10-20，tdp v0.8.2 的 layout/panel）：`[1]` 只有一欄 Name，標成長欄（`Column.Shrink`），比 `[1]` 寬的名字照欄的截法截。
 - **`[1]` 的 label 是 `KAMON`**（不是 `ICONS`）：user 定的，清單裡的東西就是家紋。
-- **`[2]` 至少 54 欄**（mark 50 欄、左右各一格留白、框兩格）。80 欄時 `[1]` 剩 26 欄；更窄時一次只畫一個 panel。
+- **60 欄時兩個 panel 並排，`[1]` 至少 20 欄**（user 2026-10-27，tdp v0.11.0 的 L1 與 screen.5：標準尺寸改成 60×32，門檻不能高於 60）：
+  - `[2]` 要 54 欄才放得下整個 mark（mark 50 欄、左右各一格留白、框兩格）。74 欄以上 `[2]` 是 54 欄，多的寬度給 `[1]`
+    （user 的 77 欄窗格是 23｜54）。
+  - 60～73 欄 `[1]` 是 20 欄，`[2]` 拿剩下的，mark 從右邊截掉、行尾 `…`（60 欄時看得到左邊 17 格）；`Enter` 的 Show 與 Draw 照樣看得到全部。
+  - 59 欄以下（到最小尺寸 56）一次只畫有 focus 的 panel（`NarrowBelow: 60`）。
+  - 否決：60～73 欄時把預覽畫小一號（一格一欄、兩列擠一列），整個 mark 看得到，但跟 splash 的樣子不一樣、要多一種畫法。
+  - 以前（tdp v0.10 以前標準是 80×40）門檻是 80，60 欄時 `[1]` 只剩 6 欄，名字只看得到 `c…`。
 - **預覽照 splash 的樣子，字全是金色**（2026-10-14，user）。理由：kamonu 裡只有這裡看得到成品的樣子；想看分字，按 `Enter` 打開畫格子的 popup。
 - **`[2] PREVIEW` 只有一個項目，就是它畫的那一個 mark**（user 2026-10-19，紀錄 KM8、KM17）：
   - `Enter` 是 Show（名字 user 2026-10-20 確認）：把那個家紋照它在 app 裡呈現的樣子放出來（家族 app 按 `V` 的那個效果），用 lib
@@ -321,6 +329,9 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **App Log**（2026-10-20，tdp v0.9.0；lib 給的，在 panel 上按 `!`，footer 常駐 `!:log`）：toast、error popup、放到旁邊的檔由 lib 記；
   kamonu 自己記做完的事：`Created <名字>`、`Saved <名字>`、`Saved <名字> as <新名字>`、`Renamed <舊> to <新>`、
   `Saved <名字>: letters …, U frame on|off`、`Deleted <名字>`。跟 toast 一樣大寫開頭（tdp v0.9.2，dialog/note 的 App Log）。
+  - 只看不改的也記（tdp v0.11.0 的 note.7）：`[2]` 的 Show 記 `Showed <名字>`。Export 的結果是 toast，由 lib 記。
+  - 不記的（tdp v0.11.2 的 note.7）：在 confirm、表單、input popup 上按 `Esc` 取消的（Draw、Edit、Add、Delete、Export as 都是），lib 本來就不跑
+    `Do`、`Submit`、`Done`；kamonu 只有一個畫面，沒有切換畫面；也沒有自己的篩選。
 
 ## 已否決，不要重提
 
@@ -376,7 +387,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.5.3）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.6.2）。
   - 2026-10-20 的一輪（tdp v0.9.0）lib 還沒打 tag 時，改動用 `go.work` 做、先留在工作區，等 v0.4.0 打了 tag、`go.mod` 改好、整個
     `make check`（含 `check-lib`）過了才 commit：照這裡的規定，不 commit 只有本機 lib 才編得過的程式。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，

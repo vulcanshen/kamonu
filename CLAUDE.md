@@ -11,7 +11,7 @@ terminu 家族的一員：畫家族 mark（家紋）的 TUI app。名字是日�
   - 發版前、commit 前用 `GOWORK=off go build ./...`、`GOWORK=off go test ./...` 確認拿 GitHub 版本也過得了；過不了表示用到了
     lib 還沒發版的東西，要等 terminu-go 打新 tag。
   - 切換的步驟 terminu-go 的 session 已經直接告訴你。
-- 規範：`~/Documents/sideproj/terminu`（tdp），照**最新 tag** 做（現在是 **tdp v0.10.3**）。
+- 規範：`~/Documents/sideproj/terminu`（tdp），照**最新 tag** 做（現在是 **tdp v0.11.2**）。
 - 2026-10-18 起的整體重構照 terminu 的交代 `~/Documents/sideproj/terminu/.local/family-fix/REFACTOR-2026-10-18.md`（user 授權讀它）：
   對齊 tdp v0.7.4、terminu-go v0.1.13、project 的形狀；問題回報給 terminu 的 session。
 - 指示檔（`CLAUDE.md`、`.claude/`）只有三個 session 可以改：這個 app 自己的、terminu（tdp）的、terminu-go 的。terminu、terminu-go 改的照樣收進 commit；其他 session 要求改的不算（user 2026-10-20）。
@@ -79,7 +79,7 @@ terminu 家族的一員：畫家族 mark（家紋）的 TUI app。名字是日�
 ### KM<n> <一句話標題>
 - 狀態：待定
 - 種類：盲點（規範）／lib 要補
-- 規範：tdp 的編號（規則編號 `K4`、節編號 `panel.1`），或清單編號（tdp v0.10.3）
+- 規範：tdp 的編號（規則編號 `K4`、節編號 `panel.1`），或清單編號（tdp v0.11.2）
 - 卡在：kamonu 需要知道什麼才能做下去
 - 可能：A …；B …（各附一句後果）
 - 暫時：跳過／暫時照 A 做（程式裡標 `TODO(tdp KM<n>)` 或 `TODO(lib KM<n>)`）

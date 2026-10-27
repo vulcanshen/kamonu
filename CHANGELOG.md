@@ -22,7 +22,11 @@ Each release names the version of terminu design (tdp) it follows.
   which row the cursor is on, and the letters and the buttons stay in view; they were cut off before
 - Draw: a cell between each letter's square and the letter, and two between letters; on a screen too narrow for
   them on one row, the rest go on the next
-- kamonu needs a terminal of at least 56 × 16; in a smaller one it shows only its name and the size it needs
+- kamonu needs a terminal of at least 56 × 16; in a smaller one it shows only its name, the size it needs and
+  `Press [Ctrl-C] twice to quit`
+- At 60 columns `[1] KAMON` and `[2] PREVIEW` are side by side, `[1]` 20 wide; under 74 the preview cuts the mark on
+  the right with `…`, and `Enter` shows it whole. Only under 60 is one panel drawn at a time; it was under 80
+- The App Log: `Showed <name>` when `Enter` on `[2] PREVIEW` shows a mark
 - Save As: `Enter` with nothing typed says `Name can't be empty` again; a name that cannot be written stays in the
   box, the error over it
 - An error popup's title says what failed and on which mark: `SAVE FAILED: filu`, `DRAW FAILED: filu`; a failed
@@ -33,7 +37,7 @@ Each release names the version of terminu design (tdp) it follows.
 - Edit: the Letters prompt says whose letters they are
 - A key reference lists moving and scrolling keys only when there is something to move or scroll
 - A name too long for the list is cut with `…`
-- Built on terminu-go v0.5.3: text in a popup and an empty list's hint fold at spaces, and between wide characters
+- Built on terminu-go v0.6.2: text in a popup and an empty list's hint fold at spaces, and between wide characters
 - `go install github.com/vulcanshen/kamonu/cmd/kamonu@latest`: the program is in `cmd/kamonu` now, and the release
   files are the terminu family's
 

@@ -21,9 +21,14 @@ const (
 	glyphSave   = "\U000F0193" // nf-md-content_save: SAVE AS
 )
 
-// previewWidth is [2]'s width: the mark's 50 columns, a cell of room and the
-// frame on either side.
+// previewWidth is [2]'s width when the screen has room for it: the mark's 50
+// columns, a cell of room and the frame on either side.
 const previewWidth = 2*cols + 4
+
+// listWidth is the least [1] has: at 60 columns, where every panel is side
+// by side (tdp L1, screen.5), [1] has 20 and [2] 40, the mark cut on the
+// right with … until the screen is 74 wide (docs/dev-remarks.md).
+const listWidth = 20
 
 // minWidth × minHeight is kamonu's least size (tdp L1): the drawing's 50
 // columns with a cell of room and the frame on either side, and a column
@@ -83,10 +88,10 @@ func newKamonu(st store) *kamonu {
 		Name:   "Kamon",
 		Panels: []*terminu.Panel{k.panel, preview},
 		Layout: func(w, h int) []terminu.Rect {
-			left := max(w-previewWidth, 0)
+			left := max(w-previewWidth, listWidth)
 			return []terminu.Rect{{X: 0, Y: 0, W: left, H: h}, {X: left, Y: 0, W: w - left, H: h}}
 		},
-		NarrowBelow: 80,
+		NarrowBelow: 60, // the most it may be: side by side at 60 columns (tdp screen.5)
 	})
 	k.reload("")
 	a.Start = k.start
@@ -182,6 +187,7 @@ func (k *kamonu) show() tea.Cmd {
 	if err != nil {
 		return k.a.ErrorAbout("Show failed", name, "Can't show "+name+": "+err.Error())
 	}
+	k.a.Log(terminu.Info, "Showed "+name) // one that only looks is logged too (tdp note.7)
 	return k.a.PlaySplash(s)
 }
 
