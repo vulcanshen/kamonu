@@ -49,7 +49,8 @@ type kamonu struct {
 func newKamonu(st store) *kamonu {
 	k := &kamonu{st: st}
 	a := terminu.New("kamonu")
-	a.Quit = &terminu.Ask{Title: "Quit", Question: "Quit kamonu?", Verb: "quit"}
+	// No Quit: on the panels nothing is left unsaved, so q leaves at once;
+	// with a popup open the lib asks first (tdp K9).
 	a.QuitDesc = "leave kamonu"
 	a.Splash = splash()
 	a.MinWidth, a.MinHeight = minWidth, minHeight

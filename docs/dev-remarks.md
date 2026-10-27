@@ -307,7 +307,10 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ### 離開
 
-- 主畫面按 `q` 先問（`Quit kamonu?`）。理由：家族的 app 都問；畫到一半的東西在畫格子的 popup 裡，那裡另外會提醒沒存。
+- **主畫面按 `q` 直接離開**（user 2026-10-27，tdp K9：離開流程 app 可以自行決定；lib 的 `App.Quit` 不設）。理由：主畫面上沒有
+  會丟掉的東西，Create、Save、Edit 都當場寫檔，畫到一半的東西只在畫格子的 popup 裡。
+  - 有 popup 開著時照樣先問 `Quit kamonu?`（tdp K9，lib 做的）；在畫格子的 popup 上沒存時多一句 Peach。再按一次 `Ctrl-C` 立刻離開。
+  - 以前主畫面也先問，理由是「家族的 app 都問」；那時 tdp 還沒寫明離開流程可以由 app 決定。
 
 ### 位置
 

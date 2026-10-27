@@ -27,6 +27,8 @@ Each release names the version of terminu design (tdp) it follows.
 - At 60 columns `[1] KAMON` and `[2] PREVIEW` are side by side, `[1]` 20 wide; under 74 the preview cuts the mark on
   the right with `…`, and `Enter` shows it whole. Only under 60 is one panel drawn at a time; it was under 80
 - The App Log: `Showed <name>` when `Enter` on `[2] PREVIEW` shows a mark
+- `q` on the screen quits at once: nothing there is left unsaved. With a popup open it still asks first, and says so
+  when Draw has changes not saved
 - Save As: `Enter` with nothing typed says `Name can't be empty` again; a name that cannot be written stays in the
   box, the error over it
 - An error popup's title says what failed and on which mark: `SAVE FAILED: filu`, `DRAW FAILED: filu`; a failed

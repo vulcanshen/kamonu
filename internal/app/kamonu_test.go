@@ -709,6 +709,22 @@ func TestEditorKeyReference(t *testing.T) {
 	hs.contains("DRAW: blank")
 }
 
+// TestQuit: on the panel q leaves at once, nothing being left unsaved
+// there; with a popup open it asks first (tdp K9).
+func TestQuit(t *testing.T) {
+	hs := newHarness(t, 80, 40, map[string][]byte{"blank": blank()})
+	hs.keys("Space", "q")
+	hs.contains("Quit kamonu?")
+	hs.keys("Esc")
+	if hs.quit {
+		t.Fatal("Esc on the confirm left")
+	}
+	hs.keys("Esc", "q")
+	if !hs.quit {
+		t.Fatal("q on the panel did not leave")
+	}
+}
+
 func TestQuitFromTheEditor(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"blank": blank()})
 	hs.keys("Enter", "Space", "Ctrl-C")
@@ -1117,8 +1133,8 @@ func TestFullWidth(t *testing.T) {
 		{"Esc", "P"},                 // the svg there: the menu
 		{"j", "Enter"},               // EXPORT AS
 		{"Esc", "Esc", "X"},          // back to the menu, out of it: delete
-		{"Esc", "q"},                 // quit
-		{"Esc", "j", "Enter"},        // DRAW: zz, six letters wider than the grid
+		{"q"},                        // a popup open: quit asks
+		{"Esc", "Esc", "j", "Enter"}, // DRAW: zz, six letters wider than the grid
 	}
 	// The least size (56 × 16) and above it: the drawing wider and taller
 	// than the screen (56 × 16), taller (120 × 16), wider (56 × 50, zz's
