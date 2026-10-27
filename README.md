@@ -86,7 +86,7 @@ Removes the binary, then asks — never assumes — about `~/.kamonu`, where you
 | `!` | The App Log: what kamonu did, and every message it showed |
 | `?` | The keys of this panel |
 | `Tab\|1–2` | The other panel |
-| `q` | Quit |
+| `q` | Quit, at once: nothing here is left unsaved |
 
 On **[2] PREVIEW**, `Enter` shows the mark the way its app will show it, and `e` draws it. When the terminal is too short for the whole mark, `j|k`,
 `u|d` and `gg|G` scroll it.
@@ -131,7 +131,8 @@ If kamonu cannot read a mark when it starts, it asks to move it aside to `<name>
   colours of the letters are only for drawing; the svg has them all gold.
 - At most 6 letters, each one of A to Z.
 - Renaming or deleting a mark leaves the svg already exported as it is.
-- kamonu needs a terminal of at least 56 × 16; in a smaller one it only says so, until the terminal grows.
+- kamonu needs a terminal of at least 56 × 16; in a smaller one it only says so, and that `Ctrl-C` twice
+  quits, until the terminal grows.
 
 ## Links
 
@@ -150,7 +151,7 @@ share. The others:
 | [sshu](https://github.com/vulcanshen/sshu) | A terminal front end for ssh and sftp |
 | [webu](https://github.com/vulcanshen/webu) | A terminal browser that reads a web page as a document |
 | [locku](https://github.com/vulcanshen/locku) | A screensaver with a PIN lock, for the terminal |
-| [ccdrawu](https://github.com/vulcanshen/ccdrawu) | A sidebar and a status line for Claude Code |
+| [ccdrawu](https://github.com/vulcanshen/ccdrawu) | A sidebar for Claude Code: usage, context, cost and git beside the transcript |
 
 ## License
 

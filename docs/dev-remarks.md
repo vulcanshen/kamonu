@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v0.11.5），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v1.0.0），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -55,7 +55,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - 畫格子：cursor 跳過 U 框、到邊停住；`Space` 照順序切換；色標每個字一個顏色；改過才問，`Esc` 回到格子。
   - Save 與 Save As：名字的檢查、控制字元、原檔不動、cursor 停在新檔。
   - 存檔失敗開 error popup，`Enter` 關掉後回到按鈕；打開的動畫播完前不收鍵；`Ctrl-C` 兩次離開。
-  - 匯出寫出跟 yaml 一致的 svg，失敗時用 toast 說原因；壞掉的 yaml 在預覽、Draw、Edit 都說讀不了。
+  - 匯出寫出跟 yaml 一致的 svg，失敗時開 error popup 說原因；壞掉的 yaml 在預覽、Draw、Edit 都說讀不了。
   - 已經有 svg 時開 menu：`Overwrite <名字>.svg` 蓋掉原檔；`Export as new…` 開輸入框，說明列舉出下一個號碼，自己取的名字照用，
     已經有的擋下（加不加 `.svg` 都一樣）；`Esc` 什麼都不寫；寫檔失敗開 error popup。
 
@@ -204,7 +204,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 - **`Ex[P]ort` 直接寫到 `svg/<名字>.svg`**，再用 toast 說寫到哪裡（2026-10-14，user 選 B）。toast 是 Success（綠色，tdp v0.8.0
   的 components/dialog/toast，紀錄 KM15），寫完整路徑，長了就折行（v0.2.0 的 toast 不再限三列）。
   - 失敗時開 error popup `EXPORT FAILED: <名字>`（2026-10-18）：原本用 Error toast，可是那時 toast 最多三列，原因長時會被截掉，
-    完整的內容要走 error popup 或 log，kamonu 沒有 log。
+    完整的內容要走 error popup 或 log，那時 kamonu 還沒有 App Log。
 - **已經有 `<名字>.svg` 時先問：menu 加輸入框**（user 2026-10-19，紀錄 KM10）：
   - menu `EXPORT` 兩列：`Overwrite <名字>.svg` 直接蓋掉；`Export as new…` 開輸入框 `EXPORT AS`，輸入新檔的名字（值叫 `File`，
     打不打 `.svg` 都可以），已經有的名字在輸入框裡就擋下（`File is taken: …`）。
@@ -391,7 +391,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v0.6.5）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v1.0.0）。
   - 2026-10-20 的一輪（tdp v0.9.0）lib 還沒打 tag 時，改動用 `go.work` 做、先留在工作區，等 v0.4.0 打了 tag、`go.mod` 改好、整個
     `make check`（含 `check-lib`）過了才 commit：照這裡的規定，不 commit 只有本機 lib 才編得過的程式。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
@@ -447,3 +447,6 @@ formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、
   v0.1.1（2026-10-15，tdp v0.6.9，terminu-go v0.1.8）：匯出時已經有 svg 先問；Draw 的按鈕照表單的動作區移動。
   v0.1.2（2026-10-15，tdp v0.6.11，terminu-go v0.1.10）：Draw 開在 lib 的 popup 疊上（`App.Popup`）；`SAVE AS` 什麼都沒打就按
   `Enter` 等於取消。
+  v1.0.0（2026-10-27，tdp v1.0.0，terminu-go v1.0.0）：跟家族一起發的穩定版，tdp 與 terminu-go 都是 v1.0.0（user 2026-10-27）。
+  v0.1.2 以後的改動：App Log、`[2] PREVIEW` 的 Show、匯出已有 svg 時的 menu、60 欄並排、主畫面 `q` 直接離開，程式搬到
+  `cmd/kamonu`。

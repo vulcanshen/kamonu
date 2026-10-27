@@ -2,7 +2,7 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
-## Unreleased
+## v1.0.0 — tdp v1.0.0
 
 - The App Log: `!` opens what kamonu did and every message it showed; the footer says `!:log`, or how many errors
   there are
@@ -39,7 +39,7 @@ Each release names the version of terminu design (tdp) it follows.
 - Edit: the Letters prompt says whose letters they are
 - A key reference lists moving and scrolling keys only when there is something to move or scroll
 - A name too long for the list is cut with `…`
-- Built on terminu-go v0.6.5: text in a popup and an empty list's hint fold at spaces, and between wide characters
+- Built on terminu-go v1.0.0, the family's stable version: text in a popup and an empty list's hint fold at spaces, and between wide characters
 - `go install github.com/vulcanshen/kamonu/cmd/kamonu@latest`: the program is in `cmd/kamonu` now, and the release
   files are the terminu family's
 

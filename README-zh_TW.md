@@ -81,7 +81,7 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/kamonu/main/uninstall.sh
 | `!` | App Log：kamonu 做過的事、跳過的每一則訊息 |
 | `?` | 這個 panel 的按鍵 |
 | `Tab\|1–2` | 另一個 panel |
-| `q` | 離開 |
+| `q` | 直接離開：這裡沒有會丟掉的東西 |
 
 在 **[2] PREVIEW** 上，`Enter` 把那一個 mark 照它在 app 裡的樣子放出來，`e` 打開來畫。終端機太矮、放不下整個 mark 時，用 `j|k`、`u|d`、`gg|G` 捲動。
 
@@ -122,7 +122,7 @@ kamonu 沒有設定檔。所有東西都在 `~/.kamonu/data`；要放在別的�
 - mark 一律是家族的 25 × 19 格、家族的顏色：藍色的 U 框、金色的字。字的顏色只是畫的時候分字用，svg 裡一律是金色。
 - 最多 6 個字，每個字是 A 到 Z。
 - 改名或刪除 mark 時，已經匯出的 svg 不會跟著改。
-- 終端機至少要 56 × 16；比這個小時 kamonu 只告訴你需要多大，拉大就回來。
+- 終端機至少要 56 × 16；比這個小時 kamonu 只告訴你需要多大、連按兩次 `Ctrl-C` 離開，拉大就回來。
 
 ## 相關連結
 
@@ -140,7 +140,7 @@ kamonu 遵循 [terminu design](https://github.com/vulcanshen/terminu)，terminu 
 | [sshu](https://github.com/vulcanshen/sshu) | ssh 與 sftp 的 terminal 前端 |
 | [webu](https://github.com/vulcanshen/webu) | 把網頁當文件讀的 terminal 瀏覽器 |
 | [locku](https://github.com/vulcanshen/locku) | 帶 PIN 鎖的 terminal 螢幕保護程式 |
-| [ccdrawu](https://github.com/vulcanshen/ccdrawu) | Claude Code 的側欄與狀態列 |
+| [ccdrawu](https://github.com/vulcanshen/ccdrawu) | Claude Code 的側邊欄：用量、context、花費與 git 放在對話旁邊 |
 
 ## License
 
