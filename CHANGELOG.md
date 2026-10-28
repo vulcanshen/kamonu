@@ -2,6 +2,13 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
+## Unreleased
+
+- Built on terminu-go v1.1.0-beta.1 (tdp v1.1.0-beta.1); nothing on the screen changes
+- The repository no longer tracks `CLAUDE.md`, Claude Code's instructions for its maintainer, and its documents and
+  comments no longer point to notes kept off GitHub
+- The READMEs' terminu family section links tdp, terminu-go and terminu-harness, instead of listing the other apps
+
 ## v1.0.0 — tdp v1.0.0
 
 - The App Log: `!` opens what kamonu did and every message it showed; the footer says `!:log`, or how many errors

@@ -77,7 +77,7 @@ func newKamonu(st store) *kamonu {
 	}}
 	k.panel.Actions = append(k.panel.Actions, k.list.Actions()...)
 	k.preview = &preview{k: k}
-	// [2] has one item, the kamon it shows (KM8, KM17): Enter shows the mark
+	// [2] has one item, the kamon it shows: Enter shows the mark
 	// as its app shows it, and [e]dit opens its cells; [1]'s Edit is [e]dit
 	// too, each told by the panel it is on.
 	preview := &terminu.Panel{Label: "Preview", Body: k.preview, Actions: []terminu.Action{
@@ -175,8 +175,8 @@ func (k *kamonu) draw() tea.Cmd {
 	return k.openEditor(name, km)
 }
 
-// show plays the kamon under the cursor as its app's splash plays its mark
-// (KM8): the name under it, no version or introduction, which kamonu does
+// show plays the kamon under the cursor as its app's splash plays its mark:
+// the name under it, no version or introduction, which kamonu does
 // not know. Any key closes it.
 func (k *kamonu) show() tea.Cmd {
 	name := k.current()
@@ -317,7 +317,7 @@ func (k *kamonu) export() tea.Cmd {
 	}
 	// <name>.svg is there: a menu asks whether to write over it or to write
 	// a new file, whose name a text input asks for, the next free number
-	// offered (KM10: one value is an input, not a form, tdp form.1).
+	// offered (one value is an input, not a form: tdp form.1).
 	// Esc on the input goes back to the menu; once written, the whole
 	// stack closes.
 	next := k.st.nextSVG(name)

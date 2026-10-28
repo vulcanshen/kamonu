@@ -519,7 +519,7 @@ func TestDrawScrolls(t *testing.T) {
 	hs.keys("Enter")
 	hs.contains("[3] " + glyphSquare + " L")
 	hs.contains("Save As")
-	hs.contains("1 of 19") // the cursor's row, on the bottom frame line (KM9)
+	hs.contains("1 of 19") // the cursor's row, on the bottom frame line
 	frameSquare := terminu.Fg(frameColor).Render(glyphSquare + " ")
 	before := strings.Count(strings.Join(hs.k.a.Frame(), "\n"), frameSquare)
 	for range rows {
@@ -837,7 +837,7 @@ func TestEditPutsTheFrameIn(t *testing.T) {
 func TestExport(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
 	hs.keys("Space")
-	// The label is Export, its key a capital P (tdp M5; KM16): "[P] Export"
+	// The label is Export, its key a capital P (tdp M5): "[P] Export"
 	// on a lib that matches the key's case only, Ex[P]ort on one that does not.
 	if !strings.Contains(hs.text(), "[P] Export") && !strings.Contains(hs.text(), "Ex[P]ort") {
 		t.Fatalf("no Export row with its key:\n%s", hs.text())
@@ -863,7 +863,7 @@ func svgIs(t *testing.T, hs *harness, file string, km kamon) {
 }
 
 // TestExportWhenThere: with <name>.svg there, a menu asks: Overwrite it,
-// or Export as new, which asks for the name (KM10, decided 2026-10-19).
+// or Export as new, which asks for the name (decided 2026-10-19).
 func TestExportWhenThere(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"filu": []byte(filYAML)})
 	km := fil(t)
@@ -882,7 +882,7 @@ func TestExportWhenThere(t *testing.T) {
 	hs.keys("Enter", "Enter") // the input again, the suggestion taken as it is
 	hs.lacks("EXPORT AS")
 	hs.lacks("Overwrite filu.svg") // written: the whole stack closes
-	hs.contains("SUCCESS")         // a Success toast (KM15)
+	hs.contains("SUCCESS")         // a Success toast
 	svgIs(t, hs, "filu_1", km)
 	// A name of its own; one there is refused, with ".svg" or without.
 	hs.keys("Esc", "P", "j", "Enter")
@@ -908,7 +908,7 @@ func TestExportWhenThere(t *testing.T) {
 	}
 }
 
-// The name on Overwrite is the file's, in its own case (KM6).
+// The name on Overwrite is the file's, in its own case.
 func TestExportOverwriteKeepsTheCase(t *testing.T) {
 	hs := newHarness(t, 80, 40, map[string][]byte{"KBU": blank()})
 	hs.keys("P", "Esc", "P") // Esc: the toast first (tdp K4)
@@ -997,9 +997,9 @@ func TestPreviewEnter(t *testing.T) {
 	hs.keys("Tab")
 	hs.contains("Enter:show")
 	hs.keys("Space")
-	hs.contains("ITEM OPERATION") // one item, the kamon shown (KM8)
+	hs.contains("ITEM OPERATION") // one item, the kamon shown
 	hs.contains("[Enter] Show")
-	hs.contains("[e]dit") // KM17
+	hs.contains("[e]dit") // [2]'s Edit draws it
 	// Enter plays the mark as its app's splash does, its name under it.
 	hs.keys("Esc", "Enter")
 	hs.contains("Press any key to close")
