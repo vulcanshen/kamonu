@@ -1,6 +1,6 @@
 # kamonu 開發者備忘
 
-kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v1.1.0-beta.1），
+kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu design principle](https://github.com/vulcanshen/terminu)（tdp v1.1.0），
 建在 terminu-go 上。
 
 ## 運作方式
@@ -389,7 +389,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v1.1.0-beta.3）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v1.1.0）。
   - 2026-10-20 的一輪（tdp v0.9.0）lib 還沒打 tag 時，改動用 `go.work` 做、先留在工作區，等 v0.4.0 打了 tag、`go.mod` 改好、整個
     `make check`（含 `check-lib`）過了才 commit：照這裡的規定，不 commit 只有本機 lib 才編得過的程式。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
@@ -407,7 +407,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
   - `make install`／`make uninstall`、`make package`（`dist/` 的 tar.gz）、`make clean`。
   - `make release-check`、`make snapshot`：見「發布」。
   - kamonu 自己的 target：沒有（`##@ kamonu 自己的` 是空的）。
-- **project 圖上沒有的頂層檔案**：沒有。跟 AI 協作的交代 `CLAUDE.md` 只在工作目錄裡，不進 git（tdp v1.1.0-beta.1 的 project.3）。
+- **project 圖上沒有的頂層檔案**：沒有。跟 AI 協作的交代 `CLAUDE.md` 只在工作目錄裡，不進 git（tdp v1.1.0 的 project.3）。
 - **從原始碼裝**：`go install github.com/vulcanshen/kamonu/cmd/kamonu@latest`（v0.1.2 以前 main 在根目錄，是
   `github.com/vulcanshen/kamonu@latest`）；或 clone 下來 `make build`。
 - 不想動到自己的 `~/.kamonu`，就用 `KAMONU__DATA=<別的目錄> ./kamonu`。
@@ -430,14 +430,14 @@ formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、
   3. commit、打 tag `vX.Y.Z`、push commit 與 tag。
   4. `.github/workflows/release.yml` 接手：在 ubuntu 與 macos 上跑 `go test -race`；goreleaser 發 release、把 formula 推到
      `vulcanshen/homebrew-tap`；最後用 CHANGELOG 那一段蓋掉 release 的說明（推 tap 失敗時照樣蓋，release 還沒建好就跳過）。
-- **beta**（tdp v1.1.0-beta.2 的 project.6、project.7）：tag `vX.Y.Z-beta.N`，CHANGELOG 的標題也是它
+- **beta**（tdp v1.1.0 的 project.6、project.7）：tag `vX.Y.Z-beta.N`，CHANGELOG 的標題也是它
   （`## v1.0.1-beta.1 — tdp v1.1.0-beta.2`），步驟一樣。goreleaser 發成 GitHub 的 pre-release、不推 tap
   （`release.prerelease: auto`、`skip_upload: auto`），brew 與 `install.sh` 拿到的還是正式版。之後的正式版那一段寫上一個正式版
   以來的全部改動，beta 的也算。
 - **release 說明**：workflow 用 awk 取 CHANGELOG 裡 `## <tag> ` 開頭的那一段，到下一個 `## ` 為止，寫到 checkout 外面的
   `$RUNNER_TEMP/RELEASE_NOTES.md`。
 - **版號**：goreleaser 把去掉 v 的版號注入 `internal/version.Version`（`-X {{ .ModulePath }}/internal/version.Version=…`：
-  go.mod 的 module，v2 起帶 `/vN`，每個 app 同一行；tdp v1.1.0-beta.3），`kamonu version` 與 splash 印 `version.Display()`，
+  go.mod 的 module，v2 起帶 `/vN`，每個 app 同一行；tdp v1.1.0），`kamonu version` 與 splash 印 `version.Display()`，
   補上 v（`kamonu v0.1.0`；tdp S5）。`make build` 不注入，印 `dev`。
   v0.1.2 以前是 `-X main.version=v…`，注入時就帶 v。
 - **推 tap 要 PAT**：workflow 內建的 token 寫不了 `homebrew-tap`，要在 repo 的 secret 設 `ACTION_TOKEN`（家族其他 repo 都有）。
@@ -467,3 +467,4 @@ formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、
   terminu family 段改成 tdp、terminu-go、terminu-harness 三個連結；release 的執行檔不再是 `+dirty`。
   v1.0.1-beta.2（2026-10-28，tdp v1.1.0-beta.3，terminu-go v1.1.0-beta.3）：goreleaser 的 ldflags 用 `{{ .ModulePath }}`；
   範本改了，家族每個 app 用最後版的範本再發一次 beta。畫面與操作沒變。
+  v1.0.1（2026-10-28，tdp v1.1.0，terminu-go v1.1.0）：兩個 beta 的正式版，CHANGELOG 那一段把 beta 的改動都併進去。
