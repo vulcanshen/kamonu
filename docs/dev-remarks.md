@@ -389,7 +389,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v1.1.0-beta.1）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v1.1.0-beta.2）。
   - 2026-10-20 的一輪（tdp v0.9.0）lib 還沒打 tag 時，改動用 `go.work` 做、先留在工作區，等 v0.4.0 打了 tag、`go.mod` 改好、整個
     `make check`（含 `check-lib`）過了才 commit：照這裡的規定，不 commit 只有本機 lib 才編得過的程式。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
@@ -430,7 +430,12 @@ formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、
   3. commit、打 tag `vX.Y.Z`、push commit 與 tag。
   4. `.github/workflows/release.yml` 接手：在 ubuntu 與 macos 上跑 `go test -race`；goreleaser 發 release、把 formula 推到
      `vulcanshen/homebrew-tap`；最後用 CHANGELOG 那一段蓋掉 release 的說明（推 tap 失敗時照樣蓋，release 還沒建好就跳過）。
-- **release 說明**：workflow 用 awk 取 CHANGELOG 裡 `## <tag> ` 開頭的那一段，到下一個 `## ` 為止。
+- **beta**（tdp v1.1.0-beta.2 的 project.6、project.7）：tag `vX.Y.Z-beta.N`，CHANGELOG 的標題也是它
+  （`## v1.0.1-beta.1 — tdp v1.1.0-beta.2`），步驟一樣。goreleaser 發成 GitHub 的 pre-release、不推 tap
+  （`release.prerelease: auto`、`skip_upload: auto`），brew 與 `install.sh` 拿到的還是正式版。之後的正式版那一段寫上一個正式版
+  以來的全部改動，beta 的也算。
+- **release 說明**：workflow 用 awk 取 CHANGELOG 裡 `## <tag> ` 開頭的那一段，到下一個 `## ` 為止，寫到 checkout 外面的
+  `$RUNNER_TEMP/RELEASE_NOTES.md`。
 - **版號**：goreleaser 把去掉 v 的版號注入 `internal/version.Version`（`-X github.com/vulcanshen/kamonu/internal/version.Version=…`），
   `kamonu version` 與 splash 印 `version.Display()`，補上 v（`kamonu v0.1.0`；tdp S5）。`make build` 不注入，印 `dev`。
   v0.1.2 以前是 `-X main.version=v…`，注入時就帶 v。
@@ -446,6 +451,8 @@ formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、
     `gh` 在 keyring 裡的登入有 `workflow`，所以改 workflow 的 commit 用 `env -u GITHUB_TOKEN git push`。
   - `ACTION_TOKEN` 是用環境變數的 `GITHUB_TOKEN` 設的（user 2026-10-14）：`gh secret set ACTION_TOKEN -R vulcanshen/kamonu`，
     值從 stdin 給，不印出來。它只有 `repo`，推 tap 夠用。
+  - v1.0.0 的執行檔 `go version -m` 看是 `v1.0.0+dirty`：release notes 寫在 checkout 裡，工作目錄變髒，goreleaser 又帶著
+    `--skip=validate` 沒擋下。tdp v1.1.0-beta.2 的範本改寫到 `$RUNNER_TEMP`、拿掉 `--skip=validate`。
 - **發過的版本**：v0.1.0（2026-10-14，tdp v0.6.3，terminu-go v0.1.3），第一版；release、tap 的 formula、`install.sh`／
   `uninstall.sh` 都確認過。
   v0.1.1（2026-10-15，tdp v0.6.9，terminu-go v0.1.8）：匯出時已經有 svg 先問；Draw 的按鈕照表單的動作區移動。
@@ -454,3 +461,6 @@ formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、
   v1.0.0（2026-10-27，tdp v1.0.0，terminu-go v1.0.0）：跟家族一起發的穩定版，tdp 與 terminu-go 都是 v1.0.0（user 2026-10-27）。
   v0.1.2 以後的改動：App Log、`[2] PREVIEW` 的 Show、匯出已有 svg 時的 menu、60 欄並排、主畫面 `q` 直接離開，程式搬到
   `cmd/kamonu`；README 補上 demo gif。
+  v1.0.1-beta.1（2026-10-28，tdp v1.1.0-beta.2，terminu-go v1.1.0-beta.2）：第一個 beta，GitHub 的 pre-release、不進 tap；
+  畫面與操作沒變，所以是 patch（user 2026-10-28）。`CLAUDE.md` 不進 git，文件與註解不再指向 GitHub 以外的筆記；README 的
+  terminu family 段改成 tdp、terminu-go、terminu-harness 三個連結；release 的執行檔不再是 `+dirty`。

@@ -2,9 +2,12 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
-## Unreleased
+## v1.0.1-beta.1 — tdp v1.1.0-beta.2
 
-- Built on terminu-go v1.1.0-beta.1 (tdp v1.1.0-beta.1); nothing on the screen changes
+- Built on terminu-go v1.1.0-beta.2 (tdp v1.1.0-beta.2); nothing on the screen changes
+- A beta is released as a GitHub pre-release and never reaches the Homebrew tap, so `brew` and `install.sh` keep
+  the stable version; `go install github.com/vulcanshen/kamonu/cmd/kamonu@v1.0.1-beta.1` gets the beta
+- The released binaries' build info no longer ends in `+dirty` (`go version -m kamonu`)
 - The repository no longer tracks `CLAUDE.md`, Claude Code's instructions for its maintainer, and its documents and
   comments no longer point to notes kept off GitHub
 - The READMEs' terminu family section links tdp, terminu-go and terminu-harness, instead of listing the other apps
