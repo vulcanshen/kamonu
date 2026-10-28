@@ -468,3 +468,4 @@ formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、
   v1.0.1-beta.2（2026-10-28，tdp v1.1.0-beta.3，terminu-go v1.1.0-beta.3）：goreleaser 的 ldflags 用 `{{ .ModulePath }}`；
   範本改了，家族每個 app 用最後版的範本再發一次 beta。畫面與操作沒變。
   v1.0.1（2026-10-28，tdp v1.1.0，terminu-go v1.1.0）：兩個 beta 的正式版，CHANGELOG 那一段把 beta 的改動都併進去。
+  release 是正式版、tap 是 1.0.1，`go version -m` 看是 `v1.0.1`、沒有 `+dirty`，都確認過。
