@@ -2,6 +2,12 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
+## v1.0.1-beta.2 — tdp v1.1.0-beta.3
+
+- Built on terminu-go v1.1.0-beta.3 (tdp v1.1.0-beta.3); nothing on the screen changes
+- The release stamps the version `kamonu version` prints through the module path in `go.mod`, the same line in
+  every app of the family
+
 ## v1.0.1-beta.1 — tdp v1.1.0-beta.2
 
 - Built on terminu-go v1.1.0-beta.2 (tdp v1.1.0-beta.2); nothing on the screen changes

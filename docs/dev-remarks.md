@@ -389,7 +389,7 @@ kamonu 是畫 terminu 家族 mark（家紋）的 TUI app，遵循 [terminu desig
 
 ## 建置與開發
 
-- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v1.1.0-beta.2）。
+- **terminu-go**：`go.mod` 指向 GitHub 上打過 tag 的版本（現在是 v1.1.0-beta.3）。
   - 2026-10-20 的一輪（tdp v0.9.0）lib 還沒打 tag 時，改動用 `go.work` 做、先留在工作區，等 v0.4.0 打了 tag、`go.mod` 改好、整個
     `make check`（含 `check-lib`）過了才 commit：照這裡的規定，不 commit 只有本機 lib 才編得過的程式。
   - 開發時用 `go.work`（`go work init . ../terminu-go`，terminu-go clone 在 kamonu 旁邊）：build、test 用的是本機的 terminu-go，
@@ -436,8 +436,9 @@ formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、
   以來的全部改動，beta 的也算。
 - **release 說明**：workflow 用 awk 取 CHANGELOG 裡 `## <tag> ` 開頭的那一段，到下一個 `## ` 為止，寫到 checkout 外面的
   `$RUNNER_TEMP/RELEASE_NOTES.md`。
-- **版號**：goreleaser 把去掉 v 的版號注入 `internal/version.Version`（`-X github.com/vulcanshen/kamonu/internal/version.Version=…`），
-  `kamonu version` 與 splash 印 `version.Display()`，補上 v（`kamonu v0.1.0`；tdp S5）。`make build` 不注入，印 `dev`。
+- **版號**：goreleaser 把去掉 v 的版號注入 `internal/version.Version`（`-X {{ .ModulePath }}/internal/version.Version=…`：
+  go.mod 的 module，v2 起帶 `/vN`，每個 app 同一行；tdp v1.1.0-beta.3），`kamonu version` 與 splash 印 `version.Display()`，
+  補上 v（`kamonu v0.1.0`；tdp S5）。`make build` 不注入，印 `dev`。
   v0.1.2 以前是 `-X main.version=v…`，注入時就帶 v。
 - **推 tap 要 PAT**：workflow 內建的 token 寫不了 `homebrew-tap`，要在 repo 的 secret 設 `ACTION_TOKEN`（家族其他 repo 都有）。
   沒設的話用內建的 token，release 會發出去，但推 formula 那一步會失敗。也可以在本機手動發：shell 裡的 `GITHUB_TOKEN` 有權限的話，
@@ -464,3 +465,5 @@ formula。`.github/workflows/release.yml`、`.goreleaser.yaml`、`install.sh`、
   v1.0.1-beta.1（2026-10-28，tdp v1.1.0-beta.2，terminu-go v1.1.0-beta.2）：第一個 beta，GitHub 的 pre-release、不進 tap；
   畫面與操作沒變，所以是 patch（user 2026-10-28）。`CLAUDE.md` 不進 git，文件與註解不再指向 GitHub 以外的筆記；README 的
   terminu family 段改成 tdp、terminu-go、terminu-harness 三個連結；release 的執行檔不再是 `+dirty`。
+  v1.0.1-beta.2（2026-10-28，tdp v1.1.0-beta.3，terminu-go v1.1.0-beta.3）：goreleaser 的 ldflags 用 `{{ .ModulePath }}`；
+  範本改了，家族每個 app 用最後版的範本再發一次 beta。畫面與操作沒變。
